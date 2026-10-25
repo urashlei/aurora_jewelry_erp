@@ -47,7 +47,7 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
             f"- **Live Total Gold Exposure**: **{total_gold_g:,.1f} grams** (~**{total_gold_chi:,.1f} Chi** / **{(total_gold_g/37.5):,.1f} Tael**).\n"
             f"- **Working Capital Valuation**: **{total_val:,.0f} VND**.\n"
             f"- **Hedging Strategy (Natural Hedging)**: Unlike financial derivatives, Aurora Jewelry hedges by matching daily raw bullion purchases (PO) with retail point-of-sale volume (POS: **{today_sales:,.0f} VND** today). This neutralizes intraday spot bullion fluctuations without costly futures contracts.\n"
-            f"- **Prescriptive Recommendation**: Maintain a **35% safety buffer** in Central Vault WH-KT and execute daily rebalancing before 17:00 to lock in spot spreads."
+            f"- **Prescriptive Recommendation**: Maintain a **35% safety buffer** in Main Warehouse WH-MW and execute daily rebalancing before 17:00 to lock in spot spreads."
         )
 
     if any(k in q for k in ["stockout", "out of stock", "shortage", "phu nhuan", "pn", "rebalance", "transfer"]):
@@ -55,21 +55,21 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
             f"### Boutique Stockout Risk & Rebalance Directive\n\n"
             f"- **Vulnerable Location**: **Phu Nhuan Boutique (WH-PN)**.\n"
             f"- **Critical Item**: *Fortune Ring 24K* (Current on-hand: ~4 units, below the safety threshold of **15 units** ahead of the God of Wealth festival).\n"
-            f"- **Prescriptive Action**: Dispatch an internal transfer of **15 units** from Central Vault (WH-KT) to WH-PN.\n"
+            f"- **Prescriptive Action**: Dispatch an internal transfer of **15 units** from Main Warehouse (WH-MW) to WH-PN.\n"
             f"- **Automation Trigger**: Click the **'Approve & Rebalance'** button in the **AI Agent** tab or execute via **Inventory > Internal Transfer**."
         )
 
     if any(k in q for k in ["forecast", "demand", "god of wealth", "festival", "tet", "season"]):
         return (
-            f"### 📈 Peak Season Demand Forecast (God of Wealth & Wedding Season)\n\n"
+            f"### Peak Season Demand Forecast (God of Wealth & Wedding Season)\n\n"
             f"- **Projected Demand Surge**: **+340%** for 24K small-denomination rings (0.5 Chi & 1 Chi) and bullion bars.\n"
-            f"- **Boutique Target Inventory**: Ensure **WH-PN** and **WH-Q1** hold at least **50 units** of Fortune Rings 48 hours prior to the festival.\n"
+            f"- **Boutique Target Inventory**: Ensure **WH-PN** and **WH-D1** hold at least **50 units** of Fortune Rings 48 hours prior to the festival.\n"
             f"- **Production Schedule**: Activate Go Vap Casting Cell #1 to process **150g of 24K Bullion** into 35 rings daily to prevent regional inventory exhaustion."
         )
 
     if any(k in q for k in ["pnj", "aurora", "compare", "heritage", "weakness", "drawback", "strength"]):
         return (
-            f"### ⚖️ Architectural Comparison: PNJ vs. AURORA JEWELRY\n\n"
+            f"### Architectural Comparison: PNJ vs. AURORA JEWELRY\n\n"
             f"1. **Inherited Strengths (from PNJ)**:\n"
             f"   - **Closed-Loop Value Chain**: In-house 3D design ➜ Bullion procurement ➜ Centralized casting ➜ Multi-boutique POS. Controlling casting preserves 9999 karat purity and saves 15% outsourced machining costs.\n"
             f"2. **Overcoming PNJ's Limitations (in Aurora)**:\n"
@@ -89,7 +89,7 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
     if any(k in q for k in ["button", "flow", "step", "how to", "create po", "buy", "cast", "mo"]):
         return (
             f"### 4-Step Interactive Execution Flow & Button Guide\n\n"
-            f"1. **Procurement**: Go to **Procurement (Purchase)** ➜ Click *'Create Purchase Order'* (150g 24K Gold) ➜ Click *'Receive Goods into Vault'* to increment WH-KT stock.\n"
+            f"1. **Procurement**: Go to **Procurement (Purchase)** ➜ Click *'Create Purchase Order'* (150g 24K Gold) ➜ Click *'Receive Goods into Vault'* to increment WH-MW stock.\n"
             f"2. **Manufacturing**: Go to **Production (Manufacturing)** ➜ Confirm MO for 25 Fortune Rings ➜ Click *'Complete MO'* (ERP deducts gold with 1.87% casting loss).\n"
             f"3. **Inter-Store Transfer**: Go to **AI Agent** ➜ Click *'Approve & Rebalance'* to dispatch 15 rings to WH-PN.\n"
             f"4. **Retail POS**: Go to **Retail POS** ➜ Select Phu Nhuan boutique ➜ Add ring to cart ➜ Click *'Complete Checkout'* for instant inventory deduction and e-Receipt!"
@@ -108,7 +108,7 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
 def ask_gemini_or_local(message: str, history: list = None, erp_context: dict = None) -> dict:
     """
     Dual-layer AI query handler:
-    1. Attempts Google Gemini 3.8 Flash via REST API (if GEMINI_API_KEY is configured).
+    1. Attempts Google Gemini 3.6 Flash via REST API (if GEMINI_API_KEY is configured).
     2. Gracefully falls back to the local Autonomous MIS Heuristic Engine.
     """
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()

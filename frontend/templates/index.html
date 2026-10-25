@@ -42,12 +42,12 @@
 
   <!-- ================= TOP HEADER & LIVE TELEMETRY ================= -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-    <!-- Live Gold Ticker Bar -->
+    <!-- Gold Ticker Bar -->
     <div class="bg-slate-950 text-slate-300 text-[11px] font-mono py-1.5 px-4 sm:px-8 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-4 overflow-x-auto no-scrollbar">
         <div class="flex items-center gap-1.5 shrink-0">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="text-slate-400 uppercase font-bold tracking-wider">Live Gold Ticker:</span>
+          <span class="text-slate-400 uppercase font-bold tracking-wider">System Ref. Price:</span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <span class="text-amber-400 font-bold">SJC 24K:</span>
@@ -65,7 +65,7 @@
         </div>
       </div>
       <div class="text-[10px] text-slate-400 shrink-0 hidden md:block">
-        Conversion: 1 Tael = 10 Chi = 37.5g · Casting Loss Factor: 1.87%
+        Conversion: 1 Tael = 10 Mace = 37.5g · Casting Loss Factor: 1.87%
       </div>
     </div>
 
@@ -92,7 +92,7 @@
         <div class="px-3 py-1.5 bg-amber-50/80 border border-amber-200/80 rounded-lg text-xs">
           <span class="text-[10px] text-amber-800 uppercase font-mono block">Total Gold In Vaults</span>
           <span class="font-bold text-amber-950 font-mono text-sm" id="headerGoldTotal">2,320.0 g</span>
-          <span class="text-[10px] text-amber-700 font-mono" id="headerGoldChi">(~618.7 Chi)</span>
+          <span class="text-[10px] text-amber-700 font-mono" id="headerGoldChi">(~618.7 Mace)</span>
         </div>
         <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
           <span class="text-[10px] text-slate-500 uppercase font-mono block">Working Capital</span>
@@ -195,7 +195,7 @@
     <div class="px-3 py-2 bg-white border-t border-slate-100 overflow-x-auto no-scrollbar shrink-0 flex items-center gap-1.5 text-[11px]">
       <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider shrink-0 mr-1">Suggestions:</span>
       <button onclick="sendQuickQuery('Balance gold inventory & hedging risks')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Gold Hedging Risk</button>
-      <button onclick="sendQuickQuery('Which boutique is at risk of stockout?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Boutique Stockout</button>
+      <button onclick="sendQuickQuery('Which store is at risk of stockout?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Boutique Stockout</button>
       <button onclick="sendQuickQuery('Compare strengths & weaknesses: PNJ vs Aurora')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">PNJ vs Aurora</button>
       <button onclick="sendQuickQuery('Which button to buy gold & cast rings?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Button Flow Guide</button>
     </div>
@@ -301,16 +301,16 @@
     // Initial master data
     const DEFAULT_DATA = {
       warehouses: [
-        { id: 'wh_kt', code: 'WH-KT', name: 'Central Vault & Casting Plant (Go Vap)', type: 'manufacturing', address: 'Go Vap Industrial Park, HCMC' },
-        { id: 'wh_pn', code: 'WH-PN', name: 'Phu Nhuan Retail Boutique', type: 'store', address: 'Phan Xich Long St., Phu Nhuan, HCMC' },
-        { id: 'wh_q1', code: 'WH-Q1', name: 'District 1 Flagship Boutique', type: 'store', address: 'Hai Ba Trung St., District 1, HCMC' }
+        { id: 'wh_mw', code: 'WH-MW', name: 'Main Warehouse (Go Vap)', type: 'manufacturing', address: 'Go Vap Industrial Park, HCMC' },
+        { id: 'wh_pn', code: 'WH-PN', name: 'Phu Nhuan Store', type: 'store', address: 'Phan Xich Long St., Phu Nhuan, HCMC' },
+        { id: 'wh_d1', code: 'WH-D1', name: 'District 1 Store', type: 'store', address: 'Hai Ba Trung St., District 1, HCMC' }
       ],
       products: [
-        { id: 'prod_g24k', sku: 'RAW-G24K-BAR', name: '24K Gold Bullion (9999)', karat: '24K', goldWeightGrams: 1.0, type: 'raw', unitCostVnd: 2360000, retailPriceVnd: 2420000, stocks: { wh_kt: 1800.0, wh_pn: 0.0, wh_q1: 0.0 } },
-        { id: 'prod_g18k', sku: 'RAW-G18K-BAR', name: '18K Gold Ingot (750)', karat: '18K', goldWeightGrams: 0.75, type: 'raw', unitCostVnd: 1680000, retailPriceVnd: 1740000, stocks: { wh_kt: 500.0, wh_pn: 0.0, wh_q1: 0.0 } },
-        { id: 'prod_ring_24k', sku: 'JWL-RNG-24K-01', name: 'Fortune Ring 24K (Kim Tien)', karat: '24K', goldWeightGrams: 3.75, type: 'finished', unitCostVnd: 9150000, retailPriceVnd: 9800000, stocks: { wh_kt: 40.0, wh_pn: 4.0, wh_q1: 18.0 } },
-        { id: 'prod_ring_18k_dia', sku: 'JWL-RNG-18K-D01', name: 'Solitaire Diamond Ring 18K (0.5ct GIA)', karat: '18K', goldWeightGrams: 2.8, type: 'finished', unitCostVnd: 28500000, retailPriceVnd: 36000000, stocks: { wh_kt: 15.0, wh_pn: 5.0, wh_q1: 12.0 } },
-        { id: 'prod_silver_ingot', sku: 'RAW-SILVER-999', name: 'Pure Fine Silver (999)', karat: '999', goldWeightGrams: 0.0, type: 'raw', unitCostVnd: 28000, retailPriceVnd: 32000, stocks: { wh_kt: 4500.0, wh_pn: 0.0, wh_q1: 0.0 } }
+        { id: 'prod_g24k', sku: 'RAW-G24K-BAR', name: '24K Gold Bullion (9999)', karat: '24K', goldWeightGrams: 1.0, type: 'raw', unitCostVnd: 2360000, retailPriceVnd: 2420000, stocks: { wh_mw: 1800.0, wh_pn: 0.0, wh_d1: 0.0 } },
+        { id: 'prod_g18k', sku: 'RAW-G18K-BAR', name: '18K Gold Ingot (750)', karat: '18K', goldWeightGrams: 0.75, type: 'raw', unitCostVnd: 1680000, retailPriceVnd: 1740000, stocks: { wh_mw: 500.0, wh_pn: 0.0, wh_d1: 0.0 } },
+        { id: 'prod_ring_24k', sku: 'JWL-RNG-24K-01', name: 'Fortune Ring 24K (Kim Tien)', karat: '24K', goldWeightGrams: 3.75, type: 'finished', unitCostVnd: 9150000, retailPriceVnd: 9800000, stocks: { wh_mw: 40.0, wh_pn: 4.0, wh_d1: 18.0 } },
+        { id: 'prod_ring_18k_dia', sku: 'JWL-RNG-18K-D01', name: 'Solitaire Diamond Ring 18K (0.5ct GIA)', karat: '18K', goldWeightGrams: 2.8, type: 'finished', unitCostVnd: 28500000, retailPriceVnd: 36000000, stocks: { wh_mw: 15.0, wh_pn: 5.0, wh_d1: 12.0 } },
+        { id: 'prod_silver_ingot', sku: 'RAW-SILVER-999', name: 'Pure Fine Silver (999)', karat: '999', goldWeightGrams: 0.0, type: 'raw', unitCostVnd: 28000, retailPriceVnd: 32000, stocks: { wh_mw: 4500.0, wh_pn: 0.0, wh_d1: 0.0 } }
       ],
       boms: [
         { id: 'bom_ring_24k', productId: 'prod_ring_24k', name: 'BOM - Fortune Ring 24K', rawMaterialId: 'prod_g24k', rawQuantityGrams: 3.82, castingLossFactor: 0.0187, laborCostVnd: 250000 },
@@ -325,17 +325,17 @@
         { id: 'po_202', code: 'PO-2026-046', vendor: 'Viet Tin GIA Diamond Importers', productName: 'Round Brilliant Diamonds 0.5ct', quantityGrams: 10, unitPriceVnd: 22000000, totalVnd: 220000000, status: 'confirmed', createdAt: '2026-10-24 11:30' }
       ],
       stockMoves: [
-        { id: 'sm_01', reference: 'PO-2026-045', productSku: 'RAW-G24K-BAR', fromLocation: 'Vendor: SJC', toLocation: 'WH-KT (Central Vault)', quantity: '200 g', type: 'receipt', timestamp: '2026-10-23 11:00' },
-        { id: 'sm_02', reference: 'INT-TRF-091', productSku: 'JWL-RNG-24K-01', fromLocation: 'WH-KT', toLocation: 'WH-Q1', quantity: '10 pcs', type: 'transfer', timestamp: '2026-10-24 10:15' }
+        { id: 'sm_01', reference: 'PO-2026-045', productSku: 'RAW-G24K-BAR', fromLocation: 'Vendor: SJC', toLocation: 'WH-MW', quantity: '200 g', type: 'receipt', timestamp: '2026-10-23 11:00' },
+        { id: 'sm_02', reference: 'INT-TRF-091', productSku: 'JWL-RNG-24K-01', fromLocation: 'WH-MW', toLocation: 'WH-D1', quantity: '10 pcs', type: 'transfer', timestamp: '2026-10-24 10:15' }
       ],
       aiRecommendations: [
         {
           id: 'rec_01',
           severity: 'high',
-          title: 'Stockout Alert: Fortune Rings at Phu Nhuan Boutique',
+          title: 'Stockout Alert: Fortune Rings at Phu Nhuan Store',
           description: 'WH-PN holds only 4 Fortune Rings (safety buffer is 15 units). Rapid pre-God of Wealth sell-through will cause complete stockout within 6 operational hours.',
-          recommendedAction: 'Dispatch 15 Fortune Rings from Central Vault (WH-KT) to WH-PN.',
-          sourceWarehouse: 'wh_kt',
+          recommendedAction: 'Dispatch 15 Fortune Rings from Main Warehouse (WH-MW) to WH-PN.',
+          sourceWarehouse: 'wh_mw',
           destinationWarehouse: 'wh_pn',
           productId: 'prod_ring_24k',
           quantity: 15,
@@ -354,10 +354,9 @@
     };
 
     // State initialization
-    let erp = JSON.parse(localStorage.getItem('aurora_jewelry_erp_en_v2') || 'null') || DEFAULT_DATA;
-
+    let erp = JSON.parse(localStorage.getItem('aurora_jewelry_erp_en_v3') || 'null') || DEFAULT_DATA;
     function saveState() {
-      localStorage.setItem('aurora_jewelry_erp_en_v2', JSON.stringify(erp));
+      localStorage.setItem('aurora_jewelry_erp_en_v3', JSON.stringify(erp));
       updateHeaderKPIs();
     }
 
@@ -393,7 +392,7 @@
       const capital = calculateTotalInventoryValue();
 
       document.getElementById('headerGoldTotal').textContent = `${goldGrams.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} g`;
-      document.getElementById('headerGoldChi').textContent = `(~${goldChi.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Chi)`;
+      document.getElementById('headerGoldChi').textContent = `(~${goldChi.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Mace)`;
       document.getElementById('headerCapitalTotal').textContent = `${capital.toLocaleString('en-US')} đ`;
       document.getElementById('headerSalesToday').textContent = `${erp.salesTodayVnd.toLocaleString('en-US')} đ`;
 
@@ -441,8 +440,8 @@
           <!-- Top Bar -->
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
             <div>
-              <h2 class="text-xl font-bold font-serif text-slate-950">Multi-Vault &amp; Boutique Inventory</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Real-time stock balance across Central Vault (WH-KT) and retail stores</p>
+              <h2 class="text-xl font-bold font-serif text-slate-950">Inventory &amp; Stock Distribution</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Real-time stock balance across Main Warehouse (WH-MW) and retail stores</p>
             </div>
             <div class="flex items-center gap-2">
               <button onclick="openInternalTransferModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-xs cursor-pointer">
@@ -492,7 +491,7 @@
           <!-- Product Stock Table -->
           <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
-              Live Precious Metal &amp; Finished Jewelry Stock Balances
+              Precious Metal &amp; Jewelry Stock Overview
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
@@ -501,16 +500,16 @@
                     <th class="py-3 px-4">SKU / Item Name</th>
                     <th class="py-3 px-3">Karat Purity</th>
                     <th class="py-3 px-3">Gold Content</th>
-                    <th class="py-3 px-3 text-right">WH-KT (Vault)</th>
-                    <th class="py-3 px-3 text-right">WH-PN (Boutique)</th>
-                    <th class="py-3 px-3 text-right">WH-Q1 (Flagship)</th>
+                    <th class="py-3 px-3 text-right">WH-MW</th>
+                    <th class="py-3 px-3 text-right">WH-PN</th>
+                    <th class="py-3 px-3 text-right">WH-D1</th>
                     <th class="py-3 px-4 text-right">Total Balance</th>
                     <th class="py-3 px-4 text-right">Valuation (VND)</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   ${erp.products.map(p => {
-                    const totalQty = (p.stocks.wh_kt || 0) + (p.stocks.wh_pn || 0) + (p.stocks.wh_q1 || 0);
+                    const totalQty = (p.stocks.wh_mw || 0) + (p.stocks.wh_pn || 0) + (p.stocks.wh_d1 || 0);
                     const isPnLow = p.id === 'prod_ring_24k' && p.stocks.wh_pn < 10;
                     return `
                       <tr class="hover:bg-slate-50/80 transition-colors">
@@ -520,9 +519,9 @@
                         </td>
                         <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${p.karat === '24K' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}">${p.karat}</span></td>
                         <td class="py-3 px-3 font-mono text-slate-600">${p.goldWeightGrams > 0 ? `${p.goldWeightGrams} g` : 'N/A'}</td>
-                        <td class="py-3 px-3 text-right font-mono font-semibold">${p.stocks.wh_kt}</td>
+                        <td class="py-3 px-3 text-right font-mono font-semibold">${p.stocks.wh_mw}</td>
                         <td class="py-3 px-3 text-right font-mono font-semibold ${isPnLow ? 'text-red-600 bg-red-50 px-2 rounded' : ''}">${p.stocks.wh_pn}</td>
-                        <td class="py-3 px-3 text-right font-mono font-semibold">${p.stocks.wh_q1}</td>
+                        <td class="py-3 px-3 text-right font-mono font-semibold">${p.stocks.wh_d1}</td>
                         <td class="py-3 px-4 text-right font-mono font-bold text-slate-950">${totalQty}</td>
                         <td class="py-3 px-4 text-right font-mono text-slate-700 font-semibold">${(totalQty * p.unitCostVnd).toLocaleString('en-US')} đ</td>
                       </tr>
@@ -536,7 +535,7 @@
           <!-- Stock Moves Audit Ledger -->
           <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 flex items-center justify-between">
-              <span>Recent Immutable Stock Moves (Odoo Inventory Audit Trail)</span>
+              <span>Recent Stock Movements (Inventory Audit Trail)</span>
               <span class="text-[11px] font-mono text-slate-400">Total: ${erp.stockMoves.length} moves</span>
             </div>
             <div class="overflow-x-auto">
@@ -581,7 +580,7 @@
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
               <i data-lucide="arrow-right-left" class="w-4 h-4 text-amber-600"></i>
-              <span>Dispatch Internal Stock Transfer</span>
+              <span>Internal Stock Transfer</span>
             </h3>
             <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
           </div>
@@ -593,7 +592,7 @@
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">Source Vault:</label>
+              <label class="block text-slate-600 font-semibold mb-1">Source:</label>
               <select id="trfSource" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
                 ${erp.warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
               </select>
@@ -661,12 +660,116 @@
     }
 
     function openPhysicalAuditModal() {
-      alert('Physical Inventory Adjustment: Count verified by Go Vap Security Officer. Discrepancy: 0.00g.');
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="check-square" class="w-4 h-4 text-amber-600"></i>
+              <span>Physical Stock Audit</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Product:</label>
+              <select id="audProduct" onchange="updateAuditPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+                ${erp.products.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Location:</label>
+              <select id="audWarehouse" onchange="updateAuditPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+                ${erp.warehouses.map(w => `<option value="${w.id}">${w.code} - ${w.name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+              <span class="text-[10px] text-slate-400 block">System balance:</span>
+              <span id="audSystemQty" class="font-mono font-bold text-slate-900">0</span>
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Counted quantity:</label>
+              <input type="number" id="audCounted" min="0" step="any" oninput="updateAuditPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+            </div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+            <span class="text-[10px] text-amber-800 block">Variance (counted - system):</span>
+            <span id="audVariance" class="font-mono font-bold text-amber-950">-</span>
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executePhysicalAudit()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Confirm Adjustment</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+      updateAuditPreview();
+    }
+
+    function updateAuditPreview() {
+      const prod = erp.products.find(p => p.id === document.getElementById('audProduct').value);
+      const whId = document.getElementById('audWarehouse').value;
+      const system = prod?.stocks[whId] || 0;
+      document.getElementById('audSystemQty').textContent = system;
+
+      const counted = parseFloat(document.getElementById('audCounted').value);
+      const out = document.getElementById('audVariance');
+      if (isNaN(counted)) {
+        out.textContent = '-';
+        return;
+      }
+
+      const diff = counted - system;
+      const goldDiff = diff * prod.goldWeightGrams;
+      out.textContent = `${diff > 0 ? '+' : ''}${diff} | ${goldDiff > 0 ? '+' : ''}${goldDiff.toFixed(2)} g gold`;
+    }
+
+    function executePhysicalAudit() {
+      const prod = erp.products.find(p => p.id === document.getElementById('audProduct').value);
+      const whId = document.getElementById('audWarehouse').value;
+      const wh = erp.warehouses.find(w => w.id === whId);
+      const counted = parseFloat(document.getElementById('audCounted').value);
+
+      if (isNaN(counted) || counted < 0) {
+        alert('Please enter a valid counted quantity.');
+        return;
+      }
+
+      const system = prod.stocks[whId] || 0;
+      const diff = counted - system;
+      if (diff === 0) {
+        alert('No discrepancy found. Stock balance matches the physical count.');
+        closeActionModal();
+        return;
+      }
+
+      prod.stocks[whId] = counted;
+
+      const unit = prod.type === 'raw' ? 'g' : 'pcs';
+      erp.stockMoves.unshift({
+        id: `sm_${Date.now()}`,
+        reference: `AUD-${Math.floor(1000 + Math.random() * 9000)}`,
+        productSku: prod.sku,
+        fromLocation: diff < 0 ? wh.code : 'Audit Adjustment',
+        toLocation: diff < 0 ? 'Audit Adjustment' : wh.code,
+        quantity: `${diff > 0 ? '+' : ''}${diff} ${unit}`,
+        type: 'adjustment',
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      closeActionModal();
+      renderActiveTab();
     }
 
     function closeActionModal() {
       document.getElementById('actionModal').classList.add('hidden');
     }
+
 
     // ================= 2. MANUFACTURING VIEW =================
     function renderManufacturingView(container) {
@@ -811,9 +914,9 @@
 
       const rawNeededGrams = mo.quantity * (bom?.rawQuantityGrams || 3.82);
 
-      if (rawProd && rawProd.stocks.wh_kt >= rawNeededGrams) {
-        rawProd.stocks.wh_kt -= rawNeededGrams;
-        finProd.stocks.wh_kt = (finProd.stocks.wh_kt || 0) + mo.quantity;
+      if (rawProd && rawProd.stocks.wh_mw >= rawNeededGrams) {
+        rawProd.stocks.wh_mw -= rawNeededGrams;
+        finProd.stocks.wh_mw = (finProd.stocks.wh_mw || 0) + mo.quantity;
         mo.status = 'completed';
 
         erp.stockMoves.unshift({
@@ -821,7 +924,7 @@
           reference: mo.code,
           productSku: finProd.sku,
           fromLocation: 'Go Vap Casting Cell',
-          toLocation: 'WH-KT (Central Vault)',
+          toLocation: 'WH-MW (Main Warehouse)',
           quantity: `${mo.quantity} pcs`,
           type: 'receipt',
           timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
@@ -830,7 +933,7 @@
         saveState();
         renderActiveTab();
       } else {
-        alert('Insufficient raw bullion in Central Vault WH-KT to complete this MO!');
+        alert('Insufficient raw bullion in Main Warehouse WH-MW to complete this MO!');
       }
     }
 
@@ -961,7 +1064,7 @@
 
       const rawG24k = erp.products.find(p => p.id === 'prod_g24k');
       if (rawG24k) {
-        rawG24k.stocks.wh_kt += po.quantityGrams;
+        rawG24k.stocks.wh_mw += po.quantityGrams;
         po.status = 'received';
 
         erp.stockMoves.unshift({
@@ -969,7 +1072,7 @@
           reference: po.code,
           productSku: rawG24k.sku,
           fromLocation: `Supplier: ${po.vendor}`,
-          toLocation: 'WH-KT (Central Vault)',
+          toLocation: 'WH-MW (Main Warehouse)',
           quantity: `${po.quantityGrams} g`,
           type: 'receipt',
           timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
@@ -994,8 +1097,8 @@
               </div>
               <div class="flex items-center gap-2">
                 <select onchange="erp.activeStoreId=this.value; saveState(); renderActiveTab();" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold">
-                  <option value="wh_pn" ${erp.activeStoreId==='wh_pn'?'selected':''}>Phu Nhuan Boutique (WH-PN)</option>
-                  <option value="wh_q1" ${erp.activeStoreId==='wh_q1'?'selected':''}>District 1 Flagship (WH-Q1)</option>
+                  <option value="wh_pn" ${erp.activeStoreId==='wh_pn'?'selected':''}>Phu Nhuan Store (WH-PN)</option>
+                  <option value="wh_d1" ${erp.activeStoreId==='wh_d1'?'selected':''}>District 1 Store (WH-D1)</option>
                 </select>
               </div>
             </div>
@@ -1164,7 +1267,7 @@
               <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
                 <span class="text-amber-400 font-mono font-bold block text-[10px]">1. INBOUND LOGISTICS</span>
                 <div class="font-bold mt-1 text-slate-200">Central Bullion Vault</div>
-                <p class="text-[11px] text-slate-400 mt-1">SJC &amp; DOJI bullion receipt into high-security WH-KT vault.</p>
+                <p class="text-[11px] text-slate-400 mt-1">SJC &amp; DOJI bullion receipt into high-security WH-MW vault.</p>
               </div>
               <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
                 <span class="text-blue-400 font-mono font-bold block text-[10px]">2. OPERATIONS (CASTING)</span>
@@ -1340,7 +1443,7 @@
         msgDiv.className = `flex flex-col w-full ${role === 'user' ? 'items-end' : 'items-start'}`;
 
         const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        const badge = source ? ` · ${source === 'gemini' ? 'Gemini 3.8 Flash' : 'MIS Local Engine'}` : '';
+        const badge = source ? ` · ${source === 'gemini' ? 'Gemini 3.6 Flash' : 'MIS Local Engine'}` : '';
 
         const html = text
             .trim()
@@ -1421,10 +1524,10 @@
 
     // ================= GUIDED DEMO STEPPER =================
     const DEMO_STEPS = [
-      { step: 1, tab: 'purchase', title: 'Step 1: Bullion Procurement (PO ➜ WH-KT)', desc: 'Procurement drafts a PO to acquire 150g of 24K pure gold bullion from SJC. Upon confirmation and receiving goods, physical bullion is ingested into the Central Vault (WH-KT).', label: 'Go to Procurement Module' },
-      { step: 2, tab: 'manufacturing', title: 'Step 2: Casting Production (BOM ➜ MO at WH-KT)', desc: 'The Go Vap plant receives an MO to cast 25 Fortune Rings 24K. The ERP resolves the BOM, computes 1.87% casting loss, deducts 95.5g of pure gold, and deposits 25 finished rings into the vault.', label: 'Go to Manufacturing Module' },
-      { step: 3, tab: 'inventory', title: 'Step 3: Inter-Store Stock Dispatch (WH-KT ➜ WH-PN)', desc: 'The AI Copilot detects that Phu Nhuan holds only 4 Fortune Rings (below safety threshold of 15). An internal transfer of 15 rings from WH-KT to WH-PN is dispatched, resolving stockout risk.', label: 'Go to Inventory Module' },
-      { step: 4, tab: 'pos', title: 'Step 4: Retail POS Checkout & Real-Time Stock Deduction', desc: 'A Diamond VIP member purchases 2 Fortune Rings at Phu Nhuan boutique. The cashier registers the sale, applies the 5% tier discount, and issues an e-Receipt with gold warranty. WH-PN store stock decrements instantly!', label: 'Go to Retail POS Module' }
+      { step: 1, tab: 'purchase', title: 'Step 1: Bullion Procurement (PO ➜ WH-MW)', desc: 'Procurement drafts a PO to acquire 150g of 24K pure gold bullion from SJC. Upon confirmation and receiving goods, physical bullion is ingested into the Main Warehouse (WH-MW).', label: 'Go to Procurement Module' },
+      { step: 2, tab: 'manufacturing', title: 'Step 2: Casting Production (BOM ➜ MO at WH-MW)', desc: 'The Go Vap plant receives an MO to cast 25 Fortune Rings 24K. The ERP resolves the BOM, computes 1.87% casting loss, deducts 95.5g of pure gold, and deposits 25 finished rings into the vault.', label: 'Go to Manufacturing Module' },
+      { step: 3, tab: 'inventory', title: 'Step 3: Inter-Store Stock Dispatch (WH-MW ➜ WH-PN)', desc: 'The AI Copilot detects that Phu Nhuan holds only 4 Fortune Rings (below safety threshold of 15). An internal transfer of 15 rings from WH-MW to WH-PN is dispatched, resolving stockout risk.', label: 'Go to Inventory Module' },
+      { step: 4, tab: 'pos', title: 'Step 4: Retail POS Checkout & Real-Time Stock Deduction', desc: 'A Diamond VIP member purchases 2 Fortune Rings at Phu Nhuan Store. The cashier registers the sale, applies the 5% tier discount, and issues an e-Receipt with gold warranty. WH-PN store stock decrements instantly!', label: 'Go to Retail POS Module' }
     ];
 
     let currentDemoStep = 1;
@@ -1480,9 +1583,9 @@
       btn.disabled = true;
       statusBox.classList.remove('hidden');
 
-      statusText.textContent = 'Step 1: Ingesting 150g pure 24K gold bullion into Central Vault WH-KT...';
+      statusText.textContent = 'Step 1: Ingesting 150g pure 24K gold bullion into Main Warehouse WH-MW...';
       const rawG24k = erp.products.find(p => p.id === 'prod_g24k');
-      if (rawG24k) rawG24k.stocks.wh_kt += 150;
+      if (rawG24k) rawG24k.stocks.wh_mw += 150;
       saveState();
 
       await new Promise(r => setTimeout(r, 600));
@@ -1490,16 +1593,16 @@
       statusText.textContent = 'Step 2: Casting 25 Fortune Rings (deducting 95.5g gold with 1.87% loss factor)...';
       const finRing = erp.products.find(p => p.id === 'prod_ring_24k');
       if (rawG24k && finRing) {
-        rawG24k.stocks.wh_kt = Math.max(0, rawG24k.stocks.wh_kt - 95.5);
-        finRing.stocks.wh_kt = (finRing.stocks.wh_kt || 0) + 25;
+        rawG24k.stocks.wh_mw = Math.max(0, rawG24k.stocks.wh_mw - 95.5);
+        finRing.stocks.wh_mw = (finRing.stocks.wh_mw || 0) + 25;
       }
       saveState();
 
       await new Promise(r => setTimeout(r, 600));
 
-      statusText.textContent = 'Step 3: Dispatching internal transfer of 15 rings from WH-KT to WH-PN...';
+      statusText.textContent = 'Step 3: Dispatching internal transfer of 15 rings from WH-MW to WH-PN...';
       if (finRing) {
-        finRing.stocks.wh_kt = Math.max(0, finRing.stocks.wh_kt - 15);
+        finRing.stocks.wh_mw = Math.max(0, finRing.stocks.wh_mw - 15);
         finRing.stocks.wh_pn = (finRing.stocks.wh_pn || 0) + 15;
       }
       erp.aiRecommendations.forEach(r => { if (r.id === 'rec_01') r.status = 'completed'; });
@@ -1507,7 +1610,7 @@
 
       await new Promise(r => setTimeout(r, 600));
 
-      statusText.textContent = 'Step 4: Processing POS checkout for 2 rings at Phu Nhuan boutique...';
+      statusText.textContent = 'Step 4: Processing POS checkout for 2 rings at Phu Nhuan store...';
       if (finRing) {
         finRing.stocks.wh_pn = Math.max(0, finRing.stocks.wh_pn - 2);
       }

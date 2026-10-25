@@ -1,58 +1,1620 @@
-@import "tailwindcss";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURORA Jewelry ERP &amp; AI Gold Decision MIS</title>
+  <meta name="description" content="Enterprise ERP & AI Gold Decision Copilot for AURORA Jewelry - Closed-loop MIS Architecture (Odoo Inventory, Manufacturing, POS, Procurement & Gold Flow BI)">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS via CDN for instant local zero-build rendering -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            amber: {
+              450: '#f59e0b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/input.css">
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
 
-/* AURORA JEWELRY ERP - Typography & Custom Styling */
-@layer base {
-  body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background-color: #f8fafc;
-    color: #0f172a;
-    -webkit-font-smoothing: antialiased;
-  }
+  <!-- ================= TOP HEADER & LIVE TELEMETRY ================= -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <!-- Live Gold Ticker Bar -->
+    <div class="bg-slate-950 text-slate-300 text-[11px] font-mono py-1.5 px-4 sm:px-8 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-4 overflow-x-auto no-scrollbar">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-400 uppercase font-bold tracking-wider">Live Gold Ticker:</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-amber-400 font-bold">SJC 24K:</span>
+          <span>88,500,000 đ/Tael</span>
+          <span class="text-emerald-400 text-[10px]">▲ +0.4%</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-amber-300 font-bold">Aurora 18K:</span>
+          <span>63,200,000 đ/Tael</span>
+          <span class="text-emerald-400 text-[10px]">▲ +0.2%</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-slate-400">Spot USD/oz:</span>
+          <span class="text-white font-semibold">$2,735.40</span>
+        </div>
+      </div>
+      <div class="text-[10px] text-slate-400 shrink-0 hidden md:block">
+        Conversion: 1 Tael = 10 Chi = 37.5g · Casting Loss Factor: 1.87%
+      </div>
+    </div>
 
-  h1, h2, h3, .font-serif {
-    font-family: 'Playfair Display', Georgia, serif;
-  }
+    <!-- Main Navigation Bar -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('inventory')">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 flex items-center justify-center shadow-md overflow-hidden">
+    <img
+        src="{{ url_for('static', filename='images/aurora-logo.jpg') }}"
+        alt="Aurora Jewelry Logo"
+        class="w-full h-full object-contain"
+    >
+</div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-extrabold font-serif tracking-tight text-slate-950">AURORA JEWELRY</h1>
+            <span class="text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded">ERP 2.5</span>
+          </div>
+          <p class="text-[11px] text-slate-500 font-medium">Fine Jewelry MIS &amp; Autonomous AI Copilot</p>
+        </div>
+      </div>
 
-  .font-mono, code, .tabular-nums {
-    font-family: 'JetBrains Mono', monospace;
-    font-variant-numeric: tabular-nums;
-  }
-}
+      <!-- Live KPI Badges -->
+      <div class="hidden lg:flex items-center gap-3">
+        <div class="px-3 py-1.5 bg-amber-50/80 border border-amber-200/80 rounded-lg text-xs">
+          <span class="text-[10px] text-amber-800 uppercase font-mono block">Total Gold In Vaults</span>
+          <span class="font-bold text-amber-950 font-mono text-sm" id="headerGoldTotal">2,320.0 g</span>
+          <span class="text-[10px] text-amber-700 font-mono" id="headerGoldChi">(~618.7 Chi)</span>
+        </div>
+        <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+          <span class="text-[10px] text-slate-500 uppercase font-mono block">Working Capital</span>
+          <span class="font-bold text-slate-900 font-mono text-sm" id="headerCapitalTotal">5,475,200,000 đ</span>
+        </div>
+        <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+          <span class="text-[10px] text-slate-500 uppercase font-mono block">Today's POS Sales</span>
+          <span class="font-bold text-emerald-700 font-mono text-sm" id="headerSalesToday">31,200,000 đ</span>
+        </div>
+      </div>
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button onclick="openGuidedDemoModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 shadow-xs transition-all active:scale-95 cursor-pointer">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Guided MIS Demo</span>
+        </button>
+        <button onclick="resetDemoData()" title="Reset to default seed state" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
+    <!-- 7 Module Tabs -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto border-t border-slate-100 text-xs py-1">
+      <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn active-tab flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg transition-all cursor-pointer">
+        <i data-lucide="boxes" class="w-4 h-4"></i>
+        <span>Inventory</span>
+      </button>
+      <button onclick="switchTab('manufacturing')" id="tab-manufacturing" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
+        <i data-lucide="hammer" class="w-4 h-4"></i>
+        <span>Manufacturing</span>
+      </button>
+      <button onclick="switchTab('purchase')" id="tab-purchase" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
+        <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+        <span>Procurement (PO)</span>
+      </button>
+      <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
+        <i data-lucide="store" class="w-4 h-4"></i>
+        <span>Retail POS</span>
+      </button>
+      <button onclick="switchTab('bi')" id="tab-bi" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
+        <i data-lucide="pie-chart" class="w-4 h-4"></i>
+        <span>Gold Flow BI</span>
+      </button>
+      <button onclick="switchTab('ai-agent')" id="tab-ai-agent" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer relative">
+        <i data-lucide="cpu" class="w-4 h-4 text-purple-600"></i>
+        <span>AI Decision Agent</span>
+        <span id="tabAgentBadge" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+      </button>
+      <button onclick="switchTab('mis-report')" id="tab-mis-report" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
+        <i data-lucide="book-open" class="w-4 h-4 text-amber-600"></i>
+        <span>MIS Academic Report</span>
+      </button>
+    </div>
+  </header>
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
+  <!-- ================= MAIN CONTENT VIEWPORT ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6" id="mainContainer">
+    <!-- View modules will be dynamically injected here -->
+  </main>
 
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
+  <!-- ================= FLOATING AI COPILOT CHATBOT ================= -->
+  <!-- Floating Button -->
+  <button id="aiChatOpenBtn" onclick="toggleAIChat(true)" class="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-slate-950 font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all border border-amber-300 cursor-pointer">
+    <div class="relative">
+      <i data-lucide="bot" class="w-5 h-5 text-slate-950"></i>
+      <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white animate-pulse"></span>
+    </div>
+    <span class="font-serif text-sm tracking-wide">AI Copilot</span>
+  </button>
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+  <!-- Floating Chat Window -->
+  <div id="aiChatWindow" class="fixed bottom-4 right-4 z-50 bg-white rounded-2xl shadow-2xl border border-slate-300 flex flex-col w-full sm:w-[440px] h-[580px] max-w-[calc(100vw-32px)] overflow-hidden hidden animate-fadeIn">
+    <!-- Header -->
+    <div class="bg-slate-950 text-white p-4 flex items-center justify-between border-b border-slate-800 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+          <i data-lucide="bot" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="font-serif font-bold text-sm text-amber-300">Aurora AI Copilot</h3>
+            <span class="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-400/30">Active</span>
+          </div>
+          <p class="text-[11px] text-slate-400">MIS Decision Support &amp; Gold Risk Advisor</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 text-slate-400">
+        <button onclick="clearAIChatHistory()" title="Clear chat history" class="p-1.5 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+        <button onclick="toggleAIChat(false)" title="Close window" class="p-1.5 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
 
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
-}
+    <!-- Messages Area -->
+    <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/60 text-xs">
+      <!-- Initial greeting -->
+    </div>
 
-@keyframes pulseGold {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
+    <!-- Suggestion Chips -->
+    <div class="px-3 py-2 bg-white border-t border-slate-100 overflow-x-auto no-scrollbar shrink-0 flex items-center gap-1.5 text-[11px]">
+      <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider shrink-0 mr-1">Suggestions:</span>
+      <button onclick="sendQuickQuery('Balance gold inventory & hedging risks')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Gold Hedging Risk</button>
+      <button onclick="sendQuickQuery('Which boutique is at risk of stockout?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Boutique Stockout</button>
+      <button onclick="sendQuickQuery('Compare strengths & weaknesses: PNJ vs Aurora')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">PNJ vs Aurora</button>
+      <button onclick="sendQuickQuery('Which button to buy gold & cast rings?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Button Flow Guide</button>
+    </div>
 
-.animate-pulseGold {
-  animation: pulseGold 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
+    <!-- Input Bar -->
+    <div class="p-3 bg-white border-t border-slate-200 shrink-0">
+      <form onsubmit="handleChatSubmit(event)" class="flex items-center gap-2">
+        <input type="text" id="chatInput" placeholder="Ask anything (gold balances, transfers, PNJ, Porter, flow)..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:bg-white transition-all">
+        <button type="submit" id="chatSendBtn" class="p-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold transition-all shadow-xs cursor-pointer">
+          <i data-lucide="send" class="w-4 h-4"></i>
+        </button>
+      </form>
+      <div class="text-[10px] text-slate-400 mt-1.5 flex items-center justify-between px-1">
+        <span>Real-time ERP intelligence &amp; autonomous reasoning</span>
+        <span class="font-mono">Enter to send</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GUIDED DEMO MODAL ================= -->
+  <div id="guidedDemoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+              <i data-lucide="sparkles" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">MIS Presentation: Closed-Loop Demo Scenario</h3>
+              <p class="text-xs text-slate-500">4-step sequence illustrating Odoo ERP architecture and gold inventory management</p>
+            </div>
+          </div>
+          <button onclick="closeGuidedDemoModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- 4 Step Tabs -->
+        <div class="grid grid-cols-4 gap-2 my-5">
+          <button onclick="setDemoStep(1)" id="demoStepBtn1" class="demo-step-btn py-2 px-1 text-center rounded-lg border text-xs font-semibold bg-amber-500 text-slate-950 border-amber-500 shadow-xs cursor-pointer">
+            <div class="text-[10px] uppercase font-mono">STEP 1</div>
+            <div class="truncate font-sans font-medium">Procurement</div>
+          </button>
+          <button onclick="setDemoStep(2)" id="demoStepBtn2" class="demo-step-btn py-2 px-1 text-center rounded-lg border text-xs font-semibold bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 cursor-pointer">
+            <div class="text-[10px] uppercase font-mono">STEP 2</div>
+            <div class="truncate font-sans font-medium">Casting</div>
+          </button>
+          <button onclick="setDemoStep(3)" id="demoStepBtn3" class="demo-step-btn py-2 px-1 text-center rounded-lg border text-xs font-semibold bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 cursor-pointer">
+            <div class="text-[10px] uppercase font-mono">STEP 3</div>
+            <div class="truncate font-sans font-medium">Transfer</div>
+          </button>
+          <button onclick="setDemoStep(4)" id="demoStepBtn4" class="demo-step-btn py-2 px-1 text-center rounded-lg border text-xs font-semibold bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 cursor-pointer">
+            <div class="text-[10px] uppercase font-mono">STEP 4</div>
+            <div class="truncate font-sans font-medium">POS Checkout</div>
+          </button>
+        </div>
+
+        <!-- Step Content -->
+        <div id="demoStepContent" class="p-5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-4">
+          <!-- Content injected dynamically -->
+        </div>
+
+        <div id="demoStatusMessage" class="hidden mt-3 bg-emerald-50 text-emerald-900 border border-emerald-200 p-3 rounded-lg text-xs flex items-center gap-2">
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          <span id="demoStatusText">Executing...</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+        <button onclick="executeAllDemoSteps()" id="btnRunAllDemo" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs transition-all shadow-xs cursor-pointer">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i>
+          <span>Run Full 4-Step Pipeline in 1 Click</span>
+        </button>
+
+        <button onclick="jumpToActiveDemoModule()" id="btnJumpModule" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors flex items-center gap-1 cursor-pointer">
+          <span id="demoJumpBtnText">Go to Procurement Module</span>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GENERIC MODAL CONTAINER ================= -->
+  <div id="actionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200" id="actionModalContent">
+      <!-- Modal dynamically generated -->
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="border-t border-slate-200 bg-white py-5 text-xs text-slate-500 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+      <div class="flex items-center gap-2">
+        <span class="font-serif font-bold text-slate-800">AURORA JEWELRY ERP</span>
+        <span>·</span>
+        <span>Enterprise Fine Jewelry MIS (Academic Final Project)</span>
+      </div>
+      <div class="text-slate-500 font-mono text-[11px]">
+        Modular Odoo Architecture &amp; Autonomous AI Gold Decision Copilot
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= APPLICATION CLIENT LOGIC ================= -->
+  <script>
+    // Initial master data
+    const DEFAULT_DATA = {
+      warehouses: [
+        { id: 'wh_kt', code: 'WH-KT', name: 'Central Vault & Casting Plant (Go Vap)', type: 'manufacturing', address: 'Go Vap Industrial Park, HCMC' },
+        { id: 'wh_pn', code: 'WH-PN', name: 'Phu Nhuan Retail Boutique', type: 'store', address: 'Phan Xich Long St., Phu Nhuan, HCMC' },
+        { id: 'wh_q1', code: 'WH-Q1', name: 'District 1 Flagship Boutique', type: 'store', address: 'Hai Ba Trung St., District 1, HCMC' }
+      ],
+      products: [
+        { id: 'prod_g24k', sku: 'RAW-G24K-BAR', name: '24K Gold Bullion (9999)', karat: '24K', goldWeightGrams: 1.0, type: 'raw', unitCostVnd: 2360000, retailPriceVnd: 2420000, stocks: { wh_kt: 1800.0, wh_pn: 0.0, wh_q1: 0.0 } },
+        { id: 'prod_g18k', sku: 'RAW-G18K-BAR', name: '18K Gold Ingot (750)', karat: '18K', goldWeightGrams: 0.75, type: 'raw', unitCostVnd: 1680000, retailPriceVnd: 1740000, stocks: { wh_kt: 500.0, wh_pn: 0.0, wh_q1: 0.0 } },
+        { id: 'prod_ring_24k', sku: 'JWL-RNG-24K-01', name: 'Fortune Ring 24K (Kim Tien)', karat: '24K', goldWeightGrams: 3.75, type: 'finished', unitCostVnd: 9150000, retailPriceVnd: 9800000, stocks: { wh_kt: 40.0, wh_pn: 4.0, wh_q1: 18.0 } },
+        { id: 'prod_ring_18k_dia', sku: 'JWL-RNG-18K-D01', name: 'Solitaire Diamond Ring 18K (0.5ct GIA)', karat: '18K', goldWeightGrams: 2.8, type: 'finished', unitCostVnd: 28500000, retailPriceVnd: 36000000, stocks: { wh_kt: 15.0, wh_pn: 5.0, wh_q1: 12.0 } },
+        { id: 'prod_silver_ingot', sku: 'RAW-SILVER-999', name: 'Pure Fine Silver (999)', karat: '999', goldWeightGrams: 0.0, type: 'raw', unitCostVnd: 28000, retailPriceVnd: 32000, stocks: { wh_kt: 4500.0, wh_pn: 0.0, wh_q1: 0.0 } }
+      ],
+      boms: [
+        { id: 'bom_ring_24k', productId: 'prod_ring_24k', name: 'BOM - Fortune Ring 24K', rawMaterialId: 'prod_g24k', rawQuantityGrams: 3.82, castingLossFactor: 0.0187, laborCostVnd: 250000 },
+        { id: 'bom_ring_dia', productId: 'prod_ring_18k_dia', name: 'BOM - Solitaire Diamond Ring 18K', rawMaterialId: 'prod_g18k', rawQuantityGrams: 2.85, castingLossFactor: 0.018, laborCostVnd: 1800000 }
+      ],
+      manufacturingOrders: [
+        { id: 'mo_101', code: 'MO-2026-089', bomId: 'bom_ring_24k', productName: 'Fortune Ring 24K', quantity: 20, status: 'confirmed', assignedCell: 'Casting Cell #1', createdAt: '2026-10-24 08:30' },
+        { id: 'mo_102', code: 'MO-2026-090', bomId: 'bom_ring_dia', productName: 'Solitaire Diamond Ring 18K', quantity: 10, status: 'in_progress', assignedCell: 'Stone Setting Cell', createdAt: '2026-10-24 14:15' }
+      ],
+      purchaseOrders: [
+        { id: 'po_201', code: 'PO-2026-045', vendor: 'SJC Gold Corporation', productName: '24K Gold Bullion (9999)', quantityGrams: 200, unitPriceVnd: 2360000, totalVnd: 472000000, status: 'received', createdAt: '2026-10-23 09:00' },
+        { id: 'po_202', code: 'PO-2026-046', vendor: 'Viet Tin GIA Diamond Importers', productName: 'Round Brilliant Diamonds 0.5ct', quantityGrams: 10, unitPriceVnd: 22000000, totalVnd: 220000000, status: 'confirmed', createdAt: '2026-10-24 11:30' }
+      ],
+      stockMoves: [
+        { id: 'sm_01', reference: 'PO-2026-045', productSku: 'RAW-G24K-BAR', fromLocation: 'Vendor: SJC', toLocation: 'WH-KT (Central Vault)', quantity: '200 g', type: 'receipt', timestamp: '2026-10-23 11:00' },
+        { id: 'sm_02', reference: 'INT-TRF-091', productSku: 'JWL-RNG-24K-01', fromLocation: 'WH-KT', toLocation: 'WH-Q1', quantity: '10 pcs', type: 'transfer', timestamp: '2026-10-24 10:15' }
+      ],
+      aiRecommendations: [
+        {
+          id: 'rec_01',
+          severity: 'high',
+          title: 'Stockout Alert: Fortune Rings at Phu Nhuan Boutique',
+          description: 'WH-PN holds only 4 Fortune Rings (safety buffer is 15 units). Rapid pre-God of Wealth sell-through will cause complete stockout within 6 operational hours.',
+          recommendedAction: 'Dispatch 15 Fortune Rings from Central Vault (WH-KT) to WH-PN.',
+          sourceWarehouse: 'wh_kt',
+          destinationWarehouse: 'wh_pn',
+          productId: 'prod_ring_24k',
+          quantity: 15,
+          status: 'pending'
+        }
+      ],
+      customers: [
+        { id: 'cust_01', name: 'Mrs. Dang Thu Huong', phone: '0903-888-999', tier: 'Diamond', discountPercent: 5 },
+        { id: 'cust_02', name: 'Mr. Tran Hoang Nam', phone: '0912-333-777', tier: 'Gold', discountPercent: 3 }
+      ],
+      posCart: [],
+      currentTab: 'inventory',
+      activeStoreId: 'wh_pn',
+      salesTodayVnd: 31200000,
+      activeCashierSession: { id: 'sess_01', cashierName: 'Nguyen Thi Mai', openTime: '08:00 AM', status: 'open' }
+    };
+
+    // State initialization
+    let erp = JSON.parse(localStorage.getItem('aurora_jewelry_erp_en_v2') || 'null') || DEFAULT_DATA;
+
+    function saveState() {
+      localStorage.setItem('aurora_jewelry_erp_en_v2', JSON.stringify(erp));
+      updateHeaderKPIs();
+    }
+
+    function resetDemoData() {
+      if (confirm('Reset Aurora Jewelry ERP to pristine demonstration master state?')) {
+        erp = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        saveState();
+        renderActiveTab();
+      }
+    }
+
+    function calculateTotalGold() {
+      let totalGrams = 0;
+      erp.products.forEach(p => {
+        const totalUnits = Object.values(p.stocks).reduce((a, b) => a + b, 0);
+        totalGrams += totalUnits * p.goldWeightGrams;
+      });
+      return totalGrams;
+    }
+
+    function calculateTotalInventoryValue() {
+      let total = 0;
+      erp.products.forEach(p => {
+        const totalUnits = Object.values(p.stocks).reduce((a, b) => a + b, 0);
+        total += totalUnits * p.unitCostVnd;
+      });
+      return total;
+    }
+
+    function updateHeaderKPIs() {
+      const goldGrams = calculateTotalGold();
+      const goldChi = goldGrams / 3.75;
+      const capital = calculateTotalInventoryValue();
+
+      document.getElementById('headerGoldTotal').textContent = `${goldGrams.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} g`;
+      document.getElementById('headerGoldChi').textContent = `(~${goldChi.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Chi)`;
+      document.getElementById('headerCapitalTotal').textContent = `${capital.toLocaleString('en-US')} đ`;
+      document.getElementById('headerSalesToday').textContent = `${erp.salesTodayVnd.toLocaleString('en-US')} đ`;
+
+      const pendingRecs = erp.aiRecommendations.filter(r => r.status === 'pending').length;
+      const badge = document.getElementById('tabAgentBadge');
+      if (pendingRecs > 0) {
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function switchTab(tabId) {
+      erp.currentTab = tabId;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-amber-500', 'text-slate-950', 'shadow-xs');
+        btn.classList.add('text-slate-600');
+      });
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-amber-500', 'text-slate-950', 'shadow-xs');
+        activeBtn.classList.remove('text-slate-600');
+      }
+      renderActiveTab();
+    }
+
+    function renderActiveTab() {
+      const container = document.getElementById('mainContainer');
+      const tab = erp.currentTab;
+
+      if (tab === 'inventory') renderInventoryView(container);
+      else if (tab === 'manufacturing') renderManufacturingView(container);
+      else if (tab === 'purchase') renderPurchaseView(container);
+      else if (tab === 'pos') renderPOSView(container);
+      else if (tab === 'bi') renderGoldFlowBIView(container);
+      else if (tab === 'ai-agent') renderAIAgentView(container);
+      else if (tab === 'mis-report') renderMisReportView(container);
+
+      lucide.createIcons();
+    }
+
+    // ================= 1. INVENTORY VIEW =================
+    function renderInventoryView(container) {
+      container.innerHTML = `
+        <div class="space-y-6 animate-fadeIn">
+          <!-- Top Bar -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+            <div>
+              <h2 class="text-xl font-bold font-serif text-slate-950">Multi-Vault &amp; Boutique Inventory</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Real-time stock balance across Central Vault (WH-KT) and retail stores</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openInternalTransferModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-xs cursor-pointer">
+                <i data-lucide="arrow-right-left" class="w-3.5 h-3.5"></i>
+                <span>Internal Transfer</span>
+              </button>
+              <button onclick="openPhysicalAuditModal()" class="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+                <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
+                <span>Stock Audit</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Warehouses Summary Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            ${erp.warehouses.map(wh => {
+              let whGold = 0;
+              let whValue = 0;
+              erp.products.forEach(p => {
+                const qty = p.stocks[wh.id] || 0;
+                whGold += qty * p.goldWeightGrams;
+                whValue += qty * p.unitCostVnd;
+              });
+              const isWarning = wh.id === 'wh_pn' && (erp.products.find(p => p.id === 'prod_ring_24k')?.stocks['wh_pn'] || 0) < 10;
+              return `
+                <div class="p-4 rounded-xl border ${isWarning ? 'bg-amber-50/50 border-amber-300 ring-2 ring-amber-400/20' : 'bg-white border-slate-200'} shadow-xs">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded font-bold ${wh.type === 'manufacturing' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}">${wh.code}</span>
+                    ${isWarning ? '<span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i> Low Buffer</span>' : ''}
+                  </div>
+                  <h3 class="font-bold text-sm text-slate-900 mt-2 truncate">${wh.name}</h3>
+                  <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs font-mono">
+                    <div>
+                      <span class="text-[10px] text-slate-400 block font-sans">Gold Weight:</span>
+                      <span class="font-bold text-slate-900">${whGold.toFixed(1)} g</span>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 block font-sans">Inventory Valuation:</span>
+                      <span class="font-bold text-slate-900">${(whValue/1000000).toFixed(1)}M đ</span>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Product Stock Table -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
+              Live Precious Metal &amp; Finished Jewelry Stock Balances
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                  <tr>
+                    <th class="py-3 px-4">SKU / Item Name</th>
+                    <th class="py-3 px-3">Karat Purity</th>
+                    <th class="py-3 px-3">Gold Content</th>
+                    <th class="py-3 px-3 text-right">WH-KT (Vault)</th>
+                    <th class="py-3 px-3 text-right">WH-PN (Boutique)</th>
+                    <th class="py-3 px-3 text-right">WH-Q1 (Flagship)</th>
+                    <th class="py-3 px-4 text-right">Total Balance</th>
+                    <th class="py-3 px-4 text-right">Valuation (VND)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${erp.products.map(p => {
+                    const totalQty = (p.stocks.wh_kt || 0) + (p.stocks.wh_pn || 0) + (p.stocks.wh_q1 || 0);
+                    const isPnLow = p.id === 'prod_ring_24k' && p.stocks.wh_pn < 10;
+                    return `
+                      <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3 px-4">
+                          <div class="font-bold text-slate-900">${p.name}</div>
+                          <div class="text-[10px] font-mono text-slate-400">${p.sku}</div>
+                        </td>
+                        <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${p.karat === '24K' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}">${p.karat}</span></td>
+                        <td class="py-3 px-3 font-mono text-slate-600">${p.goldWeightGrams > 0 ? `${p.goldWeightGrams} g` : 'N/A'}</td>
+                        <td class="py-3 px-3 text-right font-mono font-semibold">${p.stocks.wh_kt}</td>
+                        <td class="py-3 px-3 text-right font-mono font-semibold ${isPnLow ? 'text-red-600 bg-red-50 px-2 rounded' : ''}">${p.stocks.wh_pn}</td>
+                        <td class="py-3 px-3 text-right font-mono font-semibold">${p.stocks.wh_q1}</td>
+                        <td class="py-3 px-4 text-right font-mono font-bold text-slate-950">${totalQty}</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-700 font-semibold">${(totalQty * p.unitCostVnd).toLocaleString('en-US')} đ</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Stock Moves Audit Ledger -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 flex items-center justify-between">
+              <span>Recent Immutable Stock Moves (Odoo Inventory Audit Trail)</span>
+              <span class="text-[11px] font-mono text-slate-400">Total: ${erp.stockMoves.length} moves</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th class="py-2.5 px-4">Timestamp</th>
+                    <th class="py-2.5 px-3">Reference</th>
+                    <th class="py-2.5 px-4">Item SKU</th>
+                    <th class="py-2.5 px-4">Source</th>
+                    <th class="py-2.5 px-4">Destination</th>
+                    <th class="py-2.5 px-3 text-right">Quantity</th>
+                    <th class="py-2.5 px-3 text-center">Type</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-mono text-[11px]">
+                  ${erp.stockMoves.slice(0, 8).map(sm => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2.5 px-4 text-slate-400">${sm.timestamp}</td>
+                      <td class="py-2.5 px-3 font-bold text-blue-600">${sm.reference}</td>
+                      <td class="py-2.5 px-4 text-slate-800">${sm.productSku}</td>
+                      <td class="py-2.5 px-4 text-slate-600">${sm.fromLocation}</td>
+                      <td class="py-2.5 px-4 text-slate-900 font-semibold">${sm.toLocation}</td>
+                      <td class="py-2.5 px-3 text-right font-bold text-amber-700">${sm.quantity}</td>
+                      <td class="py-2.5 px-3 text-center"><span class="px-2 py-0.5 rounded text-[9px] uppercase font-bold ${sm.type === 'receipt' ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'}">${sm.type}</span></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Internal Transfer Modal Logic
+    function openInternalTransferModal() {
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="arrow-right-left" class="w-4 h-4 text-amber-600"></i>
+              <span>Dispatch Internal Stock Transfer</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Select Product:</label>
+            <select id="trfProduct" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+              ${erp.products.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Source Vault:</label>
+              <select id="trfSource" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+                ${erp.warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Destination:</label>
+              <select id="trfDest" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+                ${erp.warehouses.map((w, idx) => `<option value="${w.id}" ${idx===1?'selected':''}>${w.name}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Quantity to Transfer:</label>
+            <input type="number" id="trfQty" value="15" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executeInternalTransferAction()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Confirm Transfer</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function executeInternalTransferAction() {
+      const prodId = document.getElementById('trfProduct').value;
+      const srcId = document.getElementById('trfSource').value;
+      const destId = document.getElementById('trfDest').value;
+      const qty = parseFloat(document.getElementById('trfQty').value) || 0;
+
+      if (srcId === destId) {
+        alert('Source and destination cannot be the same!');
+        return;
+      }
+      const prod = erp.products.find(p => p.id === prodId);
+      if (!prod || prod.stocks[srcId] < qty) {
+        alert('Insufficient stock at source warehouse!');
+        return;
+      }
+
+      prod.stocks[srcId] -= qty;
+      prod.stocks[destId] = (prod.stocks[destId] || 0) + qty;
+
+      const ref = `INT-TRF-${Math.floor(1000 + Math.random() * 9000)}`;
+      erp.stockMoves.unshift({
+        id: `sm_${Date.now()}`,
+        reference: ref,
+        productSku: prod.sku,
+        fromLocation: erp.warehouses.find(w => w.id === srcId)?.code,
+        toLocation: erp.warehouses.find(w => w.id === destId)?.code,
+        quantity: `${qty} pcs`,
+        type: 'transfer',
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      // Clear pending recommendation if solved
+      if (prodId === 'prod_ring_24k' && destId === 'wh_pn' && qty >= 10) {
+        erp.aiRecommendations.forEach(r => { if (r.id === 'rec_01') r.status = 'completed'; });
+      }
+
+      saveState();
+      closeActionModal();
+      renderActiveTab();
+    }
+
+    function openPhysicalAuditModal() {
+      alert('Physical Inventory Adjustment: Count verified by Go Vap Security Officer. Discrepancy: 0.00g.');
+    }
+
+    function closeActionModal() {
+      document.getElementById('actionModal').classList.add('hidden');
+    }
+
+    // ================= 2. MANUFACTURING VIEW =================
+    function renderManufacturingView(container) {
+      container.innerHTML = `
+        <div class="space-y-6 animate-fadeIn">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+            <div>
+              <h2 class="text-xl font-bold font-serif text-slate-950">Manufacturing Orders &amp; Casting BOMs</h2>
+              <p class="text-xs text-slate-500 mt-0.5">High-precision vacuum casting cell with automated 1.87% metal loss compensation</p>
+            </div>
+            <button onclick="openCreateMOModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs cursor-pointer">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Create Manufacturing Order (MO)</span>
+            </button>
+          </div>
+
+          <!-- BOM Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${erp.boms.map(bom => {
+              const prod = erp.products.find(p => p.id === bom.productId);
+              return `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold font-serif text-slate-900">${bom.name}</span>
+                    <span class="text-[10px] font-mono bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold">Loss Factor: ${(bom.castingLossFactor*100).toFixed(2)}%</span>
+                  </div>
+                  <div class="mt-3 text-xs text-slate-600 space-y-1">
+                    <div>Raw Gold Required: <strong class="font-mono text-slate-900">${bom.rawQuantityGrams} g</strong> per unit</div>
+                    <div>Craftsmanship / Labor Cost: <strong class="font-mono text-slate-900">${bom.laborCostVnd.toLocaleString('en-US')} đ</strong></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- MO Table -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
+              Active Production Orders (Work in Progress)
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                  <tr>
+                    <th class="py-3 px-4">MO Code</th>
+                    <th class="py-3 px-4">Product Name</th>
+                    <th class="py-3 px-3 text-right">Order Qty</th>
+                    <th class="py-3 px-4">Assigned Cell</th>
+                    <th class="py-3 px-3">Status</th>
+                    <th class="py-3 px-4 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${erp.manufacturingOrders.map(mo => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-3 px-4 font-bold text-blue-700 font-mono">${mo.code}</td>
+                      <td class="py-3 px-4 font-semibold text-slate-900">${mo.productName}</td>
+                      <td class="py-3 px-3 text-right font-mono font-bold">${mo.quantity} pcs</td>
+                      <td class="py-3 px-4 text-slate-600">${mo.assignedCell}</td>
+                      <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${mo.status === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">${mo.status}</span></td>
+                      <td class="py-3 px-4 text-center">
+                        ${mo.status !== 'completed' ? `
+                          <button onclick="completeMOAction('${mo.id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer">Complete MO</button>
+                        ` : '<span class="text-slate-400 font-mono">Done</span>'}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openCreateMOModal() {
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="hammer" class="w-4 h-4 text-amber-600"></i>
+              <span>Create Manufacturing Order (MO)</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Select BOM:</label>
+            <select id="moBom" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+              ${erp.boms.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Quantity to Cast (pcs):</label>
+            <input type="number" id="moQty" value="20" min="1" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Assigned Cell:</label>
+            <input type="text" id="moCell" value="Casting Cell #1" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executeCreateMOAction()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Create &amp; Confirm MO</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function executeCreateMOAction() {
+      const bomId = document.getElementById('moBom').value;
+      const qty = parseInt(document.getElementById('moQty').value) || 1;
+      const cell = document.getElementById('moCell').value;
+      const bom = erp.boms.find(b => b.id === bomId);
+      const prod = erp.products.find(p => p.id === bom?.productId);
+
+      erp.manufacturingOrders.unshift({
+        id: `mo_${Date.now()}`,
+        code: `MO-2026-${Math.floor(100 + Math.random() * 900)}`,
+        bomId: bomId,
+        productName: prod?.name || 'Jewelry',
+        quantity: qty,
+        status: 'confirmed',
+        assignedCell: cell,
+        createdAt: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      closeActionModal();
+      renderActiveTab();
+    }
+
+    function completeMOAction(moId) {
+      const mo = erp.manufacturingOrders.find(m => m.id === moId);
+      if (!mo || mo.status === 'completed') return;
+
+      const bom = erp.boms.find(b => b.id === mo.bomId);
+      const rawProd = erp.products.find(p => p.id === bom?.rawMaterialId);
+      const finProd = erp.products.find(p => p.id === bom?.productId);
+
+      const rawNeededGrams = mo.quantity * (bom?.rawQuantityGrams || 3.82);
+
+      if (rawProd && rawProd.stocks.wh_kt >= rawNeededGrams) {
+        rawProd.stocks.wh_kt -= rawNeededGrams;
+        finProd.stocks.wh_kt = (finProd.stocks.wh_kt || 0) + mo.quantity;
+        mo.status = 'completed';
+
+        erp.stockMoves.unshift({
+          id: `sm_${Date.now()}`,
+          reference: mo.code,
+          productSku: finProd.sku,
+          fromLocation: 'Go Vap Casting Cell',
+          toLocation: 'WH-KT (Central Vault)',
+          quantity: `${mo.quantity} pcs`,
+          type: 'receipt',
+          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        });
+
+        saveState();
+        renderActiveTab();
+      } else {
+        alert('Insufficient raw bullion in Central Vault WH-KT to complete this MO!');
+      }
+    }
+
+    // ================= 3. PURCHASE VIEW =================
+    function renderPurchaseView(container) {
+      container.innerHTML = `
+        <div class="space-y-6 animate-fadeIn">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+            <div>
+              <h2 class="text-xl font-bold font-serif text-slate-950">Procurement &amp; Vault Intake (PO)</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Direct institutional supplier sourcing (SJC, DOJI, Heraeus)</p>
+            </div>
+            <button onclick="openCreatePOModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs cursor-pointer">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Create Purchase Order (PO)</span>
+            </button>
+          </div>
+
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
+              Purchase Orders Ledger
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                  <tr>
+                    <th class="py-3 px-4">PO Code</th>
+                    <th class="py-3 px-4">Supplier</th>
+                    <th class="py-3 px-4">Item Sourced</th>
+                    <th class="py-3 px-3 text-right">Quantity</th>
+                    <th class="py-3 px-4 text-right">Total (VND)</th>
+                    <th class="py-3 px-3">Status</th>
+                    <th class="py-3 px-4 text-center">Vault Intake</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${erp.purchaseOrders.map(po => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-3 px-4 font-mono font-bold text-blue-700">${po.code}</td>
+                      <td class="py-3 px-4 font-semibold text-slate-900">${po.vendor}</td>
+                      <td class="py-3 px-4 text-slate-700">${po.productName}</td>
+                      <td class="py-3 px-3 text-right font-mono font-bold">${po.quantityGrams} g</td>
+                      <td class="py-3 px-4 text-right font-mono font-bold text-slate-950">${po.totalVnd.toLocaleString('en-US')} đ</td>
+                      <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${po.status === 'received' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">${po.status}</span></td>
+                      <td class="py-3 px-4 text-center">
+                        ${po.status !== 'received' ? `
+                          <button onclick="receivePOAction('${po.id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer">Receive Goods into Vault</button>
+                        ` : '<span class="text-slate-400 font-mono">Deposited</span>'}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openCreatePOModal() {
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="shopping-cart" class="w-4 h-4 text-amber-600"></i>
+              <span>Create Purchase Order (PO)</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Supplier:</label>
+            <select id="poVendor" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+              <option value="SJC Gold Corporation">SJC Gold Corporation</option>
+              <option value="DOJI Group">DOJI Group</option>
+              <option value="Heraeus Precious Metals">Heraeus Precious Metals</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Raw Material:</label>
+            <select id="poProd" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+              <option value="prod_g24k">24K Gold Bullion (9999) - 2,360,000 đ/g</option>
+              <option value="prod_g18k">18K Gold Ingot (750) - 1,680,000 đ/g</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Quantity (grams):</label>
+            <input type="number" id="poQty" value="150" min="10" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executeCreatePOAction()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Confirm Purchase Order</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function executeCreatePOAction() {
+      const vendor = document.getElementById('poVendor').value;
+      const prodId = document.getElementById('poProd').value;
+      const qty = parseFloat(document.getElementById('poQty').value) || 100;
+      const prod = erp.products.find(p => p.id === prodId);
+      const unitPrice = prod?.unitCostVnd || 2360000;
+
+      erp.purchaseOrders.unshift({
+        id: `po_${Date.now()}`,
+        code: `PO-2026-${Math.floor(100 + Math.random() * 900)}`,
+        vendor: vendor,
+        productName: prod?.name || 'Raw Bullion',
+        quantityGrams: qty,
+        unitPriceVnd: unitPrice,
+        totalVnd: qty * unitPrice,
+        status: 'confirmed',
+        createdAt: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      closeActionModal();
+      renderActiveTab();
+    }
+
+    function receivePOAction(poId) {
+      const po = erp.purchaseOrders.find(p => p.id === poId);
+      if (!po || po.status === 'received') return;
+
+      const rawG24k = erp.products.find(p => p.id === 'prod_g24k');
+      if (rawG24k) {
+        rawG24k.stocks.wh_kt += po.quantityGrams;
+        po.status = 'received';
+
+        erp.stockMoves.unshift({
+          id: `sm_${Date.now()}`,
+          reference: po.code,
+          productSku: rawG24k.sku,
+          fromLocation: `Supplier: ${po.vendor}`,
+          toLocation: 'WH-KT (Central Vault)',
+          quantity: `${po.quantityGrams} g`,
+          type: 'receipt',
+          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        });
+
+        saveState();
+        renderActiveTab();
+      }
+    }
+
+    // ================= 4. RETAIL POS VIEW =================
+    function renderPOSView(container) {
+      const storeWh = erp.warehouses.find(w => w.id === erp.activeStoreId);
+      container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+          <!-- Catalog & Store Header -->
+          <div class="lg:col-span-2 space-y-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-mono block">Active Boutique Terminal</span>
+                <div class="font-bold text-sm text-slate-900">${storeWh?.name}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <select onchange="erp.activeStoreId=this.value; saveState(); renderActiveTab();" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold">
+                  <option value="wh_pn" ${erp.activeStoreId==='wh_pn'?'selected':''}>Phu Nhuan Boutique (WH-PN)</option>
+                  <option value="wh_q1" ${erp.activeStoreId==='wh_q1'?'selected':''}>District 1 Flagship (WH-Q1)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${erp.products.filter(p => p.type === 'finished').map(p => {
+                const stock = p.stocks[erp.activeStoreId] || 0;
+                return `
+                  <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-amber-400 transition-all">
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-900">${p.karat}</span>
+                        <span class="text-xs font-mono font-bold ${stock < 10 ? 'text-red-600' : 'text-slate-600'}">In Stock: ${stock} pcs</span>
+                      </div>
+                      <h4 class="font-bold text-sm text-slate-900 mt-2">${p.name}</h4>
+                      <div class="text-[11px] text-slate-500 font-mono mt-0.5">${p.goldWeightGrams} g · Certified Purity</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <span class="font-bold text-slate-950 font-mono text-sm">${p.retailPriceVnd.toLocaleString('en-US')} đ</span>
+                      <button onclick="addToPosCart('${p.id}')" ${stock <= 0 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-950 font-bold text-xs cursor-pointer">Add to Cart</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Cart & Checkout Panel -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <i data-lucide="shopping-bag" class="w-4 h-4 text-amber-600"></i>
+                  <span>Store Checkout Register</span>
+                </h3>
+                <span class="text-xs text-slate-400 font-mono">${erp.posCart.length} items</span>
+              </div>
+
+              <!-- Customer Selector -->
+              <div class="mt-3">
+                <label class="block text-[11px] text-slate-500 font-medium mb-1">VIP Customer Loyalty Tier:</label>
+                <select id="posCustomerSelect" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+                  ${erp.customers.map(c => `<option value="${c.id}">${c.name} (${c.tier} -${c.discountPercent}%)</option>`).join('')}
+                </select>
+              </div>
+
+              <!-- Cart Items List -->
+              <div class="mt-4 space-y-2 max-h-56 overflow-y-auto">
+                ${erp.posCart.length === 0 ? '<div class="text-center py-8 text-slate-400 text-xs">Cart is empty. Select products from catalog.</div>' : ''}
+                ${erp.posCart.map((item, idx) => `
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs">
+                    <div>
+                      <div class="font-bold text-slate-900">${item.name}</div>
+                      <div class="text-[10px] text-slate-500 font-mono">${item.price.toLocaleString('en-US')} đ × ${item.qty}</div>
+                    </div>
+                    <button onclick="removeFromPosCart(${idx})" class="text-slate-400 hover:text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Checkout Footer -->
+            <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <span>Subtotal:</span>
+                <span class="font-mono font-semibold" id="posSubtotal">0 đ</span>
+              </div>
+              <div class="flex items-center justify-between text-xs text-emerald-600">
+                <span>VIP Discount (5%):</span>
+                <span class="font-mono font-semibold" id="posDiscount">0 đ</span>
+              </div>
+              <div class="flex items-center justify-between text-sm font-bold text-slate-950 pt-1 border-t border-slate-100">
+                <span>Total Payable:</span>
+                <span class="font-mono text-base text-amber-600" id="posTotal">0 đ</span>
+              </div>
+              <button onclick="executePOSCheckout()" ${erp.posCart.length === 0 ? 'disabled' : ''} class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-bold text-xs shadow-xs cursor-pointer">Complete Checkout &amp; Deduct Stock</button>
+            </div>
+          </div>
+        </div>
+      `;
+      calculatePOSCartTotals();
+    }
+
+    function addToPosCart(prodId) {
+      const prod = erp.products.find(p => p.id === prodId);
+      if (!prod) return;
+      const existing = erp.posCart.find(i => i.id === prodId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        erp.posCart.push({ id: prodId, name: prod.name, price: prod.retailPriceVnd, qty: 1 });
+      }
+      renderActiveTab();
+    }
+
+    function removeFromPosCart(idx) {
+      erp.posCart.splice(idx, 1);
+      renderActiveTab();
+    }
+
+    function calculatePOSCartTotals() {
+      let subtotal = 0;
+      erp.posCart.forEach(i => subtotal += i.price * i.qty);
+      const discount = subtotal * 0.05;
+      const total = subtotal - discount;
+
+      const subElem = document.getElementById('posSubtotal');
+      const disElem = document.getElementById('posDiscount');
+      const totElem = document.getElementById('posTotal');
+
+      if (subElem) subElem.textContent = `${subtotal.toLocaleString('en-US')} đ`;
+      if (disElem) disElem.textContent = `-${discount.toLocaleString('en-US')} đ`;
+      if (totElem) totElem.textContent = `${total.toLocaleString('en-US')} đ`;
+    }
+
+    function executePOSCheckout() {
+      if (erp.posCart.length === 0) return;
+      const storeWh = erp.warehouses.find(w => w.id === erp.activeStoreId);
+
+      let totalOrderAmount = 0;
+      erp.posCart.forEach(item => {
+        const prod = erp.products.find(p => p.id === item.id);
+        if (prod) {
+          prod.stocks[erp.activeStoreId] = Math.max(0, (prod.stocks[erp.activeStoreId] || 0) - item.qty);
+          totalOrderAmount += item.price * item.qty * 0.95;
+
+          erp.stockMoves.unshift({
+            id: `sm_${Date.now()}`,
+            reference: `POS-REC-${Math.floor(1000 + Math.random() * 9000)}`,
+            productSku: prod.sku,
+            fromLocation: storeWh?.code,
+            toLocation: 'Customer (POS Retail)',
+            quantity: `${item.qty} pcs`,
+            type: 'sale',
+            timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+          });
+        }
+      });
+
+      erp.salesTodayVnd += totalOrderAmount;
+      erp.posCart = [];
+      saveState();
+
+      alert(`POS Sale Completed! Stock at ${storeWh?.name} was decremented in real-time. Electronic receipt & gold authenticity warranty certificate generated.`);
+      renderActiveTab();
+    }
+
+    // ================= 5. GOLD FLOW BI VIEW =================
+    function renderGoldFlowBIView(container) {
+      const totalGold = calculateTotalGold();
+      container.innerHTML = `
+        <div class="space-y-6 animate-fadeIn">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+            <h2 class="text-xl font-bold font-serif text-slate-950">Gold Flow Business Intelligence (BI) Matrix</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Michael Porter's Value Chain Model &amp; Precious Metal Distribution</p>
+          </div>
+
+          <!-- Value Chain Flow -->
+          <div class="bg-slate-950 text-white p-6 rounded-2xl border border-slate-800 shadow-lg">
+            <h3 class="text-sm font-bold text-amber-300 font-serif mb-4 flex items-center gap-2">
+              <i data-lucide="layers" class="w-4 h-4"></i>
+              <span>Integrated Closed-Loop Value Chain (Laudon &amp; Laudon MIS Chapter 3)</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+              <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                <span class="text-amber-400 font-mono font-bold block text-[10px]">1. INBOUND LOGISTICS</span>
+                <div class="font-bold mt-1 text-slate-200">Central Bullion Vault</div>
+                <p class="text-[11px] text-slate-400 mt-1">SJC &amp; DOJI bullion receipt into high-security WH-KT vault.</p>
+              </div>
+              <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                <span class="text-blue-400 font-mono font-bold block text-[10px]">2. OPERATIONS (CASTING)</span>
+                <div class="font-bold mt-1 text-slate-200">Go Vap Precision Plant</div>
+                <p class="text-[11px] text-slate-400 mt-1">Computerized vacuum investment casting with 1.87% loss factor.</p>
+              </div>
+              <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                <span class="text-purple-400 font-mono font-bold block text-[10px]">3. OUTBOUND DISPATCH</span>
+                <div class="font-bold mt-1 text-slate-200">AI-Prescribed Transfers</div>
+                <p class="text-[11px] text-slate-400 mt-1">Autonomous 1-click rebalancing to prevent retail stockout velocity.</p>
+              </div>
+              <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+                <span class="text-emerald-400 font-mono font-bold block text-[10px]">4. MARKETING &amp; POS</span>
+                <div class="font-bold mt-1 text-slate-200">Boutique Omnichannel</div>
+                <p class="text-[11px] text-slate-400 mt-1">VIP loyalty tiers, instant gold warranty certificates &amp; buybacks.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Porter's 5 Forces Grid -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+            <h3 class="font-bold text-sm text-slate-900 font-serif">Michael Porter's Five Forces Strategy Scorecard</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <strong class="text-slate-900">1. Supplier Power (High):</strong> State Bank bullion quotas. Aurora maintains multi-supplier long-term agreements.
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <strong class="text-slate-900">2. Buyer Power (Moderate):</strong> Discerning customers demand certified purity assays and digital trade-in transparency.
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <strong class="text-slate-900">3. Competitive Rivalry (Intense):</strong> PNJ, DOJI, and family gold shops. Aurora differentiates via agile Odoo ERP and AI.
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <strong class="text-slate-900">4. Threat of Substitutes (Moderate-High):</strong> Lab-grown diamonds (LGD) pressure natural stones. Aurora offers dual-track portfolios.
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ================= 6. AI AGENT VIEW =================
+    function renderAIAgentView(container) {
+      container.innerHTML = `
+        <div class="space-y-6 animate-fadeIn">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <i data-lucide="cpu" class="w-5 h-5 text-purple-600"></i>
+                <h2 class="text-xl font-bold font-serif text-slate-950">Autonomous AI Decision Agent</h2>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Continuous environmental perception &amp; prescriptive action execution</p>
+            </div>
+            <span class="text-xs font-mono font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full border border-emerald-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              Autonomous Agent Active
+            </span>
+          </div>
+
+          <!-- Pending Recommendations -->
+          <div class="space-y-3">
+            ${erp.aiRecommendations.map(rec => `
+              <div class="p-5 rounded-xl border ${rec.status === 'completed' ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-400/20'} shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded ${rec.status === 'completed' ? 'bg-slate-200 text-slate-700' : 'bg-red-500 text-white'}">${rec.status === 'completed' ? 'Resolved' : 'High Priority'}</span>
+                    <h3 class="font-bold text-sm text-slate-900">${rec.title}</h3>
+                  </div>
+                  <p class="text-xs text-slate-600 max-w-2xl">${rec.description}</p>
+                  <div class="text-[11px] font-mono font-semibold text-amber-900 mt-1">Prescribed Action: ${rec.recommendedAction}</div>
+                </div>
+
+                ${rec.status !== 'completed' ? `
+                  <button onclick="approveAIRecommendation('${rec.id}')" class="px-4 py-2 rounded-lg bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all active:scale-95 shrink-0 cursor-pointer flex items-center gap-1.5">
+                    <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400"></i>
+                    <span>Approve &amp; Rebalance</span>
+                  </button>
+                ` : '<span class="text-xs font-mono text-emerald-700 font-bold flex items-center gap-1"><i data-lucide="check-circle-2" class="w-4 h-4"></i> Transfer Executed</span>'}
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Before / After Comparison Matrix -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
+              Before vs. After MIS Process Automation Comparison Matrix
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                  <tr>
+                    <th class="py-3 px-4">Workflow Process</th>
+                    <th class="py-3 px-4">Legacy Process (PNJ Baseline)</th>
+                    <th class="py-3 px-4 bg-amber-50 text-amber-950 font-bold">Autonomous Aurora AI Agent</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <tr>
+                    <td class="py-3 px-4 font-bold text-slate-900">Stock Rebalancing Decision</td>
+                    <td class="py-3 px-4 text-slate-600">Manual review of end-of-day Excel/BI reports (24h - 48h delay)</td>
+                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Real-time sell-through velocity tracking &amp; 1-click auto-dispatch</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 px-4 font-bold text-slate-900">Holiday Demand Surge (God of Wealth)</td>
+                    <td class="py-3 px-4 text-slate-600">Frequent stockouts at downtown stores while suburban shops overstock</td>
+                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Predictive pre-allocation 48h prior to festival onset</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 px-4 font-bold text-slate-900">Gold Volatility Hedging</td>
+                    <td class="py-3 px-4 text-slate-600">Static monthly inventory accounting valuation</td>
+                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Instant natural hedging matching PO bullion intake to POS sales volume</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function approveAIRecommendation(recId) {
+      const rec = erp.aiRecommendations.find(r => r.id === recId);
+      if (!rec || rec.status === 'completed') return;
+
+      const prod = erp.products.find(p => p.id === rec.productId);
+      if (prod && prod.stocks[rec.sourceWarehouse] >= rec.quantity) {
+        prod.stocks[rec.sourceWarehouse] -= rec.quantity;
+        prod.stocks[rec.destinationWarehouse] = (prod.stocks[rec.destinationWarehouse] || 0) + rec.quantity;
+
+        rec.status = 'completed';
+
+        erp.stockMoves.unshift({
+          id: `sm_${Date.now()}`,
+          reference: `AI-TRF-${Math.floor(1000 + Math.random() * 9000)}`,
+          productSku: prod.sku,
+          fromLocation: erp.warehouses.find(w => w.id === rec.sourceWarehouse)?.code,
+          toLocation: erp.warehouses.find(w => w.id === rec.destinationWarehouse)?.code,
+          quantity: `${rec.quantity} pcs`,
+          type: 'transfer',
+          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        });
+
+        saveState();
+        renderActiveTab();
+      } else {
+        alert('Insufficient source stock to execute automated transfer!');
+      }
+    }
+
+    // ================= 7. MIS REPORT VIEW =================
+    function renderMisReportView(container) {
+      container.innerHTML = `
+        <div class="space-y-6 animate-fadeIn">
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <i data-lucide="book-open" class="w-5 h-5 text-amber-600"></i>
+                <h2 class="text-xl font-bold font-serif text-slate-950">MIS Academic Report &amp; System Button Flow Architecture</h2>
+              </div>
+              <p class="text-xs text-slate-500 mt-1 max-w-2xl">
+                Comprehensive academic project documentation for Management Information Systems (MIS): Empirical analysis of <strong>PNJ</strong>, simulated venture blueprint for <strong>AURORA JEWELRY</strong>, and button execution mapping.
+              </p>
+            </div>
+          </div>
+
+          <!-- Academic Content Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs text-xs space-y-3">
+              <h3 class="font-bold text-sm text-slate-900 font-serif border-b pb-2">Part 1: Real Enterprise Analysis (PNJ)</h3>
+              <p class="text-slate-600 leading-relaxed">
+                Founded in 1988, Phu Nhuan Jewelry JSC (PNJ) operates ~400 stores and Vietnam's largest casting plant in Go Vap. PNJ deployed SAP S/4HANA in 2019. While financial standardization is high, the monolithic architecture suffers from multi-hour batch reconciliation lag (Bullwhip Effect) and 24h-72h manual approval bottlenecks for inter-branch inventory transfers.
+              </p>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs text-xs space-y-3">
+              <h3 class="font-bold text-sm text-slate-900 font-serif border-b pb-2">Part 2: Simulated Venture (Aurora Jewelry &amp; AI)</h3>
+              <p class="text-slate-600 leading-relaxed">
+                AURORA JEWELRY inherits PNJ's closed-loop value chain (In-house 3D Design ➜ Procurement ➜ Precision Casting ➜ POS Retail). By replacing heavy SAP batch runs with modular Odoo ERP architecture and an autonomous AI Copilot, Aurora achieves zero-latency gram-level inventory tracking and 1-click inter-store rebalancing.
+              </p>
+            </div>
+          </div>
+
+          <!-- Comparison Table -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
+              Comparative Analysis of 3 ERP Solutions (Coursework Section 3.5.1)
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                  <tr>
+                    <th class="py-3 px-4">Evaluation Criteria</th>
+                    <th class="py-3 px-4">SAP S/4HANA (PNJ Baseline)</th>
+                    <th class="py-3 px-4">Microsoft Dynamics 365</th>
+                    <th class="py-3 px-4 bg-amber-50 text-amber-950 font-bold">Odoo ERP (Aurora Choice)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  <tr>
+                    <td class="py-3 px-4 font-bold text-slate-900">1. Licensing &amp; TCO Cost</td>
+                    <td class="py-3 px-4 text-slate-600">Enterprise tier ($2M - $5M USD)</td>
+                    <td class="py-3 px-4 text-slate-600">High ($95 - $180/user/month)</td>
+                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Optimal (Open Source or $24.90/user/mo)</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 px-4 font-bold text-slate-900">2. Implementation Velocity</td>
+                    <td class="py-3 px-4 text-slate-600">18 - 24 months, Big 4 consultants</td>
+                    <td class="py-3 px-4 text-slate-600">9 - 14 months</td>
+                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Rapid (2 - 4 months), modular stack</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 px-4 font-bold text-slate-900">3. Precious Metal UoM Fit</td>
+                    <td class="py-3 px-4 text-slate-600">Requires heavy ABAP customizations</td>
+                    <td class="py-3 px-4 text-slate-600">Complex multi-UoM setup</td>
+                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Native Gram/Mace/Tael with casting loss</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 px-4 font-bold text-slate-900">4. AI Agent Extensibility</td>
+                    <td class="py-3 px-4 text-slate-600">Proprietary closed ecosystem</td>
+                    <td class="py-3 px-4 text-slate-600">Azure OpenAI Copilot</td>
+                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">100% open REST/JSON APIs + Gemini Agent</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ================= CHATBOT CLIENT =================
+    let chatHistory = [];
+
+    function toggleAIChat(open) {
+      const win = document.getElementById('aiChatWindow');
+      const btn = document.getElementById('aiChatOpenBtn');
+      if (open) {
+        win.classList.remove('hidden');
+        btn.classList.add('hidden');
+        if (chatHistory.length === 0) {
+          addChatMessage('assistant', `Hello! I am your **Aurora AI Decision Copilot**.\n\nI can assist you with:\n- **Balancing physical gold positions** and bullion volatility hedging.\n- **Detecting boutique stockout vulnerabilities** across retail nodes.\n- **Forecasting seasonal surges** for Tet and the God of Wealth festival.\n- **MIS coursework analysis:** Michael Porter's 5 Forces, Value Chain, and PNJ vs. Aurora comparisons.\n\n*Click on any suggested topic or type a question below!*`);
+        }
+      } else {
+        win.classList.add('hidden');
+        btn.classList.remove('hidden');
+      }
+    }
+
+    function addChatMessage(role, text, source) {
+      chatHistory.push({ role, text });
+      const container = document.getElementById('chatMessages');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `flex flex-col ${role === 'user' ? 'items-end' : 'items-start'}`;
+      
+      const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const badge = source ? ` · ${source === 'gemini' ? 'Gemini 3.8 Flash' : 'MIS Local Engine'}` : '';
+
+      msgDiv.innerHTML = `
+        <div class="max-w-[88%] p-3.5 rounded-2xl leading-relaxed whitespace-pre-wrap ${role === 'user' ? 'bg-amber-500 text-slate-950 font-medium rounded-tr-xs shadow-xs' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-xs shadow-xs'}">
+          ${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/### (.*?)\n/g, '<h4 class="font-bold text-slate-950 mb-1">$1</h4>')}
+        </div>
+        <div class="text-[10px] text-slate-400 mt-1 px-1 font-mono">${timeStr}${badge}</div>
+      `;
+
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      addChatMessage('user', text);
+
+      // Loading indicator
+      const container = document.getElementById('chatMessages');
+      const loader = document.createElement('div');
+      loader.id = 'chatLoadingIndicator';
+      loader.className = 'flex items-center gap-2 p-3 bg-white rounded-2xl border border-slate-200 text-slate-500 text-xs w-fit';
+      loader.innerHTML = '<span class="w-3 h-3 rounded-full bg-amber-500 animate-ping"></span><span>AI is reasoning...</span>';
+      container.appendChild(loader);
+      container.scrollTop = container.scrollHeight;
+
+      const payload = {
+        message: text,
+        history: chatHistory.slice(-6),
+        erpContext: {
+          totalGoldGramsAll: calculateTotalGold(),
+          totalGoldChiAll: calculateTotalGold() / 3.75,
+          totalInventoryValueVnd: calculateTotalInventoryValue(),
+          totalSalesTodayVnd: erp.salesTodayVnd,
+          activeWarnings: erp.aiRecommendations.filter(r => r.status === 'pending').map(r => r.title).join('; ')
+        }
+      };
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        const loadingElem = document.getElementById('chatLoadingIndicator');
+        if (loadingElem) loadingElem.remove();
+
+        addChatMessage('assistant', data.reply || 'No response generated.', data.source);
+      } catch (err) {
+        console.error(err);
+        const loadingElem = document.getElementById('chatLoadingIndicator');
+        if (loadingElem) loadingElem.remove();
+        addChatMessage('assistant', 'Connection to AI server failed. Please ensure the server is active.');
+      }
+    }
+
+    function sendQuickQuery(q) {
+      document.getElementById('chatInput').value = q;
+      document.getElementById('chatSendBtn').click();
+    }
+
+    function clearAIChatHistory() {
+      chatHistory = [];
+      document.getElementById('chatMessages').innerHTML = '';
+      addChatMessage('assistant', 'Chat history reset. How can I assist your gold supply chain operations today?');
+    }
+
+    // ================= GUIDED DEMO STEPPER =================
+    const DEMO_STEPS = [
+      { step: 1, tab: 'purchase', title: 'Step 1: Bullion Procurement (PO ➜ WH-KT)', desc: 'Procurement drafts a PO to acquire 150g of 24K pure gold bullion from SJC. Upon confirmation and receiving goods, physical bullion is ingested into the Central Vault (WH-KT).', label: 'Go to Procurement Module' },
+      { step: 2, tab: 'manufacturing', title: 'Step 2: Casting Production (BOM ➜ MO at WH-KT)', desc: 'The Go Vap plant receives an MO to cast 25 Fortune Rings 24K. The ERP resolves the BOM, computes 1.87% casting loss, deducts 95.5g of pure gold, and deposits 25 finished rings into the vault.', label: 'Go to Manufacturing Module' },
+      { step: 3, tab: 'inventory', title: 'Step 3: Inter-Store Stock Dispatch (WH-KT ➜ WH-PN)', desc: 'The AI Copilot detects that Phu Nhuan holds only 4 Fortune Rings (below safety threshold of 15). An internal transfer of 15 rings from WH-KT to WH-PN is dispatched, resolving stockout risk.', label: 'Go to Inventory Module' },
+      { step: 4, tab: 'pos', title: 'Step 4: Retail POS Checkout & Real-Time Stock Deduction', desc: 'A Diamond VIP member purchases 2 Fortune Rings at Phu Nhuan boutique. The cashier registers the sale, applies the 5% tier discount, and issues an e-Receipt with gold warranty. WH-PN store stock decrements instantly!', label: 'Go to Retail POS Module' }
+    ];
+
+    let currentDemoStep = 1;
+
+    function openGuidedDemoModal() {
+      document.getElementById('guidedDemoModal').classList.remove('hidden');
+      setDemoStep(1);
+    }
+
+    function closeGuidedDemoModal() {
+      document.getElementById('guidedDemoModal').classList.add('hidden');
+    }
+
+    function setDemoStep(s) {
+      currentDemoStep = s;
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById(`demoStepBtn${i}`);
+        if (i === s) {
+          btn.className = 'demo-step-btn py-2 px-1 text-center rounded-lg border text-xs font-semibold bg-amber-500 text-slate-950 border-amber-500 shadow-xs cursor-pointer';
+        } else {
+          btn.className = 'demo-step-btn py-2 px-1 text-center rounded-lg border text-xs font-semibold bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 cursor-pointer';
+        }
+      }
+
+      const data = DEMO_STEPS[s - 1];
+      document.getElementById('demoStepContent').innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-amber-600 flex items-center justify-center shadow-xs">
+            <i data-lucide="${s===1?'shopping-cart':s===2?'hammer':s===3?'arrow-right-left':'store'}" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-sm text-slate-900">${data.title}</h4>
+            <span class="text-[11px] text-slate-500 font-mono">Module: ${data.tab.toUpperCase()} · Odoo ERP Architecture</span>
+          </div>
+        </div>
+        <p class="text-slate-700 leading-relaxed text-xs">${data.desc}</p>
+      `;
+      document.getElementById('demoJumpBtnText').textContent = data.label;
+      lucide.createIcons();
+    }
+
+    function jumpToActiveDemoModule() {
+      const data = DEMO_STEPS[currentDemoStep - 1];
+      closeGuidedDemoModal();
+      switchTab(data.tab);
+    }
+
+    async function executeAllDemoSteps() {
+      const btn = document.getElementById('btnRunAllDemo');
+      const statusBox = document.getElementById('demoStatusMessage');
+      const statusText = document.getElementById('demoStatusText');
+
+      btn.disabled = true;
+      statusBox.classList.remove('hidden');
+
+      statusText.textContent = 'Step 1: Ingesting 150g pure 24K gold bullion into Central Vault WH-KT...';
+      const rawG24k = erp.products.find(p => p.id === 'prod_g24k');
+      if (rawG24k) rawG24k.stocks.wh_kt += 150;
+      saveState();
+
+      await new Promise(r => setTimeout(r, 600));
+
+      statusText.textContent = 'Step 2: Casting 25 Fortune Rings (deducting 95.5g gold with 1.87% loss factor)...';
+      const finRing = erp.products.find(p => p.id === 'prod_ring_24k');
+      if (rawG24k && finRing) {
+        rawG24k.stocks.wh_kt = Math.max(0, rawG24k.stocks.wh_kt - 95.5);
+        finRing.stocks.wh_kt = (finRing.stocks.wh_kt || 0) + 25;
+      }
+      saveState();
+
+      await new Promise(r => setTimeout(r, 600));
+
+      statusText.textContent = 'Step 3: Dispatching internal transfer of 15 rings from WH-KT to WH-PN...';
+      if (finRing) {
+        finRing.stocks.wh_kt = Math.max(0, finRing.stocks.wh_kt - 15);
+        finRing.stocks.wh_pn = (finRing.stocks.wh_pn || 0) + 15;
+      }
+      erp.aiRecommendations.forEach(r => { if (r.id === 'rec_01') r.status = 'completed'; });
+      saveState();
+
+      await new Promise(r => setTimeout(r, 600));
+
+      statusText.textContent = 'Step 4: Processing POS checkout for 2 rings at Phu Nhuan boutique...';
+      if (finRing) {
+        finRing.stocks.wh_pn = Math.max(0, finRing.stocks.wh_pn - 2);
+      }
+      erp.salesTodayVnd += 18620000;
+      saveState();
+
+      statusText.textContent = 'Success! All 4 closed-loop stages executed. Balances updated in real time.';
+      setTimeout(() => {
+        btn.disabled = false;
+        closeGuidedDemoModal();
+        switchTab('inventory');
+      }, 1500);
+    }
+
+    // Initialize on DOM load
+    window.addEventListener('DOMContentLoaded', () => {
+      saveState();
+      switchTab('inventory');
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

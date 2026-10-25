@@ -74,9 +74,9 @@ Visit either URL in your browser.
 ### 1. Inventory
 
 - Tracks inventory across multiple warehouses and stores:
-  - Central Vault & Plant (`WH-MW`)
-  - Phu Nhuan Boutique (`WH-PN`)
-  - District 1 Flagship (`WH-D1`)
+  - Main Warehouse (`WH-MW`)
+  - Phu Nhuan Store (`WH-PN`)
+  - District 1 Store (`WH-D1`)
 - Supports internal stock transfers and inventory adjustments.
 - Maintains a stock movement ledger for inventory tracking and auditing.
 
@@ -116,7 +116,7 @@ Visit either URL in your browser.
 
 ### Step 1: Procurement
 
-In **Procurement (PO)**, create a purchase order for 150 g of 24K pure gold from SJC and click **"Receive Goods into Vault"**. The central vault (`WH-MW`) inventory increases.
+In **Procurement (PO)**, create a purchase order for 150 g of 24K pure gold from SJC and click **"Receive Goods into Vault"**. The main warehouse (`WH-MW`) inventory increases.
 
 ### Step 2: Manufacturing
 

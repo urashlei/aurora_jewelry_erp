@@ -144,11 +144,6 @@
         <i data-lucide="cpu" class="w-4 h-4 text-purple-600"></i>
         <span>AI Decision Agent</span>
         <span id="tabAgentBadge" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-      </button>
-      <button onclick="switchTab('mis-report')" id="tab-mis-report" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
-        <i data-lucide="book-open" class="w-4 h-4 text-amber-600"></i>
-        <span>MIS Academic Report</span>
-      </button>
     </div>
   </header>
 
@@ -442,7 +437,6 @@
       else if (tab === 'pos') renderPOSView(container);
       else if (tab === 'bi') renderGoldFlowBIView(container);
       else if (tab === 'ai-agent') renderAIAgentView(container);
-      else if (tab === 'mis-report') renderMisReportView(container);
 
       lucide.createIcons();
     }
@@ -1327,86 +1321,6 @@
       }
     }
 
-    // ================= 7. MIS REPORT VIEW =================
-    function renderMisReportView(container) {
-      container.innerHTML = `
-        <div class="space-y-6 animate-fadeIn">
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <div class="flex items-center gap-2">
-                <i data-lucide="book-open" class="w-5 h-5 text-amber-600"></i>
-                <h2 class="text-xl font-bold font-serif text-slate-950">MIS Academic Report &amp; System Button Flow Architecture</h2>
-              </div>
-              <p class="text-xs text-slate-500 mt-1 max-w-2xl">
-                Comprehensive academic project documentation for Management Information Systems (MIS): Empirical analysis of <strong>PNJ</strong>, simulated venture blueprint for <strong>AURORA JEWELRY</strong>, and button execution mapping.
-              </p>
-            </div>
-          </div>
-
-          <!-- Academic Content Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs text-xs space-y-3">
-              <h3 class="font-bold text-sm text-slate-900 font-serif border-b pb-2">Part 1: Real Enterprise Analysis (PNJ)</h3>
-              <p class="text-slate-600 leading-relaxed">
-                Founded in 1988, Phu Nhuan Jewelry JSC (PNJ) operates ~400 stores and Vietnam's largest casting plant in Go Vap. PNJ deployed SAP S/4HANA in 2019. While financial standardization is high, the monolithic architecture suffers from multi-hour batch reconciliation lag (Bullwhip Effect) and 24h-72h manual approval bottlenecks for inter-branch inventory transfers.
-              </p>
-            </div>
-
-            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs text-xs space-y-3">
-              <h3 class="font-bold text-sm text-slate-900 font-serif border-b pb-2">Part 2: Simulated Venture (Aurora Jewelry &amp; AI)</h3>
-              <p class="text-slate-600 leading-relaxed">
-                AURORA JEWELRY inherits PNJ's closed-loop value chain (In-house 3D Design ➜ Procurement ➜ Precision Casting ➜ POS Retail). By replacing heavy SAP batch runs with modular Odoo ERP architecture and an autonomous AI Copilot, Aurora achieves zero-latency gram-level inventory tracking and 1-click inter-store rebalancing.
-              </p>
-            </div>
-          </div>
-
-          <!-- Comparison Table -->
-          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
-              Comparative Analysis of 3 ERP Solutions (Coursework Section 3.5.1)
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
-                  <tr>
-                    <th class="py-3 px-4">Evaluation Criteria</th>
-                    <th class="py-3 px-4">SAP S/4HANA (PNJ Baseline)</th>
-                    <th class="py-3 px-4">Microsoft Dynamics 365</th>
-                    <th class="py-3 px-4 bg-amber-50 text-amber-950 font-bold">Odoo ERP (Aurora Choice)</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                  <tr>
-                    <td class="py-3 px-4 font-bold text-slate-900">1. Licensing &amp; TCO Cost</td>
-                    <td class="py-3 px-4 text-slate-600">Enterprise tier ($2M - $5M USD)</td>
-                    <td class="py-3 px-4 text-slate-600">High ($95 - $180/user/month)</td>
-                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Optimal (Open Source or $24.90/user/mo)</td>
-                  </tr>
-                  <tr>
-                    <td class="py-3 px-4 font-bold text-slate-900">2. Implementation Velocity</td>
-                    <td class="py-3 px-4 text-slate-600">18 - 24 months, Big 4 consultants</td>
-                    <td class="py-3 px-4 text-slate-600">9 - 14 months</td>
-                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Rapid (2 - 4 months), modular stack</td>
-                  </tr>
-                  <tr>
-                    <td class="py-3 px-4 font-bold text-slate-900">3. Precious Metal UoM Fit</td>
-                    <td class="py-3 px-4 text-slate-600">Requires heavy ABAP customizations</td>
-                    <td class="py-3 px-4 text-slate-600">Complex multi-UoM setup</td>
-                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">Native Gram/Mace/Tael with casting loss</td>
-                  </tr>
-                  <tr>
-                    <td class="py-3 px-4 font-bold text-slate-900">4. AI Agent Extensibility</td>
-                    <td class="py-3 px-4 text-slate-600">Proprietary closed ecosystem</td>
-                    <td class="py-3 px-4 text-slate-600">Azure OpenAI Copilot</td>
-                    <td class="py-3 px-4 bg-amber-50/30 font-semibold text-emerald-700">100% open REST/JSON APIs + Gemini Agent</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `;
-    }
 
     // ================= CHATBOT CLIENT =================
     let chatHistory = [];

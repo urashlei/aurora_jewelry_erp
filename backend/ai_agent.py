@@ -43,7 +43,7 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
 
     if any(k in q for k in ["hedge", "hedging", "risk", "balance", "gold price", "fluctuat"]):
         return (
-            f"### 🛡️ Autonomous Gold Position & Hedging Analysis\n\n"
+            f"### Autonomous Gold Position & Hedging Analysis\n\n"
             f"- **Live Total Gold Exposure**: **{total_gold_g:,.1f} grams** (~**{total_gold_chi:,.1f} Chi** / **{(total_gold_g/37.5):,.1f} Tael**).\n"
             f"- **Working Capital Valuation**: **{total_val:,.0f} VND**.\n"
             f"- **Hedging Strategy (Natural Hedging)**: Unlike financial derivatives, Aurora Jewelry hedges by matching daily raw bullion purchases (PO) with retail point-of-sale volume (POS: **{today_sales:,.0f} VND** today). This neutralizes intraday spot bullion fluctuations without costly futures contracts.\n"
@@ -52,7 +52,7 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
 
     if any(k in q for k in ["stockout", "out of stock", "shortage", "phu nhuan", "pn", "rebalance", "transfer"]):
         return (
-            f"### 🚨 Boutique Stockout Risk & Rebalance Directive\n\n"
+            f"### Boutique Stockout Risk & Rebalance Directive\n\n"
             f"- **Vulnerable Location**: **Phu Nhuan Boutique (WH-PN)**.\n"
             f"- **Critical Item**: *Fortune Ring 24K* (Current on-hand: ~4 units, below the safety threshold of **15 units** ahead of the God of Wealth festival).\n"
             f"- **Prescriptive Action**: Dispatch an internal transfer of **15 units** from Central Vault (WH-KT) to WH-PN.\n"
@@ -79,7 +79,7 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
 
     if any(k in q for k in ["porter", "5 force", "five forces", "competitive"]):
         return (
-            f"### 📊 Michael Porter's Five Forces Analysis (Chapter 3)\n\n"
+            f"### Michael Porter's Five Forces Analysis (Chapter 3)\n\n"
             f"1. **Supplier Power (High)**: State Bank regulates 24K bullion import quotas (SJC monopoly). Aurora mitigates this by maintaining long-term institutional vendor ties (SJC, DOJI, Heraeus).\n"
             f"2. **Buyer Power (Moderate)**: Discerning retail clients demand karat assay certificates and buyback guarantees. Aurora provides real-time digital e-Receipts with lifetime warranty.\n"
             f"3. **Threat of Substitutes (Moderate-High)**: Lab-grown diamonds (LGD) pressure natural stones. Aurora offers certified dual-track product lines.\n"
@@ -88,7 +88,7 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
 
     if any(k in q for k in ["button", "flow", "step", "how to", "create po", "buy", "cast", "mo"]):
         return (
-            f"### 🧭 4-Step Interactive Execution Flow & Button Guide\n\n"
+            f"### 4-Step Interactive Execution Flow & Button Guide\n\n"
             f"1. **Procurement**: Go to **Procurement (Purchase)** ➜ Click *'Create Purchase Order'* (150g 24K Gold) ➜ Click *'Receive Goods into Vault'* to increment WH-KT stock.\n"
             f"2. **Manufacturing**: Go to **Production (Manufacturing)** ➜ Confirm MO for 25 Fortune Rings ➜ Click *'Complete MO'* (ERP deducts gold with 1.87% casting loss).\n"
             f"3. **Inter-Store Transfer**: Go to **AI Agent** ➜ Click *'Approve & Rebalance'* to dispatch 15 rings to WH-PN.\n"
@@ -96,7 +96,7 @@ def _generate_local_heuristic_response(message: str, erp_context: dict = None) -
         )
 
     return (
-        f"### 💎 Aurora AI Decision Copilot\n\n"
+        f"### Aurora AI Decision Copilot\n\n"
         f"I am actively monitoring your live enterprise database:\n"
         f"- **Current Total Gold**: **{total_gold_g:,.1f} grams** (~**{total_gold_chi:,.1f} Chi**).\n"
         f"- **Working Capital**: **{total_val:,.0f} VND**.\n"
@@ -113,8 +113,9 @@ def ask_gemini_or_local(message: str, history: list = None, erp_context: dict = 
     """
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
 
-    # If no key or placeholder key, use intelligent local heuristic engine
+    # If no key or placeholder key, use local heuristic engine
     if not api_key or api_key == "MY_GEMINI_API_KEY":
+        print("[AI Agent] Source: LOCAL_FALLBACK - No API key")
         reply = _generate_local_heuristic_response(message, erp_context)
         return {
             "source": "local_fallback",
@@ -143,7 +144,10 @@ def ask_gemini_or_local(message: str, history: list = None, erp_context: dict = 
     )
 
     # Call Gemini REST API directly using standard urllib (no complex external SDK required)
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={api_key}"
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/"
+        f"models/gemini-3.6-flash:generateContent?key={api_key}"
+    )
     payload = {
         "contents": [
             {
@@ -158,7 +162,7 @@ def ask_gemini_or_local(message: str, history: list = None, erp_context: dict = 
             data=json.dumps(payload).encode("utf-8"),
             headers={"Content-Type": "application/json"}
         )
-        with urllib.request.urlopen(req, timeout=5) as response:
+        with urllib.request.urlopen(req, timeout=30) as response:
             result = json.loads(response.read().decode("utf-8"))
             reply = (
                 result.get("candidates", [{}])[0]
@@ -167,6 +171,7 @@ def ask_gemini_or_local(message: str, history: list = None, erp_context: dict = 
                 .get("text", "")
             )
             if reply:
+                print("[AI Agent] Source: GEMINI")
                 return {
                     "source": "gemini",
                     "reply": reply
@@ -174,7 +179,8 @@ def ask_gemini_or_local(message: str, history: list = None, erp_context: dict = 
     except Exception as e:
         print(f"[AI Agent] Gemini API call failed or timed out: {e}. Switching to Local MIS Engine.")
 
-    # Graceful fallback to heuristic engine if API key was invalid or network error
+    # Fallback if Gemini fails or times out
+    print("[AI Agent] Source: LOCAL_FALLBACK - API error")
     reply = _generate_local_heuristic_response(message, erp_context)
     return {
         "source": "local_fallback",

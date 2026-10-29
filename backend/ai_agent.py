@@ -41,7 +41,7 @@ SYSTEM_INSTRUCTION = """
 You are Aurora's Operations Copilot for the manager of AURORA JEWELRY, a gold and fine-jewelry business (central warehouse, casting workshop, retail stores).
 
 SCOPE
-- You cover only Aurora's day-to-day operations as shown in the system: AI Agent recommendations, inventory and stock transfers, manufacturing orders, purchasing, retail POS sales, and the gold position.
+- You cover only Aurora's day-to-day operations as shown in the system: AI Decision recommendations (inside the BI Dashboard), inventory and stock transfers, manufacturing orders, purchasing, retail POS sales, and the gold position.
 - If asked about anything outside that (academic frameworks, report formats, competitors, other companies, general knowledge), do not discuss it. Reply in one sentence that you only cover Aurora's operations, and name what you can analyse instead.
 
 SOURCE OF TRUTH
@@ -57,7 +57,7 @@ ANSWER STYLE (the manager is busy)
 - Structure, skipping any part that does not apply:
   **Conclusion:** one or two sentences that directly answer the question.
   **Evidence:** 2 to 4 hyphen bullets with exact numbers, units, warehouse codes and document codes.
-  **Actions:** a numbered list, at most 3, most urgent first. Each item says what, how much, from -> to, and where to click (for example Inventory > Internal Transfer, AI Agent > Approve & Rebalance, Manufacturing > Complete MO, Procurement > Create Purchase Order, Retail POS).
+  **Actions:** a numbered list, at most 3, most urgent first. Each item says what, how much, from -> to, and where to click (for example Inventory > Internal Transfer, BI Dashboard > AI Decision Agent > Approve & Rebalance, Manufacturing > Complete MO, Procurement > Create Purchase Order, Retail POS).
   **Watch out:** one line, only if there is a real risk or a data limitation.
 - Formatting: plain text with **bold**, "- " bullets and "1." numbering only. No headings (#), no tables, no emojis.
 - Language: reply in the language of the manager's latest message (Vietnamese -> Vietnamese, English -> English). Keep product names, SKUs and document codes unchanged.
@@ -222,7 +222,6 @@ def build_facts(ctx):
             "product": mo.get("productName"),
             "qty": _clean_qty(mo.get("quantity")),
             "status": mo.get("status"),
-            "cell": mo.get("assignedCell"),
             "raw_material": raw.get("name"),
             "raw_needed_g": round(need, 2),
             "raw_available_g": round(available, 2),
@@ -495,8 +494,8 @@ def _local_reply(message, facts):
     # ----- how to / compare (short, conceptual) -----------------------------
     if intent == "howto":
         return t(
-            "**Quy trình 4 bước:**\n1. Procurement > Create Purchase Order > Receive Goods into Vault (nhập vàng vào kho).\n2. Manufacturing > Create MO > Complete MO (trừ vàng, cộng thành phẩm).\n3. Inventory > Internal Transfer hoặc AI Agent > Approve & Rebalance (đưa hàng ra cửa hàng).\n4. Retail POS > Add to Cart > Complete Checkout (bán và trừ tồn).",
-            "**4-step flow:**\n1. Procurement > Create Purchase Order > Receive Goods into Vault (bring gold in).\n2. Manufacturing > Create MO > Complete MO (deduct gold, add finished goods).\n3. Inventory > Internal Transfer or AI Agent > Approve & Rebalance (move stock to stores).\n4. Retail POS > Add to Cart > Complete Checkout (sell and deduct stock).")
+            "**Quy trình 4 bước:**\n1. Procurement > Create Purchase Order > Receive Goods into Vault (nhập vàng vào kho).\n2. Manufacturing > Create MO > Complete MO (trừ vàng, cộng thành phẩm).\n3. Inventory > Internal Transfer hoặc BI Dashboard > AI Decision Agent > Approve & Rebalance (đưa hàng ra cửa hàng).\n4. Retail POS > Add to Cart > Complete Checkout (bán và trừ tồn).",
+            "**4-step flow:**\n1. Procurement > Create Purchase Order > Receive Goods into Vault (bring gold in).\n2. Manufacturing > Create MO > Complete MO (deduct gold, add finished goods).\n3. Inventory > Internal Transfer or BI Dashboard > AI Decision Agent > Approve & Rebalance (move stock to stores).\n4. Retail POS > Add to Cart > Complete Checkout (sell and deduct stock).")
 
     if intent == "offtopic":
         return t(

@@ -37,6 +37,13 @@
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/static/css/input.css">
+  <style>
+    #printArea { display: none; }
+    @media print {
+      body > *:not(#printArea) { display: none !important; }
+      #printArea { display: block !important; }
+    }
+  </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
 
@@ -278,10 +285,18 @@
 
   <!-- ================= GENERIC MODAL CONTAINER ================= -->
   <div id="actionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200" id="actionModalContent">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto" id="actionModalContent">
       <!-- Modal dynamically generated -->
     </div>
   </div>
+
+  <!-- ================= IN-PAGE NOTICE / CONFIRM (replaces browser alert popups) ================= -->
+  <div id="noticeModal" class="fixed inset-0 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 hidden" style="z-index:70">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200" id="noticeContent"></div>
+  </div>
+
+  <!-- Receipt used only when printing -->
+  <div id="printArea"></div>
 
   <!-- ================= FOOTER ================= -->
   <footer class="border-t border-slate-200 bg-white py-5 text-xs text-slate-500 mt-auto">
@@ -307,19 +322,26 @@
         { id: 'prod_g18k', sku: 'RAW-G18K-BAR', name: '18K Gold Ingot (750)', karat: '18K', goldWeightGrams: 0.75, type: 'raw', unitCostVnd: 1680000, retailPriceVnd: 1740000, stocks: { wh_mw: 500.0, wh_pn: 0.0, wh_d1: 0.0 } },
         { id: 'prod_ring_24k', sku: 'JWL-RNG-24K-01', name: 'Fortune Ring 24K (Kim Tien)', karat: '24K', goldWeightGrams: 3.75, type: 'finished', unitCostVnd: 9150000, retailPriceVnd: 9800000, stocks: { wh_mw: 40.0, wh_pn: 4.0, wh_d1: 18.0 } },
         { id: 'prod_ring_18k_dia', sku: 'JWL-RNG-18K-D01', name: 'Solitaire Diamond Ring 18K (0.5ct GIA)', karat: '18K', goldWeightGrams: 2.8, type: 'finished', unitCostVnd: 28500000, retailPriceVnd: 36000000, stocks: { wh_mw: 15.0, wh_pn: 5.0, wh_d1: 12.0 } },
-        { id: 'prod_silver_ingot', sku: 'RAW-SILVER-999', name: 'Pure Fine Silver (999)', karat: '999', goldWeightGrams: 0.0, type: 'raw', unitCostVnd: 28000, retailPriceVnd: 32000, stocks: { wh_mw: 4500.0, wh_pn: 0.0, wh_d1: 0.0 } }
+        { id: 'prod_silver_ingot', sku: 'RAW-SILVER-999', name: 'Pure Fine Silver (999)', karat: '999', goldWeightGrams: 0.0, type: 'raw', unitCostVnd: 28000, retailPriceVnd: 32000, stocks: { wh_mw: 4500.0, wh_pn: 0.0, wh_d1: 0.0 } },
+        { id: 'prod_diamond_05', sku: 'RAW-DIA-050', name: 'Round Brilliant Diamonds 0.5ct', karat: 'N/A', goldWeightGrams: 0.0, type: 'raw', unit: 'units', showInPos: false, unitCostVnd: 22000000, retailPriceVnd: 22000000, stocks: { wh_mw: 0.0, wh_pn: 0.0, wh_d1: 0.0 } }
+      ],
+      suppliers: [
+        { id: 'sup_sjc', name: 'SJC Gold Corporation' },
+        { id: 'sup_doji', name: 'DOJI Group' },
+        { id: 'sup_heraeus', name: 'Heraeus Precious Metals' },
+        { id: 'sup_viettin', name: 'Viet Tin GIA Diamond Importers' }
       ],
       boms: [
-        { id: 'bom_ring_24k', productId: 'prod_ring_24k', name: 'BOM - Fortune Ring 24K', rawMaterialId: 'prod_g24k', rawQuantityGrams: 3.82, castingLossFactor: 0.0187, laborCostVnd: 250000 },
-        { id: 'bom_ring_dia', productId: 'prod_ring_18k_dia', name: 'BOM - Solitaire Diamond Ring 18K', rawMaterialId: 'prod_g18k', rawQuantityGrams: 2.85, castingLossFactor: 0.018, laborCostVnd: 1800000 }
+        { id: 'bom_ring_24k', productId: 'prod_ring_24k', name: 'BOM - Fortune Ring 24K', components: [{ productId: 'prod_g24k', quantity: 3.75, lossPct: 1.87, required: 3.82 }], laborCostVnd: 250000 },
+        { id: 'bom_ring_dia', productId: 'prod_ring_18k_dia', name: 'BOM - Solitaire Diamond Ring 18K', components: [{ productId: 'prod_g18k', quantity: 2.8, lossPct: 1.8, required: 2.85 }], laborCostVnd: 1800000 }
       ],
       manufacturingOrders: [
         { id: 'mo_101', code: 'MO-2026-089', bomId: 'bom_ring_24k', productName: 'Fortune Ring 24K', quantity: 20, status: 'confirmed', createdAt: '2026-10-24 08:30' },
         { id: 'mo_102', code: 'MO-2026-090', bomId: 'bom_ring_dia', productName: 'Solitaire Diamond Ring 18K', quantity: 10, status: 'in_progress', createdAt: '2026-10-24 14:15' }
       ],
       purchaseOrders: [
-        { id: 'po_201', code: 'PO-2026-045', vendor: 'SJC Gold Corporation', productName: '24K Gold Bullion (9999)', quantityGrams: 200, unitPriceVnd: 2360000, totalVnd: 472000000, status: 'received', createdAt: '2026-10-23 09:00' },
-        { id: 'po_202', code: 'PO-2026-046', vendor: 'Viet Tin GIA Diamond Importers', productName: 'Round Brilliant Diamonds 0.5ct', quantityGrams: 10, unitPriceVnd: 22000000, totalVnd: 220000000, status: 'confirmed', createdAt: '2026-10-24 11:30' }
+        { id: 'po_201', code: 'PO-2026-045', vendor: 'SJC Gold Corporation', supplierId: 'sup_sjc', productId: 'prod_g24k', productName: '24K Gold Bullion (9999)', quantity: 200, quantityGrams: 200, unit: 'g', unitPriceVnd: 2360000, totalVnd: 472000000, status: 'received', createdAt: '2026-10-23 09:00' },
+        { id: 'po_202', code: 'PO-2026-046', vendor: 'Viet Tin GIA Diamond Importers', supplierId: 'sup_viettin', productId: 'prod_diamond_05', productName: 'Round Brilliant Diamonds 0.5ct', quantity: 10, quantityGrams: 10, unit: 'units', unitPriceVnd: 22000000, totalVnd: 220000000, status: 'confirmed', createdAt: '2026-10-24 11:30' }
       ],
       stockMoves: [
         { id: 'sm_01', reference: 'PO-2026-045', productSku: 'RAW-G24K-BAR', fromLocation: 'Vendor: SJC', toLocation: 'WH-MW', quantity: '200 g', type: 'receipt', timestamp: '2026-10-23 11:00' },
@@ -344,6 +366,8 @@
         { id: 'cust_02', name: 'Mr. Tran Hoang Nam', phone: '0912-333-777', tier: 'Gold', discountPercent: 3 }
       ],
       posCart: [],
+      posCheckout: { customerId: '__walkin__', walkInName: '', discountType: 'percent', discountValue: 0, payment: 'cash' },
+      posReceipt: null,
       currentTab: 'inventory',
       activeStoreId: 'wh_pn',
       salesTodayVnd: 31200000,
@@ -351,27 +375,217 @@
     };
 
     // State initialization
-    let erp = JSON.parse(localStorage.getItem('aurora_jewelry_erp_en_v3') || 'null') || DEFAULT_DATA;
+    let erp = migrateState(JSON.parse(localStorage.getItem('aurora_jewelry_erp_en_v3') || 'null') || JSON.parse(JSON.stringify(DEFAULT_DATA)));
     function saveState() {
+      deriveProductTypes(erp);
       syncAIRecommendations();
       localStorage.setItem('aurora_jewelry_erp_en_v3', JSON.stringify(erp));
       updateHeaderKPIs();
     }
 
-    // Unit shown next to a quantity: raw metal in grams, gold jewelry in pcs, everything else in units
+    // ================= SHARED HELPERS =================
+    function byId(id) { return document.getElementById(id); }
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function cleanText(s) { return String(s || '').replace(/[<>"]/g, '').trim(); }
+
+    // Unit shown next to a quantity: g for metal by weight, pcs for single pieces, units for everything else
     function unitOf(p) {
       if (!p) return 'pcs';
-      if (p.type === 'raw') return 'g';
-      return p.unit || 'pcs';
+      return p.unit || (p.type === 'raw' ? 'g' : 'pcs');
     }
     function isGoldKarat(k) { return ['24K', '18K', '14K', '10K'].includes(k); }
+    function purityOf(k) { return { '24K': 1, '18K': 0.75, '14K': 0.585, '10K': 0.417 }[k] || 0; }
+
+    // ---------- In-page notices (replace the browser's "127.0.0.1 says" popups) ----------
+    function inferNoticeType(m) {
+      if (/(cannot|can't|insufficient|not enough|not available|please|must|need|already|no valid|still|blocked|greater than|invalid|only \d|no longer)/i.test(m)) return 'error';
+      if (/(success|completed|now available|created|saved|received)/i.test(m)) return 'success';
+      return 'info';
+    }
+
+    function showNotice(message, type) {
+      type = type || inferNoticeType(String(message));
+      const cfg = {
+        error: { icon: 'alert-triangle', tone: 'bg-red-100 text-red-600', title: 'Action needed' },
+        success: { icon: 'check-circle-2', tone: 'bg-emerald-100 text-emerald-600', title: 'Success' },
+        info: { icon: 'info', tone: 'bg-sky-100 text-sky-600', title: 'Notice' }
+      }[type];
+      byId('noticeContent').innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full ${cfg.tone} flex items-center justify-center shrink-0"><i data-lucide="${cfg.icon}" class="w-5 h-5"></i></div>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-bold text-sm text-slate-900">${cfg.title}</h3>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed break-words">${esc(message).replace(/\n/g, '<br>')}</p>
+          </div>
+        </div>
+        <div class="mt-5 flex justify-end">
+          <button onclick="closeNotice()" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer">OK</button>
+        </div>`;
+      byId('noticeModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeNotice() { byId('noticeModal').classList.add('hidden'); }
+
+    let confirmCallback = null;
+    function askConfirm(message, onYes, yesLabel) {
+      confirmCallback = onYes;
+      byId('noticeContent').innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0"><i data-lucide="help-circle" class="w-5 h-5"></i></div>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-bold text-sm text-slate-900">Please confirm</h3>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed break-words">${esc(message).replace(/\n/g, '<br>')}</p>
+          </div>
+        </div>
+        <div class="mt-5 flex justify-end gap-2">
+          <button onclick="confirmNo()" class="px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-100 text-xs font-semibold cursor-pointer">Cancel</button>
+          <button onclick="confirmYes()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs cursor-pointer">${esc(yesLabel || 'Confirm')}</button>
+        </div>`;
+      byId('noticeModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+    function confirmYes() { const cb = confirmCallback; confirmCallback = null; closeNotice(); if (cb) cb(); }
+    function confirmNo() { confirmCallback = null; closeNotice(); }
+
+    // Any leftover alert() call now shows an in-page message instead of a browser popup
+    window.alert = function (message) { showNotice(String(message)); };
+
+    // ---------- Product helpers ----------
+    function nextCode(prefix, list) {
+      const re = new RegExp(prefix + '-2026-(\\d+)');
+      const max = list.reduce((mx, x) => {
+        const n = parseInt((String(x.code || '').match(re) || [])[1]);
+        return isNaN(n) ? mx : Math.max(mx, n);
+      }, 0);
+      return `${prefix}-2026-${String(Math.max(max + 1, 100)).padStart(3, '0')}`;
+    }
+
+    // A product is "finished" when a Bill of Materials produces it, otherwise it is a "raw" material.
+    function deriveProductTypes(state) {
+      (state.products || []).forEach(p => {
+        p.type = (state.boms || []).some(b => b.productId === p.id) ? 'finished' : 'raw';
+      });
+    }
+
+    function createProductRecord(o) {
+      const stocks = {};
+      erp.warehouses.forEach(w => { stocks[w.id] = 0; });
+      if (o.whId) stocks[o.whId] = o.qty || 0;
+      const p = {
+        id: `prod_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        sku: o.sku,
+        name: o.name,
+        karat: o.karat,
+        goldWeightGrams: o.goldWeightGrams,
+        type: o.type,
+        unit: o.unit,
+        showInPos: !!o.showInPos,
+        unitCostVnd: o.cost,
+        retailPriceVnd: o.price,
+        stocks
+      };
+      erp.products.push(p);
+      return p;
+    }
+
+    // Keeps unit / gold-weight fields consistent with karat + type. prefix = 'np' (Inventory) or 'poNp' (Procurement)
+    function applyProductFieldRules(prefix, type, reset) {
+      const karat = byId(prefix + 'Karat').value;
+      const gold = isGoldKarat(karat);
+      const sel = byId(prefix + 'Unit');
+      const w = byId(prefix + 'UnitWeight');
+      if (reset) {
+        const opts = type === 'raw' ? ['g', 'units'] : ['pcs', 'units'];
+        sel.innerHTML = opts.map(u => `<option value="${u}">${u}</option>`).join('');
+        sel.value = type === 'raw' ? ((gold || karat === '999') ? 'g' : 'units') : (gold ? 'pcs' : 'units');
+      }
+      const unit = sel.value;
+      let hint;
+      if (!gold) {
+        w.value = 0; w.disabled = true;
+        hint = 'Not gold: gold weight is 0 g and stock is counted in ' + unit + '.';
+      } else if (type === 'raw' && unit === 'g') {
+        w.value = purityOf(karat); w.disabled = true;
+        hint = `Gold content: ${purityOf(karat)} g per gram of this material.`;
+      } else {
+        if (w.disabled) w.value = '';
+        w.disabled = false;
+        hint = `Grams of gold in 1 ${unit === 'pcs' ? 'piece' : 'unit'} (1 Chi = 3.75 g).`;
+      }
+      w.classList.toggle('opacity-50', w.disabled);
+      byId(prefix + 'WeightHint').textContent = hint;
+      return unit;
+    }
+
+    function readProductFields(prefix, type) {
+      const karat = byId(prefix + 'Karat').value;
+      const unit = byId(prefix + 'Unit').value;
+      const gold = isGoldKarat(karat);
+      let weight = 0;
+      if (gold) weight = (type === 'raw' && unit === 'g') ? purityOf(karat) : (parseFloat(byId(prefix + 'UnitWeight').value) || 0);
+      return { karat, unit, goldWeightGrams: weight, error: (gold && weight <= 0) ? 'A gold product needs a gold weight greater than 0 g.' : '' };
+    }
+
+    // Upgrades data saved by an older version of this page
+    function migrateState(s) {
+      s.products = s.products || [];
+      s.products.forEach(p => { if (!p.unit) p.unit = p.type === 'raw' ? 'g' : 'pcs'; });
+
+      s.boms = s.boms || [];
+      s.boms.forEach(b => {
+        if (!Array.isArray(b.components)) {
+          const lossPct = Math.round((b.castingLossFactor || 0) * 10000) / 100;
+          const required = b.rawQuantityGrams || 0;
+          b.components = b.rawMaterialId
+            ? [{ productId: b.rawMaterialId, quantity: Math.round(required / (1 + lossPct / 100) * 1000) / 1000, lossPct, required }]
+            : [];
+        }
+        delete b.rawMaterialId; delete b.rawQuantityGrams; delete b.castingLossFactor;
+      });
+      (s.manufacturingOrders || []).forEach(m => { delete m.assignedCell; });
+
+      s.suppliers = s.suppliers || [];
+      const addSupplier = name => {
+        if (name && !s.suppliers.some(x => x.name === name)) s.suppliers.push({ id: `sup_${s.suppliers.length + 1}_${Date.now() % 100000}`, name });
+      };
+      if (s.suppliers.length === 0) (DEFAULT_DATA.suppliers || []).forEach(x => addSupplier(x.name));
+
+      (s.purchaseOrders || []).forEach(po => {
+        if (po.quantity === undefined) po.quantity = po.quantityGrams || 0;
+        let prod = (po.productId && s.products.find(p => p.id === po.productId)) || s.products.find(p => p.name === po.productName);
+        if (!prod && po.productName) {
+          const asUnits = /diamond|stone|gem|pearl/i.test(po.productName);
+          prod = {
+            id: `prod_${Date.now()}_${s.products.length}`,
+            sku: 'RAW-' + po.productName.replace(/[^A-Za-z0-9]+/g, '-').toUpperCase().slice(0, 18),
+            name: po.productName, karat: 'N/A', goldWeightGrams: 0, type: 'raw', unit: asUnits ? 'units' : 'g',
+            showInPos: false, unitCostVnd: po.unitPriceVnd || 0, retailPriceVnd: po.unitPriceVnd || 0, stocks: {}
+          };
+          (s.warehouses || []).forEach(w => { prod.stocks[w.id] = 0; });
+          s.products.push(prod);
+        }
+        if (prod) { po.productId = prod.id; po.productName = prod.name; po.unit = po.unit || prod.unit; }
+        po.unit = po.unit || 'g';
+        po.quantityGrams = po.quantity;   // legacy field still read by the Python assistant
+        addSupplier(po.vendor);
+      });
+
+      s.posCheckout = s.posCheckout || { customerId: '__walkin__', walkInName: '', discountType: 'percent', discountValue: 0, payment: 'cash' };
+      if (s.posReceipt === undefined) s.posReceipt = null;
+      deriveProductTypes(s);
+      return s;
+    }
+
 
     function resetDemoData() {
-      if (confirm('Reset Aurora Jewelry ERP to pristine demonstration master state?')) {
-        erp = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      askConfirm('Reset Aurora Jewelry ERP to pristine demonstration master state?', () => {
+        erp = migrateState(JSON.parse(JSON.stringify(DEFAULT_DATA)));
         saveState();
         renderActiveTab();
-      }
+      }, 'Reset');
     }
 
     function calculateTotalGold() {
@@ -525,7 +739,7 @@
                       <tr class="hover:bg-slate-50/80 transition-colors">
                         <td class="py-3 px-4">
                           <div class="font-bold text-slate-900">${p.name}</div>
-                          <div class="text-[10px] font-mono text-slate-400">${p.sku}</div>
+                          <div class="text-[10px] font-mono text-slate-400">${p.sku} <span class="ml-1 px-1.5 py-px rounded text-[9px] uppercase font-bold font-sans ${p.type === 'raw' ? 'bg-sky-100 text-sky-800' : 'bg-purple-100 text-purple-800'}">${p.type === 'raw' ? 'Raw' : 'Finished'}</span></div>
                         </td>
                         <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${p.karat === '24K' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}">${p.karat}</span></td>
                         <td class="py-3 px-3 font-mono text-slate-600">${p.goldWeightGrams > 0 ? `${p.goldWeightGrams} g` : 'N/A'}</td>
@@ -778,6 +992,7 @@
 
     function closeActionModal() {
       document.getElementById('actionModal').classList.add('hidden');
+      document.getElementById('actionModalContent').style.maxWidth = '';
     }
     // ================= NEW PRODUCT =================
     function isSoldInPos(p) {
@@ -787,6 +1002,7 @@
     function openNewProductModal() {
       const modal = document.getElementById('actionModal');
       const content = document.getElementById('actionModalContent');
+      const field = 'w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs';
       content.innerHTML = `
         <div class="space-y-4 text-xs">
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -799,53 +1015,53 @@
 
           <div>
             <label class="block text-slate-600 font-semibold mb-1">Product name:</label>
-            <input type="text" id="npName" placeholder="e.g. Fortune Pendant 24K" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+            <input type="text" id="npName" placeholder="e.g. Fortune Pendant 24K" class="${field}">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-slate-600 font-semibold mb-1">Product code (SKU):</label>
-              <input type="text" id="npSku" placeholder="e.g. JWL-PDT-24K-01" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+              <input type="text" id="npSku" placeholder="e.g. JWL-PDT-24K-01" class="${field} font-mono">
             </div>
             <div>
               <label class="block text-slate-600 font-semibold mb-1">Karat purity:</label>
-              <select id="npKarat" onchange="updateNewProductUnit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+              <select id="npKarat" onchange="updateNewProductForm()" class="${field}">
                 <option value="24K">24K (9999)</option>
                 <option value="18K" selected>18K (750)</option>
                 <option value="14K">14K (585)</option>
                 <option value="10K">10K (417)</option>
                 <option value="999">999 (Silver)</option>
-                <option value="N/A">N/A (non-metal)</option>
+                <option value="N/A">N/A (not metal)</option>
               </select>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3 items-start">
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">Unit weight (g):</label>
-              <input type="number" id="npUnitWeight" min="0" step="any" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
-              <p id="npWeightHint" class="text-[10px] text-slate-400 mt-1">Grams of gold in 1 piece (1 Chi = 3.75 g).</p>
+              <label class="block text-slate-600 font-semibold mb-1">Gold weight per unit (g):</label>
+              <input type="number" id="npUnitWeight" min="0" step="any" placeholder="0" class="${field} font-mono">
+              <p id="npWeightHint" class="text-[10px] text-slate-400 mt-1"></p>
             </div>
             <div>
-              <label id="npQtyLabel" class="block text-slate-600 font-semibold mb-1">Quantity (pcs):</label>
-              <input type="number" id="npQty" min="0" step="any" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+              <label id="npQtyLabel" class="block text-slate-600 font-semibold mb-1">Quantity:</label>
+              <input type="number" id="npQty" min="0" step="1" value="0" class="${field} font-mono">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">Cost (VND / unit):</label>
-              <input type="number" id="npCost" min="0" step="any" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+              <label id="npCostLabel" class="block text-slate-600 font-semibold mb-1">Cost (VND / unit):</label>
+              <input type="number" id="npCost" min="0" step="any" class="${field} font-mono">
             </div>
             <div>
-              <label class="block text-slate-600 font-semibold mb-1">Price (VND / unit):</label>
-              <input type="number" id="npPrice" min="0" step="any" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+              <label id="npPriceLabel" class="block text-slate-600 font-semibold mb-1">Price (VND / unit):</label>
+              <input type="number" id="npPrice" min="0" step="any" class="${field} font-mono">
             </div>
           </div>
 
           <div>
             <label class="block text-slate-600 font-semibold mb-1">Location:</label>
-            <select id="npWarehouse" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+            <select id="npWarehouse" class="${field}">
               ${erp.warehouses.map(w => `<option value="${w.id}">${w.code} - ${w.name}</option>`).join('')}
             </select>
           </div>
@@ -858,6 +1074,8 @@
             </span>
           </label>
 
+          <p class="text-[10px] text-slate-400">A product becomes a <strong>finished product</strong> automatically once a Bill of Materials (Manufacturing) produces it. Until then it is treated as a purchasable material.</p>
+
           <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
             <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
             <button onclick="executeNewProduct()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Create Product</button>
@@ -866,138 +1084,147 @@
       `;
       modal.classList.remove('hidden');
       lucide.createIcons();
-      updateNewProductUnit();
+      updateNewProductForm();
     }
 
-    // Gold items are counted in pcs, anything that is not gold is counted in units
-    function updateNewProductUnit() {
-      const gold = isGoldKarat(document.getElementById('npKarat').value);
-      const w = document.getElementById('npUnitWeight');
-      w.disabled = !gold;
-      w.classList.toggle('opacity-50', !gold);
-      if (!gold) w.value = 0;
-      document.getElementById('npQtyLabel').textContent = `Quantity (${gold ? 'pcs' : 'units'}):`;
-      document.getElementById('npWeightHint').textContent = gold
+    // Unit is chosen automatically: gold items are counted in pieces (pcs), everything else in units
+    function newProductUnit() {
+      return isGoldKarat(byId('npKarat').value) ? 'pcs' : 'units';
+    }
+
+    function updateNewProductForm() {
+      const gold = isGoldKarat(byId('npKarat').value);
+      const unit = newProductUnit();
+      const w = byId('npUnitWeight');
+      if (!gold) {
+        w.value = 0;
+        w.disabled = true;
+      } else {
+        if (w.disabled) w.value = '';
+        w.disabled = false;
+      }
+      w.classList.toggle('opacity-50', w.disabled);
+      byId('npWeightHint').textContent = gold
         ? 'Grams of gold in 1 piece (1 Chi = 3.75 g).'
-        : 'Not gold, so the weight is fixed at 0 g and stock is counted in units.';
+        : 'Not gold: gold weight is 0 g and stock is counted in units.';
+      byId('npQtyLabel').textContent = `Quantity (${unit}):`;
+      byId('npCostLabel').textContent = `Cost (VND / ${unit}):`;
+      byId('npPriceLabel').textContent = `Price (VND / ${unit}):`;
     }
 
     function executeNewProduct() {
-      const clean = s => s.replace(/[<>"]/g, '').trim();
-      const name = clean(document.getElementById('npName').value);
-      const sku = clean(document.getElementById('npSku').value).toUpperCase().replace(/\s+/g, '-');
-      const karat = document.getElementById('npKarat').value;
+      const name = cleanText(byId('npName').value);
+      const sku = cleanText(byId('npSku').value).toUpperCase().replace(/\s+/g, '-');
+      const karat = byId('npKarat').value;
       const gold = isGoldKarat(karat);
-      const unit = gold ? 'pcs' : 'units';
-      const unitWeight = gold ? (parseFloat(document.getElementById('npUnitWeight').value) || 0) : 0;
-      const qty = parseFloat(document.getElementById('npQty').value) || 0;
-      const cost = parseFloat(document.getElementById('npCost').value);
-      const price = parseFloat(document.getElementById('npPrice').value);
-      const whId = document.getElementById('npWarehouse').value;
-      const showInPos = document.getElementById('npShowPos').checked;
+      const unit = newProductUnit();
+      const goldWeightGrams = gold ? (parseFloat(byId('npUnitWeight').value) || 0) : 0;
+      const qty = parseFloat(byId('npQty').value) || 0;
+      const cost = parseFloat(byId('npCost').value);
+      const price = parseFloat(byId('npPrice').value);
+      const whId = byId('npWarehouse').value;
+      const showInPos = byId('npShowPos').checked;
       const wh = erp.warehouses.find(w => w.id === whId);
 
-      if (!name) { alert('Please enter a product name.'); return; }
-      if (!sku) { alert('Please enter a product code (SKU).'); return; }
+      if (!name) { showNotice('Please enter a product name.', 'error'); return; }
+      if (!sku) { showNotice('Please enter a product code (SKU).', 'error'); return; }
       if (erp.products.some(p => p.sku.toUpperCase() === sku)) {
-        alert(`SKU "${sku}" already exists. Please use a different code.`);
+        showNotice(`SKU "${sku}" already exists. Please use a different code.`, 'error');
         return;
       }
-      if (gold && unitWeight <= 0) { alert('A gold product needs a unit weight greater than 0 g.'); return; }
-      if (qty < 0) { alert('Quantity cannot be negative.'); return; }
-      if (isNaN(cost) || cost <= 0) { alert('Cost must be greater than 0.'); return; }
-      if (isNaN(price) || price <= 0) { alert('Price must be greater than 0.'); return; }
-      if (price < cost && !confirm('Price is lower than cost. Continue anyway?')) return;
+      if (gold && goldWeightGrams <= 0) { showNotice('A gold product needs a gold weight greater than 0 g.', 'error'); return; }
+      if (qty < 0) { showNotice('Quantity cannot be negative.', 'error'); return; }
+      if (!Number.isInteger(qty)) { showNotice(`Quantity in ${unit} must be a whole number.`, 'error'); return; }
+      if (isNaN(cost) || cost <= 0) { showNotice('Cost must be greater than 0.', 'error'); return; }
+      if (isNaN(price) || price <= 0) { showNotice('Price must be greater than 0.', 'error'); return; }
 
-      const stocks = {};
-      erp.warehouses.forEach(w => { stocks[w.id] = 0; });
-      stocks[whId] = qty;
+      const create = () => {
+        // type is derived from the BOMs (see deriveProductTypes): no BOM yet = raw
+        createProductRecord({ name, sku, type: 'raw', karat, unit, goldWeightGrams, cost, price, showInPos, whId, qty });
+        if (qty > 0) {
+          erp.stockMoves.unshift({
+            id: `sm_${Date.now()}`,
+            reference: `NEW-${Math.floor(1000 + Math.random() * 9000)}`,
+            productSku: sku,
+            fromLocation: 'New Product',
+            toLocation: wh.code,
+            quantity: `${qty} ${unit}`,
+            type: 'receipt',
+            timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+          });
+        }
+        saveState();
+        closeActionModal();
+        renderActiveTab();
+        showNotice(`${name} was added (${unit}). It becomes a finished product once you create a Bill of Materials for it in Manufacturing.`, 'success');
+      };
 
-      erp.products.push({
-        id: `prod_${Date.now()}`,
-        sku,
-        name,
-        karat,
-        goldWeightGrams: unitWeight,
-        type: 'finished',
-        unit,
-        showInPos,
-        unitCostVnd: cost,
-        retailPriceVnd: price,
-        stocks
-      });
-
-      if (qty > 0) {
-        erp.stockMoves.unshift({
-          id: `sm_${Date.now()}`,
-          reference: `NEW-${Math.floor(1000 + Math.random() * 9000)}`,
-          productSku: sku,
-          fromLocation: 'New Product',
-          toLocation: wh.code,
-          quantity: `${qty} ${unit}`,
-          type: 'receipt',
-          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-        });
-      }
-
-      saveState();
-      closeActionModal();
-      renderActiveTab();
+      if (price < cost) askConfirm('Price is lower than cost. Continue anyway?', create);
+      else create();
     }
+
     // ================= 2. MANUFACTURING VIEW =================
     function mfgCentralId() {
       return (erp.warehouses.find(w => w.type === 'manufacturing') || erp.warehouses[0]).id;
     }
     function fmtG(n) { return (Math.round(n * 100) / 100).toLocaleString('en-US'); }
 
-    // Raw metal check for an order: vault stock minus metal already reserved by other open orders
+    // Checks every BOM component: warehouse stock minus what other open orders already reserved
     function checkMOAvailability(bom, qty, excludeMoId) {
-      const raw = erp.products.find(p => p.id === bom.rawMaterialId);
-      const inVault = raw ? (raw.stocks[mfgCentralId()] || 0) : 0;
-      const reserved = erp.manufacturingOrders
+      const cid = mfgCentralId();
+      const reserved = {};
+      erp.manufacturingOrders
         .filter(m => m.id !== excludeMoId && (m.status === 'confirmed' || m.status === 'in_progress'))
-        .reduce((sum, m) => {
+        .forEach(m => {
           const b = erp.boms.find(x => x.id === m.bomId);
-          return b && b.rawMaterialId === bom.rawMaterialId ? sum + m.quantity * b.rawQuantityGrams : sum;
-        }, 0);
-      const available = Math.max(0, inVault - reserved);
-      const need = qty * bom.rawQuantityGrams;
-      return { raw, need, inVault, reserved, available, ok: !!raw && available + 1e-9 >= need, short: Math.max(0, need - available) };
+          (b ? b.components : []).forEach(c => { reserved[c.productId] = (reserved[c.productId] || 0) + m.quantity * c.required; });
+        });
+      const lines = (bom.components || []).map(c => {
+        const prod = erp.products.find(p => p.id === c.productId);
+        const inVault = prod ? (prod.stocks[cid] || 0) : 0;
+        const available = Math.max(0, inVault - (reserved[c.productId] || 0));
+        const need = qty * c.required;
+        return { prod, need, inVault, available, ok: !!prod && available + 1e-9 >= need, short: Math.max(0, need - available) };
+      });
+      return { lines, ok: lines.length > 0 && lines.every(l => l.ok), shorts: lines.filter(l => !l.ok) };
+    }
+
+    function shortageText(r) {
+      return r.shorts.map(l => `${fmtG(l.short)} ${unitOf(l.prod)} of ${l.prod ? l.prod.name : 'a missing item'}`).join(', ');
     }
 
     function renderManufacturingView(container) {
       const btn = 'flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg shadow-xs cursor-pointer';
 
       const bomCards = erp.boms.length === 0
-        ? `<div class="md:col-span-2 p-6 bg-white rounded-xl border border-dashed border-slate-300 text-xs text-slate-500 text-center">No bill of materials yet. Click <strong>Create BOM</strong> to define how a product is made.</div>`
+        ? `<div class="md:col-span-2 p-6 bg-white rounded-xl border border-dashed border-slate-300 text-xs text-slate-500 text-center">No bill of materials yet. Click <strong>Create BOM</strong> to define which materials make a product.</div>`
         : erp.boms.map(bom => {
             const prod = erp.products.find(p => p.id === bom.productId);
-            const raw = erp.products.find(p => p.id === bom.rawMaterialId);
+            const comps = (bom.components || []).map(c => {
+              const p = erp.products.find(x => x.id === c.productId);
+              const u = unitOf(p);
+              return `<li class="flex justify-between gap-3"><span>${p ? p.name : '(deleted item)'}</span><span class="font-mono text-slate-900 shrink-0">${c.required} ${u}${c.lossPct > 0 ? ` <span class="text-amber-700">(+${c.lossPct}% loss)</span>` : ''}</span></li>`;
+            }).join('');
             return `
               <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
                 <div class="flex items-start justify-between gap-2">
-                  <span class="text-xs font-bold font-serif text-slate-900">${bom.name}</span>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <span class="text-[10px] font-mono bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold">Loss Factor: ${(bom.castingLossFactor*100).toFixed(2)}%</span>
-                    <button onclick="deleteBOMAction('${bom.id}')" title="Delete BOM" class="text-slate-300 hover:text-red-600 cursor-pointer"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  <div>
+                    <div class="text-xs font-bold font-serif text-slate-900">${bom.name}</div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">Makes 1 × ${prod ? prod.name : '(deleted product)'}</div>
                   </div>
+                  <button onclick="deleteBOMAction('${bom.id}')" title="Delete BOM" class="text-slate-300 hover:text-red-600 cursor-pointer"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                 </div>
-                <div class="mt-3 text-xs text-slate-600 space-y-1">
-                  <div>Finished product: <strong class="text-slate-900">${prod ? prod.name : '(deleted product)'}</strong></div>
-                  <div>Raw material: <strong class="text-slate-900">${raw ? raw.name : '(missing)'}</strong></div>
-                  <div>Raw required: <strong class="font-mono text-slate-900">${bom.rawQuantityGrams} g</strong> per ${prod && unitOf(prod) === 'units' ? 'unit' : 'piece'}</div>
-                  <div>Craftsmanship / Labor Cost: <strong class="font-mono text-slate-900">${bom.laborCostVnd.toLocaleString('en-US')} đ</strong></div>
-                </div>
+                <div class="mt-3 text-[10px] uppercase tracking-wider font-bold text-slate-400">Components per ${prod && unitOf(prod) === 'units' ? 'unit' : 'piece'}</div>
+                <ul class="mt-1 text-xs text-slate-600 space-y-1">${comps || '<li class="text-slate-400">No components</li>'}</ul>
+                <div class="mt-3 pt-2 border-t border-slate-100 text-xs text-slate-600">Craftsmanship / Labor Cost: <strong class="font-mono text-slate-900">${bom.laborCostVnd.toLocaleString('en-US')} đ</strong></div>
               </div>`;
           }).join('');
 
       const moRows = erp.manufacturingOrders.length === 0
-        ? `<tr><td colspan="6" class="py-6 text-center text-slate-400">No manufacturing orders yet.</td></tr>`
+        ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">No manufacturing orders yet.</td></tr>`
         : erp.manufacturingOrders.map(mo => {
             const bom = erp.boms.find(b => b.id === mo.bomId);
             const fin = bom && erp.products.find(p => p.id === bom.productId);
-            const raw = bom && erp.products.find(p => p.id === bom.rawMaterialId);
-            const need = bom ? mo.quantity * bom.rawQuantityGrams : 0;
             const na = mo.status === 'not_available';
             const chk = (na && bom) ? checkMOAvailability(bom, mo.quantity, mo.id) : null;
             const cls = mo.status === 'completed' ? 'bg-emerald-100 text-emerald-800' : na ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900';
@@ -1007,10 +1234,9 @@
                 <td class="py-3 px-4 font-bold text-blue-700 font-mono">${mo.code}</td>
                 <td class="py-3 px-4 font-semibold text-slate-900">${mo.productName}</td>
                 <td class="py-3 px-3 text-right font-mono font-bold">${mo.quantity} ${unitOf(fin)}</td>
-                <td class="py-3 px-3 text-right font-mono text-slate-700">${bom ? fmtG(need) + ' g' : '-'}<div class="text-[10px] text-slate-400">${raw ? raw.name : ''}</div></td>
                 <td class="py-3 px-3">
                   <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${cls}">${label}</span>
-                  ${chk ? `<div class="text-[10px] text-red-600 mt-1">Short ${fmtG(chk.short)} g (free: ${fmtG(chk.available)} g)</div>` : ''}
+                  ${chk && chk.shorts.length ? `<div class="text-[10px] text-red-600 mt-1">Short ${shortageText(chk)}</div>` : ''}
                 </td>
                 <td class="py-3 px-4 text-center">
                   ${mo.status === 'completed' ? '<span class="text-slate-400 font-mono">Done</span>'
@@ -1024,13 +1250,10 @@
         <div class="space-y-6 animate-fadeIn">
           <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
             <div>
-              <h2 class="text-xl font-bold font-serif text-slate-950">Manufacturing Orders &amp; Casting BOMs</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Create products, define their bill of materials, then issue orders. Casting loss is built into each BOM.</p>
+              <h2 class="text-xl font-bold font-serif text-slate-950">Manufacturing Orders &amp; Bills of Materials</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Combine several materials into one product, then issue production orders. New products are created in Inventory.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button onclick="openNewProductModal()" class="${btn} bg-slate-100 hover:bg-slate-200 text-slate-800">
-                <i data-lucide="gem" class="w-3.5 h-3.5"></i><span>New Product</span>
-              </button>
               <button onclick="openCreateBOMModal()" class="${btn} bg-slate-900 hover:bg-slate-800 text-white">
                 <i data-lucide="list-checks" class="w-3.5 h-3.5"></i><span>Create BOM</span>
               </button>
@@ -1040,10 +1263,8 @@
             </div>
           </div>
 
-          <!-- BOM Cards -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${bomCards}</div>
 
-          <!-- MO Table -->
           <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
               Active Production Orders (Work in Progress)
@@ -1055,7 +1276,6 @@
                     <th class="py-3 px-4">MO Code</th>
                     <th class="py-3 px-4">Product Name</th>
                     <th class="py-3 px-3 text-right">Order Quantity</th>
-                    <th class="py-3 px-3 text-right">Raw Needed</th>
                     <th class="py-3 px-3">Status</th>
                     <th class="py-3 px-4 text-center">Action</th>
                   </tr>
@@ -1068,27 +1288,22 @@
       `;
     }
 
-    // ---------- Bill of Materials ----------
+    // ---------- Bill of Materials (several components -> 1 product) ----------
+    let bomDraft = [];
+
     function openCreateBOMModal() {
       const modal = document.getElementById('actionModal');
       const content = document.getElementById('actionModalContent');
-      const finished = erp.products.filter(p => p.type !== 'raw');
-      const raws = erp.products.filter(p => p.type === 'raw');
+      const makeable = erp.products.slice();
+      const withoutBom = makeable.filter(p => !erp.boms.some(b => b.productId === p.id));
+      const withBom = makeable.filter(p => erp.boms.some(b => b.productId === p.id));
 
-      if (finished.length === 0 || raws.length === 0) {
-        content.innerHTML = `
-          <div class="space-y-4 text-xs">
-            <h3 class="font-bold text-slate-900 text-sm">Create Bill of Materials</h3>
-            <p class="text-slate-600">${finished.length === 0 ? 'You need at least one finished product first.' : 'You need at least one raw material (gold or silver) in Inventory first.'}</p>
-            <div class="flex justify-end gap-2">
-              <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Close</button>
-              ${finished.length === 0 ? `<button onclick="openNewProductModal()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">New Product</button>` : ''}
-            </div>
-          </div>`;
-        modal.classList.remove('hidden');
+      if (makeable.length === 0) {
+        showNotice('Create a product first (Inventory > New Product), then build its BOM here.', 'error');
         return;
       }
 
+      content.style.maxWidth = '40rem';
       content.innerHTML = `
         <div class="space-y-4 text-xs">
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -1099,31 +1314,19 @@
             <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
           </div>
           <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="block text-slate-600 font-semibold">Finished product:</label>
-              <button onclick="openNewProductModal()" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 cursor-pointer">+ New product</button>
-            </div>
-            <select id="bomProduct" onchange="bomPrefill()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
-              ${finished.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}
+            <label class="block text-slate-600 font-semibold mb-1">Product to make:</label>
+            <select id="bomProduct" onchange="bomProductChanged()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+              ${withoutBom.length ? `<optgroup label="Products without a BOM yet">${withoutBom.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}</optgroup>` : ''}
+              ${withBom.length ? `<optgroup label="Products already made by a BOM">${withBom.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}</optgroup>` : ''}
             </select>
           </div>
           <div>
-            <label class="block text-slate-600 font-semibold mb-1">Raw material:</label>
-            <select id="bomRaw" onchange="bomPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
-              ${raws.map(r => `<option value="${r.id}">${r.name} (${r.karat})</option>`).join('')}
-            </select>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-slate-600 font-semibold mb-1">Net metal per piece (g):</label>
-              <input type="number" id="bomNet" min="0" step="any" oninput="bomPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-slate-600 font-semibold">Components (materials used for 1 piece):</label>
+              <button onclick="bomAddRow()" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 cursor-pointer">+ Add component</button>
             </div>
-            <div>
-              <label class="block text-slate-600 font-semibold mb-1">Casting loss (%):</label>
-              <input type="number" id="bomLoss" value="1.87" min="0" step="any" oninput="bomPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
-            </div>
+            <div id="bomComps" class="space-y-2"></div>
           </div>
-          <div id="bomPreview" class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 font-semibold"></div>
           <div>
             <label class="block text-slate-600 font-semibold mb-1">Labor cost per piece (VND):</label>
             <input type="number" id="bomLabor" value="0" min="0" step="any" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
@@ -1135,79 +1338,139 @@
         </div>
       `;
       modal.classList.remove('hidden');
-      lucide.createIcons();
-      bomPrefill();
+      bomDraft = [];
+      bomProductChanged();
     }
 
-    // Picks the product's metal weight and the raw material with the same karat
-    function bomPrefill() {
-      const prod = erp.products.find(p => p.id === document.getElementById('bomProduct').value);
-      if (prod) {
-        document.getElementById('bomNet').value = prod.goldWeightGrams > 0 ? prod.goldWeightGrams : '';
-        const match = erp.products.find(r => r.type === 'raw' && r.karat === prod.karat);
-        if (match) document.getElementById('bomRaw').value = match.id;
+    function bomLossDefault(p) { return p && p.type === 'raw' && unitOf(p) === 'g' ? 1.87 : 0; }
+
+    // First open: pre-fill one row with the metal that matches the product's karat
+    function bomProductChanged() {
+      const prod = erp.products.find(p => p.id === byId('bomProduct').value);
+      if (!prod) return;
+      if (bomDraft.length === 0) {
+        const match = prod.karat !== 'N/A' ? erp.products.find(r => r.id !== prod.id && r.type === 'raw' && r.karat === prod.karat) : null;
+        const first = match || erp.products.find(r => r.id !== prod.id && r.type === 'raw');
+        if (first) bomDraft.push({ productId: first.id, quantity: prod.goldWeightGrams > 0 && match ? prod.goldWeightGrams : '', lossPct: bomLossDefault(first) });
       }
-      bomPreview();
+      bomDraft = bomDraft.filter(r => r.productId !== prod.id);
+      renderBomRows();
     }
 
-    function bomRequiredGrams() {
-      const net = parseFloat(document.getElementById('bomNet').value) || 0;
-      const loss = parseFloat(document.getElementById('bomLoss').value) || 0;
-      return { net, loss, required: Math.round(net * (1 + loss / 100) * 1000) / 1000 };
+    function bomRowRequired(r) {
+      return Math.round((parseFloat(r.quantity) || 0) * (1 + (parseFloat(r.lossPct) || 0) / 100) * 1000) / 1000;
     }
 
-    function bomPreview() {
-      const { net, loss, required } = bomRequiredGrams();
-      document.getElementById('bomPreview').innerHTML = net > 0
-        ? `Raw metal required per piece: <span class="font-mono font-bold">${required} g</span> <span class="font-normal">(${net} g + ${loss}% casting loss)</span>`
-        : 'Enter the net metal weight to see the raw metal required.';
+    function renderBomRows() {
+      const prodId = byId('bomProduct').value;
+      const mats = erp.products.filter(p => p.id !== prodId);
+      const group = (label, list, sel) => list.length === 0 ? '' :
+        `<optgroup label="${label}">${list.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${p.name} (${unitOf(p)})</option>`).join('')}</optgroup>`;
+      const field = 'w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold';
+
+      byId('bomComps').innerHTML = bomDraft.length === 0
+        ? `<div class="p-4 rounded-lg border border-dashed border-slate-300 text-center text-slate-400">No component yet. Click "+ Add component".</div>`
+        : bomDraft.map((r, i) => {
+            const p = erp.products.find(x => x.id === r.productId);
+            const u = unitOf(p);
+            return `
+              <div class="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-2">
+                <div class="flex items-center gap-2">
+                  <select onchange="bomRowSet(${i}, 'productId', this.value)" class="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-xs">
+                    ${group('Raw materials', mats.filter(m => m.type === 'raw'), r.productId)}
+                    ${group('Finished products', mats.filter(m => m.type !== 'raw'), r.productId)}
+                  </select>
+                  <button onclick="bomRemoveRow(${i})" title="Remove" class="text-slate-400 hover:text-red-600 cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div><label class="block text-[10px] text-slate-500 mb-0.5">Net qty (${u})</label>
+                    <input type="number" min="0" step="any" value="${r.quantity}" oninput="bomRowSet(${i}, 'quantity', this.value)" class="${field}"></div>
+                  <div><label class="block text-[10px] text-slate-500 mb-0.5">Loss (%)</label>
+                    <input type="number" min="0" step="any" value="${r.lossPct}" oninput="bomRowSet(${i}, 'lossPct', this.value)" class="${field}"></div>
+                  <div><label class="block text-[10px] text-slate-500 mb-0.5">Consumed (${u})</label>
+                    <div id="bomReq${i}" class="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 font-mono font-bold">${bomRowRequired(r)}</div></div>
+                </div>
+              </div>`;
+          }).join('');
+      lucide.createIcons();
+    }
+
+    function bomRowSet(i, key, val) {
+      const r = bomDraft[i];
+      if (!r) return;
+      if (key === 'productId') {
+        r.productId = val;
+        r.lossPct = bomLossDefault(erp.products.find(p => p.id === val));
+        renderBomRows();
+        return;
+      }
+      r[key] = val === '' ? '' : parseFloat(val);
+      const el = byId('bomReq' + i);
+      if (el) el.textContent = bomRowRequired(r);
+    }
+
+    function bomAddRow() {
+      const prodId = byId('bomProduct').value;
+      const used = new Set(bomDraft.map(r => r.productId));
+      const next = erp.products.find(p => p.id !== prodId && !used.has(p.id) && p.type === 'raw') || erp.products.find(p => p.id !== prodId && !used.has(p.id));
+      if (!next) { showNotice('Every available product is already in this BOM.', 'info'); return; }
+      bomDraft.push({ productId: next.id, quantity: '', lossPct: bomLossDefault(next) });
+      renderBomRows();
+    }
+
+    function bomRemoveRow(i) {
+      bomDraft.splice(i, 1);
+      renderBomRows();
     }
 
     function executeCreateBOM() {
-      const prod = erp.products.find(p => p.id === document.getElementById('bomProduct').value);
-      const raw = erp.products.find(p => p.id === document.getElementById('bomRaw').value);
-      const labor = parseFloat(document.getElementById('bomLabor').value) || 0;
-      const { net, loss, required } = bomRequiredGrams();
+      const prod = erp.products.find(p => p.id === byId('bomProduct').value);
+      const labor = parseFloat(byId('bomLabor').value) || 0;
+      const rows = bomDraft.filter(r => r.productId);
 
-      if (!prod || !raw) { alert('Please choose a finished product and a raw material.'); return; }
-      if (net <= 0) { alert('Net metal weight must be greater than 0 g.'); return; }
-      if (loss < 0) { alert('Casting loss cannot be negative.'); return; }
-      if (labor < 0) { alert('Labor cost cannot be negative.'); return; }
-      if (erp.boms.some(b => b.productId === prod.id) && !confirm(`${prod.name} already has a BOM. Add another one?`)) return;
+      if (!prod) { showNotice('Please choose the product to make.', 'error'); return; }
+      if (rows.length === 0) { showNotice('Add at least one component to this BOM.', 'error'); return; }
+      if (rows.some(r => !(parseFloat(r.quantity) > 0))) { showNotice('Every component needs a quantity greater than 0.', 'error'); return; }
+      if (rows.some(r => (parseFloat(r.lossPct) || 0) < 0)) { showNotice('Loss percentage cannot be negative.', 'error'); return; }
+      if (new Set(rows.map(r => r.productId)).size !== rows.length) { showNotice('Each material can only appear once in a BOM.', 'error'); return; }
+      if (labor < 0) { showNotice('Labor cost cannot be negative.', 'error'); return; }
 
-      erp.boms.push({
-        id: `bom_${Date.now()}`,
-        productId: prod.id,
-        name: `BOM - ${prod.name}`,
-        rawMaterialId: raw.id,
-        rawQuantityGrams: required,
-        castingLossFactor: loss / 100,
-        laborCostVnd: labor
-      });
+      const components = rows.map(r => ({
+        productId: r.productId,
+        quantity: parseFloat(r.quantity),
+        lossPct: parseFloat(r.lossPct) || 0,
+        required: bomRowRequired(r)
+      }));
 
-      saveState();
-      closeActionModal();
-      renderActiveTab();
+      const save = () => {
+        erp.boms.push({ id: `bom_${Date.now()}`, productId: prod.id, name: `BOM - ${prod.name}`, components, laborCostVnd: labor });
+        saveState();
+        closeActionModal();
+        renderActiveTab();
+        showNotice(`BOM saved: ${components.length} component${components.length > 1 ? 's' : ''} for ${prod.name}.`, 'success');
+      };
+      if (erp.boms.some(b => b.productId === prod.id)) askConfirm(`${prod.name} already has a BOM. Add another one?`, save);
+      else save();
     }
 
     function deleteBOMAction(bomId) {
       const bom = erp.boms.find(b => b.id === bomId);
       if (!bom) return;
       if (erp.manufacturingOrders.some(m => m.bomId === bomId && m.status !== 'completed')) {
-        alert('This BOM is used by an open manufacturing order. Complete that order first.');
+        showNotice('This BOM is used by an open manufacturing order. Complete that order first.', 'error');
         return;
       }
-      if (!confirm(`Delete ${bom.name}?`)) return;
-      erp.boms = erp.boms.filter(b => b.id !== bomId);
-      saveState();
-      renderActiveTab();
+      askConfirm(`Delete ${bom.name}?`, () => {
+        erp.boms = erp.boms.filter(b => b.id !== bomId);
+        saveState();
+        renderActiveTab();
+      }, 'Delete');
     }
 
     // ---------- Manufacturing Orders ----------
     function openCreateMOModal() {
       if (erp.boms.length === 0) {
-        alert('Create a Bill of Materials first.');
-        openCreateBOMModal();
+        showNotice('Create a Bill of Materials first.', 'error');
         return;
       }
       const modal = document.getElementById('actionModal');
@@ -1245,37 +1508,33 @@
 
     // Live availability check while the order is being typed
     function moPreview() {
-      const bom = erp.boms.find(b => b.id === document.getElementById('moBom').value);
-      const qty = parseInt(document.getElementById('moQty').value) || 0;
-      const box = document.getElementById('moPreview');
+      const bom = erp.boms.find(b => b.id === byId('moBom').value);
+      const qty = parseInt(byId('moQty').value) || 0;
+      const box = byId('moPreview');
       if (!bom) { box.innerHTML = ''; return; }
       const fin = erp.products.find(p => p.id === bom.productId);
-      document.getElementById('moQtyLabel').textContent = `Quantity to produce (${unitOf(fin)}):`;
+      byId('moQtyLabel').textContent = `Quantity to produce (${unitOf(fin)}):`;
       if (qty < 1) { box.innerHTML = ''; return; }
       const r = checkMOAvailability(bom, qty);
+      const rows = r.lines.map(l => `<li class="flex justify-between gap-3 ${l.ok ? '' : 'font-bold'}"><span>${l.prod ? l.prod.name : 'Missing item'}</span><span class="font-mono shrink-0">${fmtG(l.need)} / ${fmtG(l.available)} ${unitOf(l.prod)} ${l.ok ? '✓' : '✗'}</span></li>`).join('');
       box.innerHTML = r.ok
-        ? `<div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold">Available: needs ${fmtG(r.need)} g of ${r.raw.name}, ${fmtG(r.available)} g free in the vault.</div>`
-        : `<div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 font-semibold">Not Available: needs ${fmtG(r.need)} g of ${r.raw ? r.raw.name : 'raw material'}, only ${fmtG(r.available)} g free (short ${fmtG(r.short)} g).</div>`;
+        ? `<div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800"><div class="font-semibold mb-1">Available. Needed / free in the vault:</div><ul class="space-y-0.5">${rows}</ul></div>`
+        : `<div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800"><div class="font-semibold mb-1">Not Available. Needed / free in the vault:</div><ul class="space-y-0.5">${rows}</ul></div>`;
     }
 
     function executeCreateMOAction() {
-      const bomId = document.getElementById('moBom').value;
-      const qty = parseInt(document.getElementById('moQty').value) || 0;
+      const bomId = byId('moBom').value;
+      const qty = parseInt(byId('moQty').value) || 0;
       const bom = erp.boms.find(b => b.id === bomId);
       const prod = erp.products.find(p => p.id === bom?.productId);
 
-      if (!bom) { alert('Please select a BOM.'); return; }
-      if (qty < 1) { alert('Quantity must be at least 1.'); return; }
+      if (!bom) { showNotice('Please select a BOM.', 'error'); return; }
+      if (qty < 1) { showNotice('Quantity must be at least 1.', 'error'); return; }
 
       const r = checkMOAvailability(bom, qty);
-      const maxNo = erp.manufacturingOrders.reduce((mx, m) => {
-        const n = parseInt((m.code.match(/MO-2026-(\d+)/) || [])[1]);
-        return isNaN(n) ? mx : Math.max(mx, n);
-      }, 0);
-
       const mo = {
         id: `mo_${Date.now()}`,
-        code: `MO-2026-${String(Math.max(maxNo + 1, 100)).padStart(3, '0')}`,
+        code: nextCode('MO', erp.manufacturingOrders),
         bomId: bomId,
         productName: prod?.name || 'Jewelry',
         quantity: qty,
@@ -1289,21 +1548,19 @@
       renderActiveTab();
 
       if (!r.ok) {
-        alert(`Not Available: ${mo.code} needs ${fmtG(r.need)} g of ${r.raw ? r.raw.name : 'raw material'} but only ${fmtG(r.available)} g is free (short ${fmtG(r.short)} g).\n\nThe order was saved as "Not Available". Buy more metal in Procurement, then press Re-check.`);
+        showNotice(`Not Available: ${mo.code} is short ${shortageText(r)}.\n\nThe order was saved as "Not Available". Buy the missing items in Procurement, then press Re-check.`, 'error');
       }
     }
 
     function recheckMOAction(moId) {
       const mo = erp.manufacturingOrders.find(m => m.id === moId);
       const bom = mo && erp.boms.find(b => b.id === mo.bomId);
-      if (!mo || !bom) { alert('This order has no valid BOM.'); return; }
+      if (!mo || !bom) { showNotice('This order has no valid BOM.', 'error'); return; }
       const r = checkMOAvailability(bom, mo.quantity, mo.id);
       if (r.ok) mo.status = 'confirmed';
       saveState();
       renderActiveTab();
-      alert(r.ok
-        ? `${mo.code} is now available and confirmed.`
-        : `Still Not Available: short ${fmtG(r.short)} g of ${r.raw ? r.raw.name : 'raw material'}.`);
+      showNotice(r.ok ? `${mo.code} is now available and confirmed.` : `Still Not Available: short ${shortageText(r)}.`, r.ok ? 'success' : 'error');
     }
 
     function completeMOAction(moId) {
@@ -1311,16 +1568,20 @@
       if (!mo || mo.status === 'completed') return;
 
       const bom = erp.boms.find(b => b.id === mo.bomId);
-      const rawProd = erp.products.find(p => p.id === bom?.rawMaterialId);
       const finProd = erp.products.find(p => p.id === bom?.productId);
-      if (!bom || !rawProd || !finProd) { alert('This order has no valid BOM or product.'); return; }
+      if (!bom || !finProd || !(bom.components || []).length) { showNotice('This order has no valid BOM or product.', 'error'); return; }
 
       const cid = mfgCentralId();
       const cwh = erp.warehouses.find(w => w.id === cid);
-      const rawNeeded = mo.quantity * bom.rawQuantityGrams;
+      const lines = bom.components.map(c => {
+        const prod = erp.products.find(p => p.id === c.productId);
+        const need = mo.quantity * c.required;
+        const have = prod ? (prod.stocks[cid] || 0) : 0;
+        return { prod, need, have, short: Math.max(0, need - have), ok: !!prod && have + 1e-9 >= need };
+      });
 
-      if ((rawProd.stocks[cid] || 0) + 1e-9 >= rawNeeded) {
-        rawProd.stocks[cid] = Math.round(((rawProd.stocks[cid] || 0) - rawNeeded) * 1000) / 1000;
+      if (lines.every(l => l.ok)) {
+        lines.forEach(l => { l.prod.stocks[cid] = Math.round((l.prod.stocks[cid] - l.need) * 1000) / 1000; });
         finProd.stocks[cid] = (finProd.stocks[cid] || 0) + mo.quantity;
         mo.status = 'completed';
 
@@ -1328,7 +1589,7 @@
           id: `sm_${Date.now()}`,
           reference: mo.code,
           productSku: finProd.sku,
-          fromLocation: 'Go Vap Casting',
+          fromLocation: 'Production',
           toLocation: `${cwh.code} (Main Warehouse)`,
           quantity: `${mo.quantity} ${unitOf(finProd)}`,
           type: 'receipt',
@@ -1337,22 +1598,42 @@
 
         saveState();
         renderActiveTab();
+        showNotice(`${mo.code} completed: ${mo.quantity} ${unitOf(finProd)} of ${finProd.name} added to ${cwh.code}.`, 'success');
       } else {
         mo.status = 'not_available';
         saveState();
         renderActiveTab();
-        alert(`Not Available: ${mo.code} needs ${fmtG(rawNeeded)} g of ${rawProd.name}, but ${cwh.code} holds only ${fmtG(rawProd.stocks[cid] || 0)} g.`);
+        const miss = lines.filter(l => !l.ok).map(l => `${fmtG(l.short)} ${unitOf(l.prod)} of ${l.prod ? l.prod.name : 'a missing item'}`).join(', ');
+        showNotice(`Not Available: ${mo.code} is short ${miss} in ${cwh.code}.`, 'error');
       }
     }
 
     // ================= 3. PURCHASE VIEW =================
     function renderPurchaseView(container) {
+      const rows = erp.purchaseOrders.length === 0
+        ? `<tr><td colspan="8" class="py-6 text-center text-slate-400">No purchase orders yet.</td></tr>`
+        : erp.purchaseOrders.map(po => `
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-mono font-bold text-blue-700">${po.code}</td>
+              <td class="py-3 px-4 font-semibold text-slate-900">${po.vendor}</td>
+              <td class="py-3 px-4 text-slate-700">${po.productName}</td>
+              <td class="py-3 px-3 text-right font-mono font-bold">${po.quantity} ${po.unit || 'g'}</td>
+              <td class="py-3 px-3 text-right font-mono text-slate-600">${(po.unitPriceVnd || 0).toLocaleString('en-US')} đ</td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-slate-950">${po.totalVnd.toLocaleString('en-US')} đ</td>
+              <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${po.status === 'received' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">${po.status}</span></td>
+              <td class="py-3 px-4 text-center">
+                ${po.status !== 'received'
+                  ? `<button onclick="receivePOAction('${po.id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer">Receive Goods into Vault</button>`
+                  : '<span class="text-slate-400 font-mono">Deposited</span>'}
+              </td>
+            </tr>`).join('');
+
       container.innerHTML = `
         <div class="space-y-6 animate-fadeIn">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
             <div>
               <h2 class="text-xl font-bold font-serif text-slate-950">Procurement &amp; Vault Intake (PO)</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Direct institutional supplier sourcing (SJC, DOJI, Heraeus)</p>
+              <p class="text-xs text-slate-500 mt-0.5">Buy any raw material (gold, silver, diamonds...) from a saved or a new supplier. Received goods go straight to inventory.</p>
             </div>
             <button onclick="openCreatePOModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs cursor-pointer">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -1372,28 +1653,13 @@
                     <th class="py-3 px-4">Supplier</th>
                     <th class="py-3 px-4">Item Sourced</th>
                     <th class="py-3 px-3 text-right">Quantity</th>
+                    <th class="py-3 px-3 text-right">Unit Price</th>
                     <th class="py-3 px-4 text-right">Total (VND)</th>
                     <th class="py-3 px-3">Status</th>
                     <th class="py-3 px-4 text-center">Vault Intake</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
-                  ${erp.purchaseOrders.map(po => `
-                    <tr class="hover:bg-slate-50">
-                      <td class="py-3 px-4 font-mono font-bold text-blue-700">${po.code}</td>
-                      <td class="py-3 px-4 font-semibold text-slate-900">${po.vendor}</td>
-                      <td class="py-3 px-4 text-slate-700">${po.productName}</td>
-                      <td class="py-3 px-3 text-right font-mono font-bold">${po.quantityGrams} g</td>
-                      <td class="py-3 px-4 text-right font-mono font-bold text-slate-950">${po.totalVnd.toLocaleString('en-US')} đ</td>
-                      <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${po.status === 'received' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">${po.status}</span></td>
-                      <td class="py-3 px-4 text-center">
-                        ${po.status !== 'received' ? `
-                          <button onclick="receivePOAction('${po.id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer">Receive Goods into Vault</button>
-                        ` : '<span class="text-slate-400 font-mono">Deposited</span>'}
-                      </td>
-                    </tr>
-                  `).join('')}
-                </tbody>
+                <tbody class="divide-y divide-slate-100">${rows}</tbody>
               </table>
             </div>
           </div>
@@ -1404,6 +1670,8 @@
     function openCreatePOModal() {
       const modal = document.getElementById('actionModal');
       const content = document.getElementById('actionModalContent');
+      const raws = erp.products.filter(p => p.type === 'raw');
+      const field = 'w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs';
       content.innerHTML = `
         <div class="space-y-4 text-xs">
           <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -1413,25 +1681,68 @@
             </h3>
             <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
           </div>
+
           <div>
             <label class="block text-slate-600 font-semibold mb-1">Supplier:</label>
-            <select id="poVendor" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
-              <option value="SJC Gold Corporation">SJC Gold Corporation</option>
-              <option value="DOJI Group">DOJI Group</option>
-              <option value="Heraeus Precious Metals">Heraeus Precious Metals</option>
+            <select id="poVendor" onchange="poSupplierChanged()" class="${field}">
+              ${erp.suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+              <option value="__new__">+ Add a new supplier...</option>
             </select>
+            <input type="text" id="poNewSupplier" placeholder="New supplier name" class="${field} mt-2 hidden">
           </div>
+
           <div>
-            <label class="block text-slate-600 font-semibold mb-1">Raw Material:</label>
-            <select id="poProd" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
-              <option value="prod_g24k">24K Gold Bullion (9999) - 2,360,000 đ/g</option>
-              <option value="prod_g18k">18K Gold Ingot (750) - 1,680,000 đ/g</option>
+            <label class="block text-slate-600 font-semibold mb-1">Raw material:</label>
+            <select id="poProd" onchange="poProductChanged()" class="${field}">
+              ${raws.map(p => `<option value="${p.id}">${p.name} (${unitOf(p)})</option>`).join('')}
+              <option value="__new__">+ Add a new raw material...</option>
             </select>
+            <div id="poNewProdWrap" class="hidden mt-2 p-3 rounded-lg border border-amber-200 bg-amber-50/60 space-y-3">
+              <div class="text-[10px] uppercase tracking-wider font-bold text-amber-800">New raw material (also added to Inventory)</div>
+              <div class="grid grid-cols-2 gap-3">
+                <input type="text" id="poNpName" placeholder="Name, e.g. Ruby 1ct" class="${field}">
+                <input type="text" id="poNpSku" placeholder="SKU, e.g. RAW-RUBY-1" class="${field} font-mono">
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-slate-600 font-semibold mb-1">Karat purity:</label>
+                  <select id="poNpKarat" onchange="poNewProdChanged(true)" class="${field}">
+                    <option value="24K">24K (9999)</option>
+                    <option value="18K">18K (750)</option>
+                    <option value="14K">14K (585)</option>
+                    <option value="10K">10K (417)</option>
+                    <option value="999">999 (Silver)</option>
+                    <option value="N/A" selected>N/A (non-metal)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-slate-600 font-semibold mb-1">Unit of measure:</label>
+                  <select id="poNpUnit" onchange="poNewProdChanged(false)" class="${field}"></select>
+                </div>
+              </div>
+              <div>
+                <label class="block text-slate-600 font-semibold mb-1">Gold weight per unit (g):</label>
+                <input type="number" id="poNpUnitWeight" min="0" step="any" class="${field} font-mono">
+                <p id="poNpWeightHint" class="text-[10px] text-slate-500 mt-1"></p>
+              </div>
+            </div>
           </div>
-          <div>
-            <label class="block text-slate-600 font-semibold mb-1">Quantity (grams):</label>
-            <input type="number" id="poQty" value="150" min="10" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label id="poQtyLabel" class="block text-slate-600 font-semibold mb-1">Quantity:</label>
+              <input type="number" id="poQty" value="10" min="0" step="any" oninput="poRecalc()" class="${field} font-mono font-bold">
+            </div>
+            <div>
+              <label id="poPriceLabel" class="block text-slate-600 font-semibold mb-1">Unit price (VND):</label>
+              <input type="number" id="poPrice" min="0" step="any" oninput="poRecalc()" class="${field} font-mono font-bold">
+            </div>
           </div>
+          <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+            <span class="font-semibold text-slate-600">Order total</span>
+            <span id="poTotal" class="font-mono font-bold text-slate-950">0 đ</span>
+          </div>
+
           <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
             <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
             <button onclick="executeCreatePOAction()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Confirm Purchase Order</button>
@@ -1440,167 +1751,382 @@
       `;
       modal.classList.remove('hidden');
       lucide.createIcons();
+      poSupplierChanged();
+      poProductChanged();
+    }
+
+    function poSupplierChanged() {
+      const isNew = byId('poVendor').value === '__new__';
+      byId('poNewSupplier').classList.toggle('hidden', !isNew);
+      if (isNew) byId('poNewSupplier').focus();
+    }
+
+    // Unit of the item being bought (existing product or the new one being typed)
+    function poCurrentUnit() {
+      return byId('poProd').value === '__new__' ? byId('poNpUnit').value : unitOf(erp.products.find(p => p.id === byId('poProd').value));
+    }
+
+    function poProductChanged() {
+      const isNew = byId('poProd').value === '__new__';
+      byId('poNewProdWrap').classList.toggle('hidden', !isNew);
+      if (isNew) {
+        poNewProdChanged(true);
+      } else {
+        const p = erp.products.find(x => x.id === byId('poProd').value);
+        if (p) byId('poPrice').value = p.unitCostVnd;
+        poRecalc();
+      }
+    }
+
+    function poNewProdChanged(reset) {
+      applyProductFieldRules('poNp', 'raw', reset);
+      poRecalc();
+    }
+
+    function poRecalc() {
+      const unit = poCurrentUnit();
+      byId('poQtyLabel').textContent = `Quantity (${unit}):`;
+      byId('poPriceLabel').textContent = `Unit price (VND / ${unit}):`;
+      const total = (parseFloat(byId('poQty').value) || 0) * (parseFloat(byId('poPrice').value) || 0);
+      byId('poTotal').textContent = `${Math.round(total).toLocaleString('en-US')} đ`;
     }
 
     function executeCreatePOAction() {
-      const vendor = document.getElementById('poVendor').value;
-      const prodId = document.getElementById('poProd').value;
-      const qty = parseFloat(document.getElementById('poQty').value) || 100;
-      const prod = erp.products.find(p => p.id === prodId);
-      const unitPrice = prod?.unitCostVnd || 2360000;
+      // ----- supplier
+      const supSel = byId('poVendor').value;
+      let supplier = null;
+      let newSupplierName = '';
+      if (supSel === '__new__') {
+        newSupplierName = cleanText(byId('poNewSupplier').value);
+        if (!newSupplierName) { showNotice('Please enter the new supplier name.', 'error'); return; }
+        supplier = erp.suppliers.find(s => s.name.toLowerCase() === newSupplierName.toLowerCase()) || null;
+      } else {
+        supplier = erp.suppliers.find(s => s.id === supSel);
+      }
 
-      erp.purchaseOrders.unshift({
+      // ----- raw material
+      const prodSel = byId('poProd').value;
+      let prod = null;
+      let newProd = null;
+      if (prodSel === '__new__') {
+        const name = cleanText(byId('poNpName').value);
+        const sku = cleanText(byId('poNpSku').value).toUpperCase().replace(/\s+/g, '-');
+        if (!name) { showNotice('Please enter the new raw material name.', 'error'); return; }
+        if (!sku) { showNotice('Please enter a SKU for the new raw material.', 'error'); return; }
+        if (erp.products.some(p => p.sku.toUpperCase() === sku)) { showNotice(`SKU "${sku}" already exists. Please use a different code.`, 'error'); return; }
+        const f = readProductFields('poNp', 'raw');
+        if (f.error) { showNotice(f.error, 'error'); return; }
+        newProd = { name, sku, ...f };
+      } else {
+        prod = erp.products.find(p => p.id === prodSel);
+        if (!prod) { showNotice('Please choose a raw material.', 'error'); return; }
+      }
+
+      const unit = newProd ? newProd.unit : unitOf(prod);
+      const qty = parseFloat(byId('poQty').value) || 0;
+      const unitPrice = parseFloat(byId('poPrice').value) || 0;
+      if (qty <= 0) { showNotice('Quantity must be greater than 0.', 'error'); return; }
+      if (unit !== 'g' && !Number.isInteger(qty)) { showNotice(`Quantity in ${unit} must be a whole number.`, 'error'); return; }
+      if (unitPrice <= 0) { showNotice('Unit price must be greater than 0.', 'error'); return; }
+
+      // ----- everything is valid: create what is new, then the PO
+      if (!supplier) {
+        supplier = { id: `sup_${Date.now()}`, name: newSupplierName };
+        erp.suppliers.push(supplier);
+      }
+      if (newProd) {
+        prod = createProductRecord({ name: newProd.name, sku: newProd.sku, type: 'raw', karat: newProd.karat, unit: newProd.unit,
+          goldWeightGrams: newProd.goldWeightGrams, cost: unitPrice, price: unitPrice, showInPos: false, whId: null, qty: 0 });
+      }
+
+      const po = {
         id: `po_${Date.now()}`,
-        code: `PO-2026-${Math.floor(100 + Math.random() * 900)}`,
-        vendor: vendor,
-        productName: prod?.name || 'Raw Bullion',
+        code: nextCode('PO', erp.purchaseOrders),
+        vendor: supplier.name,
+        supplierId: supplier.id,
+        productId: prod.id,
+        productName: prod.name,
+        quantity: qty,
         quantityGrams: qty,
+        unit,
         unitPriceVnd: unitPrice,
-        totalVnd: qty * unitPrice,
+        totalVnd: Math.round(qty * unitPrice),
         status: 'confirmed',
         createdAt: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-      });
+      };
+      erp.purchaseOrders.unshift(po);
 
       saveState();
       closeActionModal();
       renderActiveTab();
+      showNotice(`${po.code} created: ${qty} ${unit} of ${prod.name} from ${supplier.name}.` + (newProd ? '\nThe new raw material is now in Inventory and can be used in a BOM.' : ''), 'success');
     }
 
     function receivePOAction(poId) {
       const po = erp.purchaseOrders.find(p => p.id === poId);
       if (!po || po.status === 'received') return;
 
-      const rawG24k = erp.products.find(p => p.id === 'prod_g24k');
-      if (rawG24k) {
-        rawG24k.stocks.wh_mw += po.quantityGrams;
-        po.status = 'received';
+      const prod = erp.products.find(p => p.id === po.productId);
+      if (!prod) { showNotice(`${po.code}: the item "${po.productName}" no longer exists in the catalog.`, 'error'); return; }
 
-        erp.stockMoves.unshift({
-          id: `sm_${Date.now()}`,
-          reference: po.code,
-          productSku: rawG24k.sku,
-          fromLocation: `Supplier: ${po.vendor}`,
-          toLocation: 'WH-MW (Main Warehouse)',
-          quantity: `${po.quantityGrams} g`,
-          type: 'receipt',
-          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-        });
-
-        saveState();
-        renderActiveTab();
+      const cid = mfgCentralId();
+      const cwh = erp.warehouses.find(w => w.id === cid);
+      const onHand = Object.values(prod.stocks).reduce((a, b) => a + b, 0);
+      if (onHand + po.quantity > 0) {
+        prod.unitCostVnd = Math.round((onHand * prod.unitCostVnd + po.quantity * po.unitPriceVnd) / (onHand + po.quantity));
       }
+      prod.stocks[cid] = (prod.stocks[cid] || 0) + po.quantity;
+      po.status = 'received';
+
+      erp.stockMoves.unshift({
+        id: `sm_${Date.now()}`,
+        reference: po.code,
+        productSku: prod.sku,
+        fromLocation: `Supplier: ${po.vendor}`,
+        toLocation: `${cwh.code} (Main Warehouse)`,
+        quantity: `${po.quantity} ${unitOf(prod)}`,
+        type: 'receipt',
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      });
+
+      saveState();
+      renderActiveTab();
+      showNotice(`${po.code} received: ${po.quantity} ${unitOf(prod)} of ${prod.name} added to ${cwh.code}.`, 'success');
     }
 
     // ================= 4. RETAIL POS VIEW =================
+    const WALKIN = '__walkin__';
+    const PAYMENT_LABELS = { cash: 'Cash', card: 'Card', transfer: 'Bank transfer', qr: 'QR / e-wallet' };
+    const posMoney = n => `${Math.round(n).toLocaleString('en-US')} đ`;
+
+    function posCustomer() {
+      const f = erp.posCheckout;
+      const c = f.customerId !== WALKIN ? erp.customers.find(x => x.id === f.customerId) : null;
+      if (c) return { id: c.id, name: c.name, phone: c.phone, tier: c.tier, tierDiscount: c.discountPercent };
+      return { id: null, name: cleanText(f.walkInName) || 'Walk-in customer', phone: '', tier: '', tierDiscount: 0 };
+    }
+
+    // Discount is its own setting: it does not depend on who the customer is
+    function posTotals() {
+      const subtotal = erp.posCart.reduce((s, i) => s + i.price * i.qty, 0);
+      const f = erp.posCheckout;
+      const v = Math.max(0, parseFloat(f.discountValue) || 0);
+      let discount = f.discountType === 'vnd' ? v : subtotal * Math.min(100, v) / 100;
+      discount = Math.min(subtotal, Math.round(discount));
+      return { subtotal, discount, total: subtotal - discount };
+    }
+
     function renderPOSView(container) {
       const storeWh = erp.warehouses.find(w => w.id === erp.activeStoreId);
+      const f = erp.posCheckout;
+      const cust = posCustomer();
+      const r = erp.posReceipt;
+      const field = 'w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs';
+
+      const catalog = erp.products.filter(isSoldInPos).map(p => {
+        const stock = p.stocks[erp.activeStoreId] || 0;
+        const u = unitOf(p);
+        return `
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-amber-400 transition-all">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-900">${p.karat}</span>
+                <span class="text-xs font-mono font-bold ${stock < 10 ? 'text-red-600' : 'text-slate-600'}">In Stock: ${stock} ${u}</span>
+              </div>
+              <h4 class="font-bold text-sm text-slate-900 mt-2">${p.name}</h4>
+              <div class="text-[11px] text-slate-500 font-mono mt-0.5">${p.goldWeightGrams > 0 ? `${p.goldWeightGrams} g · Certified Purity` : p.sku}</div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100">
+              <div class="font-bold text-slate-950 font-mono text-sm mb-2">${p.retailPriceVnd.toLocaleString('en-US')} đ</div>
+              <div class="flex items-center gap-2">
+                <input type="number" id="posQty_${p.id}" value="1" min="1" max="${stock}" step="1" ${stock <= 0 ? 'disabled' : ''} class="w-16 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs font-mono font-bold text-center disabled:opacity-40">
+                <span class="text-[10px] text-slate-400">${u}</span>
+                <button onclick="addToPosCart('${p.id}')" ${stock <= 0 ? 'disabled' : ''} class="ml-auto px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-950 font-bold text-xs cursor-pointer">Add to Cart</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      const chip = v => `<button onclick="posSetDiscountPreset(${v})" class="px-2.5 py-1 rounded-md text-[10px] font-bold border ${f.discountType === 'percent' && Number(f.discountValue) === v ? 'bg-amber-500 border-amber-500 text-slate-950' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'} cursor-pointer">${v === 0 ? 'None' : v + '%'}</button>`;
+
+      const cartHtml = erp.posCart.length === 0
+        ? '<div class="text-center py-6 text-slate-400 text-xs">Cart is empty. Pick a quantity and press Add to Cart.</div>'
+        : erp.posCart.map((item, idx) => {
+            const p = erp.products.find(x => x.id === item.id);
+            return `
+              <div class="p-2 rounded-lg bg-slate-50 text-xs">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="font-bold text-slate-900 truncate">${item.name}</div>
+                    <div class="text-[10px] text-slate-500 font-mono">${item.price.toLocaleString('en-US')} đ / ${unitOf(p)}</div>
+                  </div>
+                  <button onclick="removeFromPosCart(${idx})" class="text-slate-400 hover:text-red-500 cursor-pointer"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+                <div class="mt-1.5 flex items-center justify-between">
+                  <div class="flex items-center gap-1">
+                    <button onclick="changeCartQty(${idx}, -1)" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold hover:bg-slate-100 cursor-pointer">−</button>
+                    <input type="number" min="1" step="1" value="${item.qty}" onchange="setCartQty(${idx}, this.value)" class="w-12 text-center bg-white border border-slate-200 rounded p-1 font-mono font-bold">
+                    <button onclick="changeCartQty(${idx}, 1)" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold hover:bg-slate-100 cursor-pointer">+</button>
+                  </div>
+                  <span class="font-mono font-bold text-slate-900">${posMoney(item.price * item.qty)}</span>
+                </div>
+              </div>`;
+          }).join('');
+
+      const checkoutPanel = `
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-amber-600"></i>
+                <span>Store Checkout Register</span>
+              </h3>
+              <span class="text-xs text-slate-400 font-mono">${erp.posCart.length} items</span>
+            </div>
+
+            <div class="mt-3 space-y-2">
+              <label class="block text-[11px] text-slate-500 font-medium">Customer:</label>
+              <select onchange="posSetCustomer(this.value)" class="${field}">
+                <option value="${WALKIN}" ${f.customerId === WALKIN ? 'selected' : ''}>Walk-in customer (type a name)</option>
+                ${erp.customers.map(c => `<option value="${c.id}" ${f.customerId === c.id ? 'selected' : ''}>${c.name} · ${c.tier} member</option>`).join('')}
+              </select>
+              ${f.customerId === WALKIN
+                ? `<input type="text" placeholder="Customer name (optional)" value="${esc(f.walkInName || '')}" oninput="erp.posCheckout.walkInName = this.value" class="${field}">`
+                : `<div class="flex items-center justify-between text-[11px] text-slate-500"><span>${cust.phone} · ${cust.tier} tier</span><button onclick="posApplyTier()" class="font-bold text-amber-700 hover:text-amber-900 cursor-pointer">Apply ${cust.tierDiscount}% member discount</button></div>`}
+            </div>
+
+            <div class="mt-3">
+              <label class="block text-[11px] text-slate-500 font-medium mb-1">Discount:</label>
+              <div class="flex items-center gap-2">
+                <select onchange="posSetDiscountType(this.value)" class="bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold">
+                  <option value="percent" ${f.discountType === 'percent' ? 'selected' : ''}>%</option>
+                  <option value="vnd" ${f.discountType === 'vnd' ? 'selected' : ''}>VND</option>
+                </select>
+                <input type="number" min="0" step="any" value="${f.discountValue}" oninput="posSetDiscountValue(this.value)" class="${field} font-mono font-bold">
+              </div>
+              <div class="flex items-center gap-1.5 mt-1.5">${[0, 3, 5, 10].map(chip).join('')}</div>
+            </div>
+
+            <div class="mt-3">
+              <label class="block text-[11px] text-slate-500 font-medium mb-1">Payment method:</label>
+              <select onchange="erp.posCheckout.payment = this.value" class="${field}">
+                ${Object.entries(PAYMENT_LABELS).map(([k, v]) => `<option value="${k}" ${f.payment === k ? 'selected' : ''}>${v}</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="mt-4 space-y-2 max-h-56 overflow-y-auto">${cartHtml}</div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <span>Subtotal:</span>
+              <span class="font-mono font-semibold" id="posSubtotal">0 đ</span>
+            </div>
+            <div class="flex items-center justify-between text-xs text-emerald-600">
+              <span>Discount:</span>
+              <span class="font-mono font-semibold" id="posDiscount">0 đ</span>
+            </div>
+            <div class="flex items-center justify-between text-sm font-bold text-slate-950 pt-1 border-t border-slate-100">
+              <span>Total Payable:</span>
+              <span class="font-mono text-base text-amber-600" id="posTotal">0 đ</span>
+            </div>
+            <button onclick="executePOSCheckout()" ${erp.posCart.length === 0 ? 'disabled' : ''} class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-bold text-xs shadow-xs cursor-pointer">Complete Checkout &amp; Deduct Stock</button>
+          </div>
+        </div>`;
+
+      const receiptPanel = r ? `
+        <div class="bg-white p-5 rounded-xl border-2 border-emerald-300 shadow-xs">
+          <div class="flex flex-col items-center text-center pb-4 border-b border-dashed border-slate-200">
+            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"><i data-lucide="check" class="w-7 h-7"></i></div>
+            <h3 class="font-bold text-base text-slate-900 mt-2">Payment Successful</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Stock at ${esc(r.store)} was deducted. Warranty certificate issued.</p>
+          </div>
+
+          <div class="py-3 text-xs space-y-1.5 border-b border-dashed border-slate-200">
+            <div class="flex justify-between"><span class="text-slate-500">Receipt No.</span><span class="font-mono font-bold text-slate-900">${r.no}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Date</span><span class="font-mono text-slate-700">${esc(r.time)}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Customer</span><span class="font-semibold text-slate-900">${esc(r.customer)}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Cashier</span><span class="text-slate-700">${esc(r.cashier)}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Payment</span><span class="text-slate-700">${esc(r.paymentLabel)}</span></div>
+          </div>
+
+          <div class="py-3 space-y-1.5 text-xs border-b border-dashed border-slate-200">
+            ${r.items.map(i => `<div class="flex justify-between gap-3"><span class="text-slate-700">${esc(i.name)} <span class="text-slate-400 font-mono">× ${i.qty} ${i.unit}</span></span><span class="font-mono font-semibold shrink-0">${posMoney(i.price * i.qty)}</span></div>`).join('')}
+          </div>
+
+          <div class="py-3 space-y-1.5 text-xs">
+            <div class="flex justify-between text-slate-500"><span>Subtotal</span><span class="font-mono">${posMoney(r.subtotal)}</span></div>
+            <div class="flex justify-between text-emerald-600"><span>Discount (${esc(r.discountLabel)})</span><span class="font-mono">-${posMoney(r.discount)}</span></div>
+            <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+              <span class="font-bold text-slate-900 text-sm">Amount Paid</span>
+              <span class="font-mono font-bold text-xl text-emerald-600">${posMoney(r.total)}</span>
+            </div>
+          </div>
+
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <button onclick="printReceipt()" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer"><i data-lucide="printer" class="w-3.5 h-3.5"></i><span>Print Receipt</span></button>
+            <button onclick="newPosSale()" class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs cursor-pointer"><i data-lucide="plus" class="w-3.5 h-3.5"></i><span>New Sale</span></button>
+          </div>
+        </div>` : '';
+
       container.innerHTML = `
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
-          <!-- Catalog & Store Header -->
           <div class="lg:col-span-2 space-y-4">
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
               <div>
                 <span class="text-[10px] text-slate-400 uppercase font-mono block">Active Boutique Terminal</span>
                 <div class="font-bold text-sm text-slate-900">${storeWh?.name}</div>
               </div>
-              <div class="flex items-center gap-2">
-                <select onchange="erp.activeStoreId=this.value; saveState(); renderActiveTab();" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold">
-                  <option value="wh_pn" ${erp.activeStoreId==='wh_pn'?'selected':''}>Phu Nhuan Store (WH-PN)</option>
-                  <option value="wh_d1" ${erp.activeStoreId==='wh_d1'?'selected':''}>District 1 Store (WH-D1)</option>
-                </select>
-              </div>
+              <select onchange="erp.activeStoreId=this.value; saveState(); renderActiveTab();" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold">
+                ${erp.warehouses.filter(w => w.type === 'store').map(w => `<option value="${w.id}" ${erp.activeStoreId === w.id ? 'selected' : ''}>${w.name} (${w.code})</option>`).join('')}
+              </select>
             </div>
-
-            <!-- Product Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              ${erp.products.filter(isSoldInPos).map(p => {
-                const stock = p.stocks[erp.activeStoreId] || 0;
-                return `
-                  <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-amber-400 transition-all">
-                    <div>
-                      <div class="flex items-center justify-between">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-900">${p.karat}</span>
-                        <span class="text-xs font-mono font-bold ${stock < 10 ? 'text-red-600' : 'text-slate-600'}">In Stock: ${stock} ${unitOf(p)}</span>
-                      </div>
-                      <h4 class="font-bold text-sm text-slate-900 mt-2">${p.name}</h4>
-                      <div class="text-[11px] text-slate-500 font-mono mt-0.5">${p.goldWeightGrams} g · Certified Purity</div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <span class="font-bold text-slate-950 font-mono text-sm">${p.retailPriceVnd.toLocaleString('en-US')} đ</span>
-                      <button onclick="addToPosCart('${p.id}')" ${stock <= 0 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-950 font-bold text-xs cursor-pointer">Add to Cart</button>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${catalog || '<div class="sm:col-span-2 p-6 text-center text-xs text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">No product is enabled for Point of Sale.</div>'}</div>
           </div>
-
-          <!-- Cart & Checkout Panel -->
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                  <i data-lucide="shopping-bag" class="w-4 h-4 text-amber-600"></i>
-                  <span>Store Checkout Register</span>
-                </h3>
-                <span class="text-xs text-slate-400 font-mono">${erp.posCart.length} items</span>
-              </div>
-
-              <!-- Customer Selector -->
-              <div class="mt-3">
-                <label class="block text-[11px] text-slate-500 font-medium mb-1">VIP Customer Loyalty Tier:</label>
-                <select id="posCustomerSelect" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
-                  ${erp.customers.map(c => `<option value="${c.id}">${c.name} (${c.tier} -${c.discountPercent}%)</option>`).join('')}
-                </select>
-              </div>
-
-              <!-- Cart Items List -->
-              <div class="mt-4 space-y-2 max-h-56 overflow-y-auto">
-                ${erp.posCart.length === 0 ? '<div class="text-center py-8 text-slate-400 text-xs">Cart is empty. Select products from catalog.</div>' : ''}
-                ${erp.posCart.map((item, idx) => `
-                  <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs">
-                    <div>
-                      <div class="font-bold text-slate-900">${item.name}</div>
-                      <div class="text-[10px] text-slate-500 font-mono">${item.price.toLocaleString('en-US')} đ × ${item.qty}</div>
-                    </div>
-                    <button onclick="removeFromPosCart(${idx})" class="text-slate-400 hover:text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Checkout Footer -->
-            <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
-              <div class="flex items-center justify-between text-xs text-slate-500">
-                <span>Subtotal:</span>
-                <span class="font-mono font-semibold" id="posSubtotal">0 đ</span>
-              </div>
-              <div class="flex items-center justify-between text-xs text-emerald-600">
-                <span>VIP Discount (5%):</span>
-                <span class="font-mono font-semibold" id="posDiscount">0 đ</span>
-              </div>
-              <div class="flex items-center justify-between text-sm font-bold text-slate-950 pt-1 border-t border-slate-100">
-                <span>Total Payable:</span>
-                <span class="font-mono text-base text-amber-600" id="posTotal">0 đ</span>
-              </div>
-              <button onclick="executePOSCheckout()" ${erp.posCart.length === 0 ? 'disabled' : ''} class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-bold text-xs shadow-xs cursor-pointer">Complete Checkout &amp; Deduct Stock</button>
-            </div>
-          </div>
+          ${r ? receiptPanel : checkoutPanel}
         </div>
       `;
       calculatePOSCartTotals();
     }
 
+    // ---------- cart ----------
     function addToPosCart(prodId) {
       const prod = erp.products.find(p => p.id === prodId);
       if (!prod) return;
+      const input = byId('posQty_' + prodId);
+      const qty = Math.floor(parseFloat(input ? input.value : 1)) || 1;
+      const stock = prod.stocks[erp.activeStoreId] || 0;
       const existing = erp.posCart.find(i => i.id === prodId);
-      if (existing) {
-        existing.qty += 1;
-      } else {
-        erp.posCart.push({ id: prodId, name: prod.name, price: prod.retailPriceVnd, qty: 1 });
+      const inCart = existing ? existing.qty : 0;
+
+      if (qty < 1) { showNotice('Quantity must be at least 1.', 'error'); return; }
+      if (inCart + qty > stock) {
+        showNotice(`Only ${stock} ${unitOf(prod)} of ${prod.name} in stock (${inCart} already in the cart).`, 'error');
+        return;
       }
+      erp.posReceipt = null;   // starting a new sale
+      if (existing) existing.qty += qty;
+      else erp.posCart.push({ id: prodId, name: prod.name, price: prod.retailPriceVnd, qty });
       renderActiveTab();
+    }
+
+    function setCartQty(idx, value) {
+      const item = erp.posCart[idx];
+      if (!item) return;
+      const prod = erp.products.find(p => p.id === item.id);
+      const stock = prod ? (prod.stocks[erp.activeStoreId] || 0) : 0;
+      let q = Math.floor(parseFloat(value)) || 1;
+      if (q < 1) q = 1;
+      if (q > stock) {
+        q = Math.max(1, stock);
+        showNotice(`Only ${stock} ${unitOf(prod)} of ${item.name} in stock.`, 'error');
+      }
+      item.qty = q;
+      renderActiveTab();
+    }
+    function changeCartQty(idx, delta) {
+      const item = erp.posCart[idx];
+      if (item) setCartQty(idx, item.qty + delta);
     }
 
     function removeFromPosCart(idx) {
@@ -1608,51 +2134,106 @@
       renderActiveTab();
     }
 
+    // ---------- customer / discount ----------
+    function posSetCustomer(id) { erp.posCheckout.customerId = id; renderActiveTab(); }
+    function posSetDiscountType(t) { erp.posCheckout.discountType = t; calculatePOSCartTotals(); }
+    function posSetDiscountValue(v) { erp.posCheckout.discountValue = v; calculatePOSCartTotals(); }
+    function posSetDiscountPreset(p) { erp.posCheckout.discountType = 'percent'; erp.posCheckout.discountValue = p; renderActiveTab(); }
+    function posApplyTier() { posSetDiscountPreset(posCustomer().tierDiscount); }
+
     function calculatePOSCartTotals() {
-      let subtotal = 0;
-      erp.posCart.forEach(i => subtotal += i.price * i.qty);
-      const discount = subtotal * 0.05;
-      const total = subtotal - discount;
-
-      const subElem = document.getElementById('posSubtotal');
-      const disElem = document.getElementById('posDiscount');
-      const totElem = document.getElementById('posTotal');
-
-      if (subElem) subElem.textContent = `${subtotal.toLocaleString('en-US')} đ`;
-      if (disElem) disElem.textContent = `-${discount.toLocaleString('en-US')} đ`;
-      if (totElem) totElem.textContent = `${total.toLocaleString('en-US')} đ`;
+      const { subtotal, discount, total } = posTotals();
+      const set = (id, txt) => { const el = byId(id); if (el) el.textContent = txt; };
+      set('posSubtotal', posMoney(subtotal));
+      set('posDiscount', `-${posMoney(discount)}`);
+      set('posTotal', posMoney(total));
     }
 
+    // ---------- checkout ----------
     function executePOSCheckout() {
       if (erp.posCart.length === 0) return;
       const storeWh = erp.warehouses.find(w => w.id === erp.activeStoreId);
 
-      let totalOrderAmount = 0;
-      erp.posCart.forEach(item => {
+      for (const item of erp.posCart) {
         const prod = erp.products.find(p => p.id === item.id);
-        if (prod) {
-          prod.stocks[erp.activeStoreId] = Math.max(0, (prod.stocks[erp.activeStoreId] || 0) - item.qty);
-          totalOrderAmount += item.price * item.qty * 0.95;
-
-          erp.stockMoves.unshift({
-            id: `sm_${Date.now()}`,
-            reference: `POS-REC-${Math.floor(1000 + Math.random() * 9000)}`,
-            productSku: prod.sku,
-            fromLocation: storeWh?.code,
-            toLocation: 'Customer (POS Retail)',
-            quantity: `${item.qty} ${unitOf(prod)}`,
-            type: 'sale',
-            timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-          });
+        const have = prod ? (prod.stocks[erp.activeStoreId] || 0) : 0;
+        if (!prod || item.qty > have) {
+          showNotice(`Not enough stock for ${item.name} at ${storeWh?.name}: ${have} left, ${item.qty} in the cart.`, 'error');
+          return;
         }
+      }
+
+      const { subtotal, discount, total } = posTotals();
+      const f = erp.posCheckout;
+      const cust = posCustomer();
+      erp.receiptSeq = (erp.receiptSeq || 0) + 1;
+      const no = `RCP-2026-${String(erp.receiptSeq).padStart(4, '0')}`;
+      const stamp = new Date();
+      const hhmm = stamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      const items = erp.posCart.map(item => {
+        const prod = erp.products.find(p => p.id === item.id);
+        prod.stocks[erp.activeStoreId] = Math.max(0, (prod.stocks[erp.activeStoreId] || 0) - item.qty);
+        erp.stockMoves.unshift({
+          id: `sm_${Date.now()}_${Math.floor(Math.random() * 100000)}`,
+          reference: no,
+          productSku: prod.sku,
+          fromLocation: storeWh?.code,
+          toLocation: 'Customer (POS Retail)',
+          quantity: `${item.qty} ${unitOf(prod)}`,
+          type: 'sale',
+          timestamp: hhmm
+        });
+        return { name: item.name, sku: prod.sku, qty: item.qty, unit: unitOf(prod), price: item.price };
       });
 
-      erp.salesTodayVnd += totalOrderAmount;
+      erp.salesTodayVnd += total;
+      erp.posReceipt = {
+        no,
+        time: stamp.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
+        store: storeWh?.name || '',
+        cashier: erp.activeCashierSession?.cashierName || 'Cashier',
+        customer: cust.name + (cust.tier ? ` (${cust.tier})` : ''),
+        paymentLabel: PAYMENT_LABELS[f.payment] || 'Cash',
+        items, subtotal, discount, total,
+        discountLabel: discount === 0 ? 'none' : (f.discountType === 'vnd' ? 'fixed amount' : `${Math.max(0, parseFloat(f.discountValue) || 0)}%`)
+      };
       erp.posCart = [];
       saveState();
-
-      alert(`POS Sale Completed! Stock at ${storeWh?.name} was decremented in real-time. Electronic receipt & gold authenticity warranty certificate generated.`);
       renderActiveTab();
+    }
+
+    function newPosSale() {
+      erp.posReceipt = null;
+      erp.posCheckout = { customerId: WALKIN, walkInName: '', discountType: 'percent', discountValue: 0, payment: 'cash' };
+      renderActiveTab();
+    }
+
+    function printReceipt() {
+      const r = erp.posReceipt;
+      if (!r) return;
+      byId('printArea').innerHTML = `
+        <div style="font-family: Georgia, serif; max-width: 340px; margin: 0 auto; padding: 16px; color: #000;">
+          <h2 style="text-align:center; margin:0; letter-spacing:2px;">AURORA JEWELRY</h2>
+          <div style="text-align:center; font-size:12px; margin-bottom:8px;">${esc(r.store)}</div>
+          <hr style="border:0; border-top:1px dashed #000;">
+          <div style="font-size:12px; line-height:1.6;">
+            Receipt: <b>${r.no}</b><br>Date: ${esc(r.time)}<br>Customer: ${esc(r.customer)}<br>Cashier: ${esc(r.cashier)}<br>Payment: ${esc(r.paymentLabel)}
+          </div>
+          <hr style="border:0; border-top:1px dashed #000;">
+          <table style="width:100%; font-size:12px; border-collapse:collapse;">
+            ${r.items.map(i => `<tr><td style="padding:2px 0;">${esc(i.name)}<br><span style="font-size:11px;">${i.qty} ${i.unit} × ${i.price.toLocaleString('en-US')}</span></td><td style="text-align:right; vertical-align:top;">${posMoney(i.price * i.qty)}</td></tr>`).join('')}
+          </table>
+          <hr style="border:0; border-top:1px dashed #000;">
+          <table style="width:100%; font-size:12px;">
+            <tr><td>Subtotal</td><td style="text-align:right;">${posMoney(r.subtotal)}</td></tr>
+            <tr><td>Discount (${esc(r.discountLabel)})</td><td style="text-align:right;">-${posMoney(r.discount)}</td></tr>
+            <tr style="font-size:14px;"><td><b>Amount Paid</b></td><td style="text-align:right;"><b>${posMoney(r.total)}</b></td></tr>
+          </table>
+          <hr style="border:0; border-top:1px dashed #000;">
+          <p style="text-align:center; font-size:11px;">Gold authenticity warranty included.<br>Thank you for shopping at Aurora!</p>
+        </div>`;
+      window.print();
     }
 
     // ================= 5. BI DASHBOARD VIEW =================
@@ -1694,14 +2275,14 @@
       });
       const totalGold = rows.reduce((a, r) => a + r.gold, 0);
       const totalValue = rows.reduce((a, r) => a + r.value, 0);
-      const finished = rows.filter(r => r.p.type !== 'raw');
+      const finished = rows.filter(r => r.p.type !== 'raw' || soldInPos(r.p));
       const finishedCost = finished.reduce((a, r) => a + r.value, 0);
       const finishedRetail = finished.reduce((a, r) => a + r.retail, 0);
 
       // ---- store stock gaps and suggested transfers
       const alerts = [];
       erp.products.forEach(p => {
-        if (p.type === 'raw' || !soldInPos(p)) return;
+        if (!soldInPos(p)) return;
         let centralLeft = p.stocks[central.id] || 0;
         const min = p.minStock !== undefined ? p.minStock : BI_MIN_STOCK;
         const target = Math.max(BI_REFILL_TARGET, min);
@@ -1716,20 +2297,24 @@
       });
       alerts.sort((a, b) => (a.have / (a.min || 1)) - (b.have / (b.min || 1)));
 
-      // ---- production readiness
+      // ---- production readiness (every BOM component must be in stock)
       const rawLeft = {};
       const mos = [];
       (erp.manufacturingOrders || []).forEach(mo => {
         if (mo.status === 'completed') return;
         const bom = (erp.boms || []).find(b => b.id === mo.bomId);
-        const raw = bom && erp.products.find(p => p.id === bom.rawMaterialId);
-        if (!bom || !raw) return;
-        if (rawLeft[raw.id] === undefined) rawLeft[raw.id] = raw.stocks[central.id] || 0;
-        const need = mo.quantity * bom.rawQuantityGrams;
-        const avail = rawLeft[raw.id];
-        const ok = avail >= need;
-        mos.push({ mo, raw, need, avail, ok, short: Math.max(0, need - avail) });
-        if (ok) rawLeft[raw.id] -= need;
+        if (!bom || !(bom.components || []).length) return;
+        const lines = bom.components.map(c => {
+          const prod = erp.products.find(p => p.id === c.productId);
+          if (!prod) return null;
+          if (rawLeft[prod.id] === undefined) rawLeft[prod.id] = prod.stocks[central.id] || 0;
+          const need = mo.quantity * c.required;
+          const avail = rawLeft[prod.id];
+          return { prod, need, avail, ok: avail + 1e-9 >= need, short: Math.max(0, need - avail) };
+        }).filter(Boolean);
+        const ok = lines.length > 0 && lines.every(l => l.ok);
+        if (ok) lines.forEach(l => { rawLeft[l.prod.id] -= l.need; });
+        mos.push({ mo, lines, ok });
       });
 
       // ---- purchasing, movements, sales
@@ -1752,10 +2337,10 @@
       const dest = erp.warehouses.find(w => w.id === destId);
       if (!prod || !src || !dest) return;
       if ((prod.stocks[srcId] || 0) < qty) {
-        alert(`Not enough stock at ${src.code}.`);
+        showNotice(`Not enough stock at ${src.code}.`, 'error');
         return;
       }
-      if (!confirm(`Transfer ${qty} ${unitOf(prod)} of ${prod.name} from ${src.code} to ${dest.code}?`)) return;
+      askConfirm(`Transfer ${qty} ${unitOf(prod)} of ${prod.name} from ${src.code} to ${dest.code}?`, () => {
 
       prod.stocks[srcId] -= qty;
       prod.stocks[destId] = (prod.stocks[destId] || 0) + qty;
@@ -1774,6 +2359,7 @@
       }
       saveState();
       renderActiveTab();
+      }, 'Transfer');
     }
     function syncAIRecommendations() {
       const m = getBIMetrics();
@@ -1831,12 +2417,14 @@
       const btnCls = 'shrink-0 px-3 py-1.5 text-[11px] font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white cursor-pointer';
       const actions = [];
       m.mos.forEach(x => {
+        const needTxt = x.lines.map(l => `${biQty(l.need)} ${unitOf(l.prod)} ${l.prod.name}`).join(', ');
+        const shortTxt = x.lines.filter(l => !l.ok).map(l => `${biQty(l.short)} ${unitOf(l.prod)} of ${l.prod.name}`).join(', ');
         actions.push(x.ok
           ? { tone: 'green', title: `${x.mo.code} is ready: ${x.mo.quantity} × ${x.mo.productName}`,
-              detail: `Needs ${biQty(x.need)} g of ${x.raw.name}, vault holds ${biQty(x.avail)} g.`,
+              detail: `Needs ${needTxt}. Everything is in the vault.`,
               btn: `<button onclick="switchTab('manufacturing')" class="${btnCls}">Open Manufacturing</button>` }
-          : { tone: 'red', title: `${x.mo.code} is blocked: short ${biQty(x.short)} g of ${x.raw.name}`,
-              detail: `Needs ${biQty(x.need)} g, vault holds ${biQty(x.avail)} g. Buy at least ${biQty(x.short)} g.`,
+          : { tone: 'red', title: `${x.mo.code} is blocked: short ${shortTxt}`,
+              detail: `Needs ${needTxt}. Buy the missing items.`,
               btn: `<button onclick="switchTab('purchase')" class="${btnCls}">Open Procurement</button>` });
       });
       m.openPOs.forEach(po => {
@@ -1864,7 +2452,7 @@
             m.totalValue ? r.value / m.totalValue * 100 : 0, palette[i % palette.length])).join('');
 
       // ---- store stock health matrix
-      const posRows = erp.products.filter(p => p.type !== 'raw' && m.soldInPos(p));
+      const posRows = erp.products.filter(p => m.soldInPos(p));
       const whCols = [m.central, ...m.stores];
       const stockCell = (p, wh, isStore) => {
         const q = p.stocks[wh.id] || 0;
@@ -1889,15 +2477,14 @@
 
       // ---- production readiness
       const moHtml = m.mos.length === 0
-        ? `<tr><td colspan="6" class="py-6 text-center text-slate-400">No open production orders.</td></tr>`
+        ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">No open production orders.</td></tr>`
         : m.mos.map(x => `<tr class="hover:bg-slate-50/80">
             <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${x.mo.code}</td>
             <td class="py-2.5 px-3">${x.mo.productName} <span class="text-slate-400">× ${x.mo.quantity}</span></td>
             <td class="py-2.5 px-3">${x.mo.status === 'not_available' ? badge('Not Available', 'red') : badge(x.mo.status.replace('_', ' '), 'slate')}</td>
-            <td class="py-2.5 px-3 text-right font-mono">${biQty(x.need)} g</td>
-            <td class="py-2.5 px-3 text-right font-mono">${biQty(x.avail)} g</td>
-            <td class="py-2.5 px-4">${x.ok ? badge('Ready', 'green') : badge('Short ' + biQty(x.short) + ' g', 'red')}</td>
-                      </tr>`).join('');
+            <td class="py-2.5 px-3 text-[11px]">${x.lines.map(l => `<div class="${l.ok ? 'text-slate-600' : 'text-red-600 font-semibold'}">${l.prod.name}: <span class="font-mono">${biQty(l.need)} / ${biQty(l.avail)} ${unitOf(l.prod)}</span></div>`).join('')}</td>
+            <td class="py-2.5 px-4">${x.ok ? badge('Ready', 'green') : badge('Not enough', 'red')}</td>
+          </tr>`).join('');
 
       // ---- purchase pipeline
       const poHtml = m.openPOs.length === 0
@@ -1919,7 +2506,7 @@
           <td class="py-2.5 px-3 text-right font-mono">${biQty(r.qty)} ${unitOf(r.p)}</td>
           <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.value)} đ</td>
           <td class="py-2.5 px-3 text-right font-mono">${r.gold > 0 ? biQty(Math.round(r.gold * 10) / 10) + ' g' : '-'}</td>
-          <td class="py-2.5 px-4">${r.p.type === 'raw' ? badge('Raw', 'slate') : (m.soldInPos(r.p) ? badge('In POS', 'green') : badge('Hidden', 'slate'))}</td>
+          <td class="py-2.5 px-4">${m.soldInPos(r.p) ? badge('In POS', 'green') : (r.p.type === 'raw' ? badge('Raw', 'slate') : badge('Hidden', 'slate'))}</td>
         </tr>`).join('');
 
       // ---- POS & movement activity
@@ -1990,7 +2577,7 @@
             ${kpi('Inventory Value', `${biCompact(m.totalValue)} đ`, `At cost · finished goods retail ${biCompact(m.finishedRetail)} đ`)}
             ${kpi('POS Sales Today', `${biCompact(erp.salesTodayVnd)} đ`, `Finished stock margin ${biCompact(m.finishedRetail - m.finishedCost)} đ`)}
             ${kpi('Store Alerts', m.alerts.length, outOfStock > 0 ? `${outOfStock} out of stock` : (m.alerts.length ? 'Below minimum level' : 'All stores healthy'), m.alerts.length ? 'text-red-600' : 'text-emerald-600')}
-            ${kpi('Open Production', m.mos.length, blockedMOs > 0 ? `${blockedMOs} blocked by gold shortage` : 'All have enough gold', blockedMOs ? 'text-red-600' : 'text-slate-950')}
+            ${kpi('Open Production', m.mos.length, blockedMOs > 0 ? `${blockedMOs} blocked by missing materials` : 'All have enough gold', blockedMOs ? 'text-red-600' : 'text-slate-950')}
             ${kpi('Open Purchases', m.openPOs.length, `${biCompact(openPoValue)} đ to receive`)}
           </div>
 
@@ -2008,7 +2595,7 @@
             healthHtml))}
 
           ${card('Production Readiness', 'factory', tableWrap(
-            th('Order', 'px-4') + th('Product') + th('Status') + th('Gold needed', 'px-3 text-right') + th('In vault', 'px-3 text-right') + th('Result', 'px-4'),
+            th('Order', 'px-4') + th('Product') + th('Status') + th('Materials (needed / in vault)') + th('Result', 'px-4'),
             moHtml))}
 
           ${card('Purchase Pipeline', 'truck', tableWrap(

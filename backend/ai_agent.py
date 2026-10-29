@@ -41,7 +41,7 @@ SYSTEM_INSTRUCTION = """
 You are Aurora's Operations Copilot for the manager of AURORA JEWELRY, a gold and fine-jewelry business (central warehouse, casting workshop, retail stores).
 
 SCOPE
-- You cover only Aurora's day-to-day operations as shown in the system: AI Decision recommendations (inside the BI Dashboard), inventory and stock transfers, manufacturing orders, purchasing, retail POS sales, and the gold position.
+- You cover only Aurora's day-to-day operations as shown in the system: the recommended actions on the BI Dashboard, inventory and stock transfers, manufacturing orders, purchasing, retail POS sales, and the gold position.
 - If asked about anything outside that (academic frameworks, report formats, competitors, other companies, general knowledge), do not discuss it. Reply in one sentence that you only cover Aurora's operations, and name what you can analyse instead.
 
 SOURCE OF TRUTH
@@ -57,7 +57,7 @@ ANSWER STYLE (the manager is busy)
 - Structure, skipping any part that does not apply:
   **Conclusion:** one or two sentences that directly answer the question.
   **Evidence:** 2 to 4 hyphen bullets with exact numbers, units, warehouse codes and document codes.
-  **Actions:** a numbered list, at most 3, most urgent first. Each item says what, how much, from -> to, and where to click (for example Inventory > Internal Transfer, BI Dashboard > AI Decision Agent > Approve & Rebalance, Manufacturing > Complete MO, Procurement > Create Purchase Order, Retail POS).
+  **Actions:** a numbered list, at most 3, most urgent first. Each item says what, how much, from -> to, and where to click (for example BI Dashboard > Approve & Rebalance, Inventory > Internal Transfer, Manufacturing > Complete MO, Procurement > Create Purchase Order, Retail POS).
   **Watch out:** one line, only if there is a real risk or a data limitation.
 - Formatting: plain text with **bold**, "- " bullets and "1." numbering only. No headings (#), no tables, no emojis.
 - Language: reply in the language of the manager's latest message (Vietnamese -> Vietnamese, English -> English). Keep product names, SKUs and document codes unchanged.
@@ -155,7 +155,7 @@ def build_facts(ctx):
             "name": p.get("name"),
             "karat": p.get("karat"),
             "kind": "raw material" if p.get("type") == "raw" else "finished product",
-            "unit": "g" if p.get("type") == "raw" else "pcs",
+            "unit": p.get("unit") or ("g" if p.get("type") == "raw" else "pcs"),
             "gold_per_unit_g": gw,
             "cost_vnd": cost,
             "price_vnd": _num(p.get("retailPriceVnd")),
@@ -170,7 +170,7 @@ def build_facts(ctx):
     # ---- store stock gaps and suggested transfers --------------------------
     alerts = []
     for p in products:
-        if p.get("type") == "raw" or not _sold_in_pos(p):
+        if not _sold_in_pos(p):
             continue
         stocks = p.get("stocks") or {}
         central_left = _num(stocks.get(cid))
@@ -199,37 +199,53 @@ def build_facts(ctx):
             central_left -= move
     alerts.sort(key=lambda a: (a["stock_now"] / a["min_level"]) if a["min_level"] else 1)
 
-    # ---- production orders: is there enough raw metal? ---------------------
+    # ---- production orders: does every component have enough stock? ---------
+    # Same rule as the web page: vault stock minus what the OTHER open orders already reserved.
     boms = {b.get("id"): b for b in snap.get("boms") or []}
     prod_by_id = {p.get("id"): p for p in products}
-    raw_left = {}
+    open_orders = [m for m in snap.get("manufacturingOrders") or []
+                   if m.get("status") in ("confirmed", "in_progress")]
+
+    def _required(c):
+        if c.get("required") is not None:
+            return _num(c.get("required"))
+        return _num(c.get("quantity", c.get("qty"))) * (1 + _num(c.get("lossPct")) / 100)
+
     mo_checks = []
-    for mo in snap.get("manufacturingOrders") or []:
-        if mo.get("status") == "completed":
-            continue
+    for mo in open_orders:
         bom = boms.get(mo.get("bomId"))
-        raw = prod_by_id.get((bom or {}).get("rawMaterialId"))
-        if not bom or not raw:
+        if not bom:
             continue
-        rid = raw["id"]
-        if rid not in raw_left:
-            raw_left[rid] = _num((raw.get("stocks") or {}).get(cid))
-        need = _num(mo.get("quantity")) * _num(bom.get("rawQuantityGrams"))
-        available = raw_left[rid]
-        ok = available >= need
+        reserved = {}
+        for other in open_orders:
+            if other is mo:
+                continue
+            ob = boms.get(other.get("bomId"))
+            for c in (ob or {}).get("components") or []:
+                reserved[c.get("productId")] = reserved.get(c.get("productId"), 0.0) + _num(other.get("quantity")) * _required(c)
+        lines = []
+        for c in bom.get("components") or []:
+            comp = prod_by_id.get(c.get("productId"))
+            if not comp:
+                continue
+            in_vault = _num((comp.get("stocks") or {}).get(cid))
+            available = max(0.0, in_vault - reserved.get(comp["id"], 0.0))
+            need = _num(mo.get("quantity")) * _required(c)
+            lines.append({
+                "material": comp.get("name"),
+                "unit": comp.get("unit") or ("g" if comp.get("type") == "raw" else "pcs"),
+                "needed": round(need, 3),
+                "available": round(available, 3),
+                "short": round(max(0.0, need - available), 3),
+            })
         mo_checks.append({
             "order": mo.get("code"),
             "product": mo.get("productName"),
             "qty": _clean_qty(mo.get("quantity")),
             "status": mo.get("status"),
-            "raw_material": raw.get("name"),
-            "raw_needed_g": round(need, 2),
-            "raw_available_g": round(available, 2),
-            "can_complete": ok,
-            "shortfall_g": round(max(0.0, need - available), 2),
+            "materials": lines,
+            "available": bool(lines) and all(l["short"] <= 1e-9 for l in lines),
         })
-        if ok:
-            raw_left[rid] -= need
 
     # ---- open purchase orders ---------------------------------------------
     catalog_names = {p.get("name") for p in products}
@@ -241,7 +257,8 @@ def build_facts(ctx):
             "order": po.get("code"),
             "vendor": po.get("vendor"),
             "item": po.get("productName"),
-            "qty": _clean_qty(po.get("quantityGrams")),
+            "qty": _clean_qty(po.get("quantity", po.get("quantityGrams"))),
+            "unit": po.get("unit"),
             "total_vnd": _num(po.get("totalVnd")),
             "status": po.get("status"),
         })
@@ -413,8 +430,8 @@ def _local_reply(message, facts):
         for a in alerts[:limit]:
             if a["suggested_transfer_qty"] > 0:
                 out.append(t(
-                    f"Chuyển {a['suggested_transfer_qty']} cái {a['product']} từ {a['from']} sang {a['to']} (Inventory > Internal Transfer).",
-                    f"Transfer {a['suggested_transfer_qty']} pcs of {a['product']} from {a['from']} to {a['to']} (Inventory > Internal Transfer)."))
+                    f"Chuyển {a['suggested_transfer_qty']} cái {a['product']} từ {a['from']} sang {a['to']} (BI Dashboard > Approve & Rebalance).",
+                    f"Transfer {a['suggested_transfer_qty']} pcs of {a['product']} from {a['from']} to {a['to']} (BI Dashboard > Approve & Rebalance)."))
             else:
                 out.append(t(
                     f"{a['from']} không còn {a['product']} để chuyển cho {a['to']}: cần đúc thêm (Manufacturing) hoặc mua vàng (Procurement).",
@@ -442,22 +459,25 @@ def _local_reply(message, facts):
     if intent == "production":
         if not mos:
             return t("**Kết luận:** Không có lệnh sản xuất nào đang mở.", "**Conclusion:** There are no open production orders.")
-        short = [m for m in mos if not m["can_complete"]]
-        ev = [t(f"- {m['order']} ({m['product']} x{m['qty']}, {m['status']}): cần {m['raw_needed_g']} g, kho có {m['raw_available_g']} g → "
-                + ("đủ" if m["can_complete"] else f"thiếu {m['shortfall_g']} g"),
-                f"- {m['order']} ({m['product']} x{m['qty']}, {m['status']}): needs {m['raw_needed_g']} g, available {m['raw_available_g']} g → "
-                + ("enough" if m["can_complete"] else f"short {m['shortfall_g']} g")) for m in mos]
+        short = [m for m in mos if not m["available"]]
+
+        def shortage(m):
+            return ", ".join(f"{_clean_qty(l['short'])} {l['unit']} {l['material']}" for l in m["materials"] if l["short"] > 0)
+
+        ev = [t(f"- {m['order']} ({m['product']} x{m['qty']}, {m['status']}): " + ("Available" if m["available"] else f"Not Available, thiếu {shortage(m)}"),
+                f"- {m['order']} ({m['product']} x{m['qty']}, {m['status']}): " + ("Available" if m["available"] else f"Not Available, short {shortage(m)}"))
+              for m in mos]
         acts = []
         for m in mos:
-            if m["can_complete"]:
+            if m["available"]:
                 acts.append(t(f"Hoàn tất {m['order']} (Manufacturing > Complete MO).", f"Complete {m['order']} (Manufacturing > Complete MO)."))
             else:
-                acts.append(t(f"Mua tối thiểu {m['shortfall_g']} g {m['raw_material']} trước khi hoàn tất {m['order']} (Procurement > Create Purchase Order).",
-                              f"Buy at least {m['shortfall_g']} g of {m['raw_material']} before completing {m['order']} (Procurement > Create Purchase Order)."))
-        head = (t(f"**Kết luận:** {len(mos)} lệnh đang mở, {len(short)} lệnh thiếu nguyên liệu.",
-                  f"**Conclusion:** {len(mos)} open order(s), {len(short)} short of raw material.")
-                if short else t(f"**Kết luận:** {len(mos)} lệnh đang mở, đủ vàng để hoàn tất tất cả.",
-                                f"**Conclusion:** {len(mos)} open order(s), enough gold to complete all."))
+                acts.append(t(f"Mua bổ sung {shortage(m)} trước khi hoàn tất {m['order']} (Procurement > New Purchase Order).",
+                              f"Buy {shortage(m)} before completing {m['order']} (Procurement > New Purchase Order)."))
+        head = (t(f"**Kết luận:** {len(mos)} lệnh đang mở, {len(short)} lệnh Not Available (thiếu vật tư).",
+                  f"**Conclusion:** {len(mos)} open order(s), {len(short)} Not Available (short of materials).")
+                if short else t(f"**Kết luận:** {len(mos)} lệnh đang mở, đủ vật tư để hoàn tất tất cả.",
+                                f"**Conclusion:** {len(mos)} open order(s), all have enough materials."))
         return head + "\n\n**" + t("Bằng chứng", "Evidence") + ":**\n" + "\n".join(ev) + "\n\n**" + t("Hành động", "Actions") + ":**\n" + numbered(acts[:3])
 
     # ----- purchase ---------------------------------------------------------
@@ -494,8 +514,8 @@ def _local_reply(message, facts):
     # ----- how to / compare (short, conceptual) -----------------------------
     if intent == "howto":
         return t(
-            "**Quy trình 4 bước:**\n1. Procurement > Create Purchase Order > Receive Goods into Vault (nhập vàng vào kho).\n2. Manufacturing > Create MO > Complete MO (trừ vàng, cộng thành phẩm).\n3. Inventory > Internal Transfer hoặc BI Dashboard > AI Decision Agent > Approve & Rebalance (đưa hàng ra cửa hàng).\n4. Retail POS > Add to Cart > Complete Checkout (bán và trừ tồn).",
-            "**4-step flow:**\n1. Procurement > Create Purchase Order > Receive Goods into Vault (bring gold in).\n2. Manufacturing > Create MO > Complete MO (deduct gold, add finished goods).\n3. Inventory > Internal Transfer or BI Dashboard > AI Decision Agent > Approve & Rebalance (move stock to stores).\n4. Retail POS > Add to Cart > Complete Checkout (sell and deduct stock).")
+            "**Quy trình 4 bước:**\n1. Procurement > Create Purchase Order > Receive Goods into Vault (nhập vàng vào kho).\n2. Manufacturing > Create MO > Complete MO (trừ vàng, cộng thành phẩm).\n3. BI Dashboard > Approve & Rebalance, hoặc Inventory > Internal Transfer (đưa hàng ra cửa hàng).\n4. Retail POS > Add to Cart > Complete Checkout (bán và trừ tồn).",
+            "**4-step flow:**\n1. Procurement > Create Purchase Order > Receive Goods into Vault (bring gold in).\n2. Manufacturing > Create MO > Complete MO (deduct gold, add finished goods).\n3. BI Dashboard > Approve & Rebalance, or Inventory > Internal Transfer (move stock to stores).\n4. Retail POS > Add to Cart > Complete Checkout (sell and deduct stock).")
 
     if intent == "offtopic":
         return t(
@@ -510,10 +530,10 @@ def _local_reply(message, facts):
         lines.append(t(f"- {len(alerts)} vị trí cửa hàng thiếu hàng (gấp nhất: {alerts[0]['product']} tại {alerts[0]['to']}, còn {alerts[0]['stock_now']})",
                        f"- {len(alerts)} store position(s) short (most urgent: {alerts[0]['product']} at {alerts[0]['to']}, {alerts[0]['stock_now']} left)"))
         issues += actions_for_alerts(2)
-    short = [m for m in mos if not m["can_complete"]]
+    short = [m for m in mos if not m["available"]]
     if short:
-        lines.append(t(f"- {len(short)} lệnh sản xuất thiếu nguyên liệu ({short[0]['order']}: thiếu {short[0]['shortfall_g']} g)",
-                       f"- {len(short)} production order(s) short of metal ({short[0]['order']}: short {short[0]['shortfall_g']} g)"))
+        lines.append(t(f"- {len(short)} lệnh sản xuất Not Available ({short[0]['order']}: thiếu vật tư)",
+                       f"- {len(short)} production order(s) Not Available ({short[0]['order']}: short of materials)"))
     head = (t("**Kết luận:** Có việc cần xử lý.", "**Conclusion:** Some items need attention.") if (alerts or short)
             else t("**Kết luận:** Tình hình ổn định, không cần hành động.", "**Conclusion:** Operations look stable. No action needed."))
     out = head + "\n\n**" + t("Bằng chứng", "Evidence") + ":**\n" + "\n".join(lines)

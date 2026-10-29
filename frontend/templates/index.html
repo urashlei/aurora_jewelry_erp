@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AURORA Jewelry ERP</title>
-  <meta name="description" content="Enterprise ERP & AI Gold Decision Copilot for AURORA Jewelry - Closed-loop MIS Architecture (Odoo Inventory, Manufacturing, POS, Procurement & Gold Flow BI)">
+  <meta name="description" content="Enterprise ERP & AI Gold Decision Copilot for AURORA Jewelry">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -136,7 +136,7 @@
       </button>
       <button onclick="switchTab('bi')" id="tab-bi" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer">
         <i data-lucide="pie-chart" class="w-4 h-4"></i>
-        <span>Gold Flow BI</span>
+        <span>BI Dashboard</span>
       </button>
       <button onclick="switchTab('ai-agent')" id="tab-ai-agent" class="tab-btn flex items-center gap-1.5 px-3.5 py-2 font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition-all cursor-pointer relative">
         <i data-lucide="cpu" class="w-4 h-4 text-purple-600"></i>
@@ -356,6 +356,7 @@
     // State initialization
     let erp = JSON.parse(localStorage.getItem('aurora_jewelry_erp_en_v3') || 'null') || DEFAULT_DATA;
     function saveState() {
+      syncAIRecommendations();
       localStorage.setItem('aurora_jewelry_erp_en_v3', JSON.stringify(erp));
       updateHeaderKPIs();
     }
@@ -444,6 +445,10 @@
               <p class="text-xs text-slate-500 mt-0.5">Real-time stock balance across Main Warehouse (WH-MW) and retail stores</p>
             </div>
             <div class="flex items-center gap-2">
+              <button onclick="openNewProductModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs cursor-pointer">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>New Product</span>
+              </button>
               <button onclick="openInternalTransferModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-xs cursor-pointer">
                 <i data-lucide="arrow-right-left" class="w-3.5 h-3.5"></i>
                 <span>Internal Transfer</span>
@@ -769,8 +774,154 @@
     function closeActionModal() {
       document.getElementById('actionModal').classList.add('hidden');
     }
+    // ================= NEW PRODUCT =================
+    function isSoldInPos(p) {
+      return p.showInPos !== undefined ? p.showInPos : p.type === 'finished';
+    }
 
+    function openNewProductModal() {
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="plus" class="w-4 h-4 text-amber-600"></i>
+              <span>New Product</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
 
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Product name:</label>
+            <input type="text" id="npName" placeholder="e.g. Fortune Pendant 24K" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Product code (SKU):</label>
+              <input type="text" id="npSku" placeholder="e.g. JWL-PDT-24K-01" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Karat purity:</label>
+              <select id="npKarat" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+                <option value="24K">24K (9999)</option>
+                <option value="18K" selected>18K (750)</option>
+                <option value="14K">14K (585)</option>
+                <option value="10K">10K (417)</option>
+                <option value="999">999 (Silver)</option>
+                <option value="N/A">N/A (non-metal)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 items-start">
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Unit weight (g):</label>
+              <input type="number" id="npUnitWeight" min="0" step="any" placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+              <p class="text-[10px] text-slate-400 mt-1">Grams of gold in 1 stock unit (1 Chi = 3.75 g). Enter 0 if not gold.</p>
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Quantity:</label>
+              <input type="number" id="npQty" min="0" step="any" value="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Cost (VND / unit):</label>
+              <input type="number" id="npCost" min="0" step="any" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Price (VND / unit):</label>
+              <input type="number" id="npPrice" min="0" step="any" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Location:</label>
+            <select id="npWarehouse" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+              ${erp.warehouses.map(w => `<option value="${w.id}">${w.code} - ${w.name}</option>`).join('')}
+            </select>
+          </div>
+
+          <label class="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer">
+            <input type="checkbox" id="npShowPos" checked class="mt-0.5 w-4 h-4 accent-amber-500">
+            <span>
+              <span class="block font-semibold text-slate-800">Show in Point of Sale</span>
+              <span class="block text-[10px] text-slate-500">Tick to let cashiers sell this product at the retail stores.</span>
+            </span>
+          </label>
+
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executeNewProduct()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Create Product</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function executeNewProduct() {
+      const clean = s => s.replace(/[<>"]/g, '').trim();
+      const name = clean(document.getElementById('npName').value);
+      const sku = clean(document.getElementById('npSku').value).toUpperCase().replace(/\s+/g, '-');
+      const karat = document.getElementById('npKarat').value;
+      const unitWeight = parseFloat(document.getElementById('npUnitWeight').value) || 0;
+      const qty = parseFloat(document.getElementById('npQty').value) || 0;
+      const cost = parseFloat(document.getElementById('npCost').value);
+      const price = parseFloat(document.getElementById('npPrice').value);
+      const whId = document.getElementById('npWarehouse').value;
+      const showInPos = document.getElementById('npShowPos').checked;
+      const wh = erp.warehouses.find(w => w.id === whId);
+
+      if (!name) { alert('Please enter a product name.'); return; }
+      if (!sku) { alert('Please enter a product code (SKU).'); return; }
+      if (erp.products.some(p => p.sku.toUpperCase() === sku)) {
+        alert(`SKU "${sku}" already exists. Please use a different code.`);
+        return;
+      }
+      if (unitWeight < 0) { alert('Unit weight cannot be negative.'); return; }
+      if (qty < 0) { alert('Quantity cannot be negative.'); return; }
+      if (isNaN(cost) || cost <= 0) { alert('Cost must be greater than 0.'); return; }
+      if (isNaN(price) || price <= 0) { alert('Price must be greater than 0.'); return; }
+      if (price < cost && !confirm('Price is lower than cost. Continue anyway?')) return;
+
+      const stocks = {};
+      erp.warehouses.forEach(w => { stocks[w.id] = 0; });
+      stocks[whId] = qty;
+
+      erp.products.push({
+        id: `prod_${Date.now()}`,
+        sku,
+        name,
+        karat,
+        goldWeightGrams: unitWeight,
+        type: 'finished',
+        showInPos,
+        unitCostVnd: cost,
+        retailPriceVnd: price,
+        stocks
+      });
+
+      if (qty > 0) {
+        erp.stockMoves.unshift({
+          id: `sm_${Date.now()}`,
+          reference: `NEW-${Math.floor(1000 + Math.random() * 9000)}`,
+          productSku: sku,
+          fromLocation: 'New Product',
+          toLocation: wh.code,
+          quantity: `${qty} pcs`,
+          type: 'receipt',
+          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        });
+      }
+
+      saveState();
+      closeActionModal();
+      renderActiveTab();
+    }
     // ================= 2. MANUFACTURING VIEW =================
     function renderManufacturingView(container) {
       container.innerHTML = `
@@ -1105,7 +1256,7 @@
 
             <!-- Product Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              ${erp.products.filter(p => p.type === 'finished').map(p => {
+              ${erp.products.filter(isSoldInPos).map(p => {
                 const stock = p.stocks[erp.activeStoreId] || 0;
                 return `
                   <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-amber-400 transition-all">
@@ -1247,64 +1398,363 @@
       renderActiveTab();
     }
 
-    // ================= 5. GOLD FLOW BI VIEW =================
+    // ================= 5. BI DASHBOARD VIEW =================
+    const BI_MIN_STOCK = 10;       // store is "low" below this (same rule the AI Agent uses)
+    const BI_REFILL_TARGET = 15;   // refill a low store up to this level
+
+    function biCompact(n) {
+      const a = Math.abs(n);
+      if (a >= 1e9) return (n / 1e9).toFixed(2) + ' B';
+      if (a >= 1e6) return (n / 1e6).toFixed(1) + ' M';
+      return Math.round(n).toLocaleString('en-US');
+    }
+    function biVnd(n) { return Math.round(n).toLocaleString('en-US') + ' đ'; }
+    function biQty(n) { return Number.isInteger(n) ? n : Math.round(n * 100) / 100; }
+
+    function getBIMetrics() {
+      const central = erp.warehouses.find(w => w.type !== 'store') || erp.warehouses[0];
+      const stores = erp.warehouses.filter(w => w.id !== central.id);
+      const soldInPos = p => (p.showInPos !== undefined ? !!p.showInPos : p.type === 'finished');
+      const sum = obj => Object.values(obj).reduce((a, b) => a + b, 0);
+
+      // ---- inventory by warehouse and by product
+      const whStats = erp.warehouses.map(w => ({ id: w.id, code: w.code, name: w.name, gold: 0, value: 0 }));
+      const rows = erp.products.map(p => {
+        const qty = sum(p.stocks);
+        whStats.forEach(s => {
+          const q = p.stocks[s.id] || 0;
+          s.gold += q * p.goldWeightGrams;
+          s.value += q * p.unitCostVnd;
+        });
+        return {
+          p,
+          qty,
+          value: qty * p.unitCostVnd,
+          retail: qty * p.retailPriceVnd,
+          gold: qty * p.goldWeightGrams,
+          margin: p.retailPriceVnd > 0 ? (p.retailPriceVnd - p.unitCostVnd) / p.retailPriceVnd * 100 : 0
+        };
+      });
+      const totalGold = rows.reduce((a, r) => a + r.gold, 0);
+      const totalValue = rows.reduce((a, r) => a + r.value, 0);
+      const finished = rows.filter(r => r.p.type !== 'raw');
+      const finishedCost = finished.reduce((a, r) => a + r.value, 0);
+      const finishedRetail = finished.reduce((a, r) => a + r.retail, 0);
+
+      // ---- store stock gaps and suggested transfers
+      const alerts = [];
+      erp.products.forEach(p => {
+        if (p.type === 'raw' || !soldInPos(p)) return;
+        let centralLeft = p.stocks[central.id] || 0;
+        const min = p.minStock !== undefined ? p.minStock : BI_MIN_STOCK;
+        const target = Math.max(BI_REFILL_TARGET, min);
+        stores.forEach(st => {
+          const have = p.stocks[st.id] || 0;
+          if (have >= min) return;
+          const need = target - have;
+          const move = Math.floor(Math.min(need, centralLeft));
+          alerts.push({ p, store: st, have, min, target, move, centralBefore: centralLeft });
+          centralLeft -= move;
+        });
+      });
+      alerts.sort((a, b) => (a.have / (a.min || 1)) - (b.have / (b.min || 1)));
+
+      // ---- production readiness
+      const rawLeft = {};
+      const mos = [];
+      (erp.manufacturingOrders || []).forEach(mo => {
+        if (mo.status === 'completed') return;
+        const bom = (erp.boms || []).find(b => b.id === mo.bomId);
+        const raw = bom && erp.products.find(p => p.id === bom.rawMaterialId);
+        if (!bom || !raw) return;
+        if (rawLeft[raw.id] === undefined) rawLeft[raw.id] = raw.stocks[central.id] || 0;
+        const need = mo.quantity * bom.rawQuantityGrams;
+        const avail = rawLeft[raw.id];
+        const ok = avail >= need;
+        mos.push({ mo, raw, need, avail, ok, short: Math.max(0, need - avail) });
+        if (ok) rawLeft[raw.id] -= need;
+      });
+
+      // ---- purchasing, movements, sales
+      const openPOs = (erp.purchaseOrders || []).filter(po => po.status !== 'received');
+      const moveCounts = { receipt: 0, transfer: 0, sale: 0, adjustment: 0 };
+      const soldBySku = {};
+      (erp.stockMoves || []).forEach(m => {
+        moveCounts[m.type] = (moveCounts[m.type] || 0) + 1;
+        if (m.type === 'sale') soldBySku[m.productSku] = (soldBySku[m.productSku] || 0) + (parseFloat(m.quantity) || 0);
+      });
+
+      return { central, stores, soldInPos, whStats, rows, totalGold, totalValue, finishedCost, finishedRetail,
+               alerts, mos, openPOs, moveCounts, soldBySku };
+    }
+
+    // One-click transfer from a dashboard action (same effect as Inventory > Internal Transfer)
+    function biQuickTransfer(prodId, srcId, destId, qty) {
+      const prod = erp.products.find(p => p.id === prodId);
+      const src = erp.warehouses.find(w => w.id === srcId);
+      const dest = erp.warehouses.find(w => w.id === destId);
+      if (!prod || !src || !dest) return;
+      if ((prod.stocks[srcId] || 0) < qty) {
+        alert(`Not enough stock at ${src.code}.`);
+        return;
+      }
+      if (!confirm(`Transfer ${qty} pcs of ${prod.name} from ${src.code} to ${dest.code}?`)) return;
+
+      prod.stocks[srcId] -= qty;
+      prod.stocks[destId] = (prod.stocks[destId] || 0) + qty;
+      erp.stockMoves.unshift({
+        id: `sm_${Date.now()}`,
+        reference: `INT-TRF-${Math.floor(1000 + Math.random() * 9000)}`,
+        productSku: prod.sku,
+        fromLocation: src.code,
+        toLocation: dest.code,
+        quantity: `${qty} pcs`,
+        type: 'transfer',
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      });
+      if (prodId === 'prod_ring_24k' && destId === 'wh_pn' && qty >= 10) {
+        erp.aiRecommendations.forEach(r => { if (r.id === 'rec_01') r.status = 'completed'; });
+      }
+      saveState();
+      renderActiveTab();
+    }
+    function syncAIRecommendations() {
+      const m = getBIMetrics();
+      const fresh = m.alerts.filter(a => a.move > 0).map(a => ({
+        id: `rec_${a.p.id}_${a.store.id}`,
+        auto: true,
+        severity: a.have <= 0 ? 'critical' : 'high',
+        title: `Stock ${a.have <= 0 ? 'Out' : 'Alert'}: ${a.p.name} at ${a.store.name}`,
+        description: `${a.store.code} holds ${biQty(a.have)} pcs (minimum ${biQty(a.min)}). ${m.central.code} holds ${biQty(a.centralBefore)} pcs.`,
+        recommendedAction: `Dispatch ${a.move} × ${a.p.name} from ${m.central.name} (${m.central.code}) to ${a.store.code}, reaching ${biQty(a.target)} pcs.`,
+        sourceWarehouse: m.central.id,
+        destinationWarehouse: a.store.id,
+        productId: a.p.id,
+        quantity: a.move,
+        status: 'pending'
+      }));
+      const freshIds = new Set(fresh.map(r => r.id));
+      const history = (erp.aiRecommendations || [])
+        .filter(r => r.auto && !freshIds.has(r.id))                            // drops the old fixed demo card
+        .map(r => (r.status === 'pending' ? { ...r, status: 'completed' } : r)) // shortage no longer exists
+        .slice(0, 3);
+      erp.aiRecommendations = [...fresh, ...history];
+    }
+
     function renderGoldFlowBIView(container) {
-      const totalGold = calculateTotalGold();
+      const m = getBIMetrics();
+      const palette = ['bg-amber-500', 'bg-sky-500', 'bg-emerald-500', 'bg-purple-500', 'bg-rose-500', 'bg-slate-500'];
+      const blockedMOs = m.mos.filter(x => !x.ok).length;
+      const outOfStock = m.alerts.filter(a => a.have <= 0).length;
+      const openPoValue = m.openPOs.reduce((a, po) => a + (po.totalVnd || 0), 0);
+
+      const kpi = (label, value, sub, tone) => `
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">${label}</div>
+          <div class="text-xl font-bold font-mono mt-1 ${tone || 'text-slate-950'}">${value}</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">${sub}</div>
+        </div>`;
+
+      const bar = (label, valueText, pct, color) => `
+        <div>
+          <div class="flex items-center justify-between text-[11px] mb-1">
+            <span class="font-semibold text-slate-700 truncate pr-2">${label}</span>
+            <span class="font-mono text-slate-600 shrink-0">${valueText}</span>
+          </div>
+          <div class="h-2 rounded bg-slate-100 overflow-hidden"><div class="h-2 rounded ${color}" style="width:${Math.max(0, Math.min(100, pct))}%"></div></div>
+        </div>`;
+
+      const badge = (text, tone) => {
+        const t = { red: 'bg-red-100 text-red-800', amber: 'bg-amber-100 text-amber-900', green: 'bg-emerald-100 text-emerald-800', slate: 'bg-slate-100 text-slate-700' }[tone];
+        return `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t}">${text}</span>`;
+      };
+
+      // ---- priority actions
+      const toneBox = { red: 'border-red-200 bg-red-50', amber: 'border-amber-200 bg-amber-50', green: 'border-emerald-200 bg-emerald-50', slate: 'border-slate-200 bg-slate-50' };
+      const btnCls = 'shrink-0 px-3 py-1.5 text-[11px] font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white cursor-pointer';
+      const actions = [];
+      m.alerts.forEach(a => {
+        actions.push({
+          tone: a.have <= 0 ? 'red' : 'amber',
+          title: `${a.store.code} · ${a.p.name}: ${biQty(a.have)} pcs (minimum ${biQty(a.min)})`,
+          detail: a.move > 0
+            ? `Move ${a.move} pcs from ${m.central.code} (holds ${biQty(a.centralBefore)}) to reach ${biQty(a.target)}.`
+            : `${m.central.code} has no stock left to send. Produce or buy more.`,
+          btn: a.move > 0
+            ? `<button onclick="biQuickTransfer('${a.p.id}','${m.central.id}','${a.store.id}',${a.move})" class="${btnCls}">Transfer ${a.move}</button>`
+            : `<button onclick="switchTab('manufacturing')" class="${btnCls}">Open Manufacturing</button>`
+        });
+      });
+      m.mos.forEach(x => {
+        actions.push(x.ok
+          ? { tone: 'green', title: `${x.mo.code} is ready: ${x.mo.quantity} × ${x.mo.productName}`,
+              detail: `Needs ${biQty(x.need)} g of ${x.raw.name}, vault holds ${biQty(x.avail)} g.`,
+              btn: `<button onclick="switchTab('manufacturing')" class="${btnCls}">Open Manufacturing</button>` }
+          : { tone: 'red', title: `${x.mo.code} is blocked: short ${biQty(x.short)} g of ${x.raw.name}`,
+              detail: `Needs ${biQty(x.need)} g, vault holds ${biQty(x.avail)} g. Buy at least ${biQty(x.short)} g.`,
+              btn: `<button onclick="switchTab('purchase')" class="${btnCls}">Open Procurement</button>` });
+      });
+      m.openPOs.forEach(po => {
+        actions.push({ tone: 'slate', title: `${po.code} awaiting receipt: ${po.productName}`,
+          detail: `${po.vendor} · ${biVnd(po.totalVnd || 0)}`,
+          btn: `<button onclick="switchTab('purchase')" class="${btnCls}">Open Procurement</button>` });
+      });
+      const actionHtml = actions.length === 0
+        ? `<div class="p-4 rounded-lg border border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-800">All clear: no store is low, no production order is blocked, no purchase order is waiting.</div>`
+        : actions.slice(0, 8).map(a => `
+            <div class="flex items-center justify-between gap-3 p-3 rounded-lg border ${toneBox[a.tone]}">
+              <div class="min-w-0">
+                <div class="font-bold text-slate-900 text-xs">${a.title}</div>
+                <div class="text-[11px] text-slate-600 mt-0.5">${a.detail}</div>
+              </div>
+              ${a.btn}
+            </div>`).join('');
+
+      // ---- gold by location, value by product
+      const goldBars = m.whStats.map((w, i) =>
+        bar(`${w.code} · ${w.name}`, `${biQty(Math.round(w.gold * 10) / 10)} g (${m.totalGold ? (w.gold / m.totalGold * 100).toFixed(1) : 0}%)`,
+            m.totalGold ? w.gold / m.totalGold * 100 : 0, palette[i % palette.length])).join('');
+      const valueBars = m.rows.slice().sort((a, b) => b.value - a.value).map((r, i) =>
+        bar(r.p.name, `${biCompact(r.value)} đ (${m.totalValue ? (r.value / m.totalValue * 100).toFixed(1) : 0}%)`,
+            m.totalValue ? r.value / m.totalValue * 100 : 0, palette[i % palette.length])).join('');
+
+      // ---- store stock health matrix
+      const posRows = erp.products.filter(p => p.type !== 'raw' && m.soldInPos(p));
+      const whCols = [m.central, ...m.stores];
+      const stockCell = (p, wh, isStore) => {
+        const q = p.stocks[wh.id] || 0;
+        const min = p.minStock !== undefined ? p.minStock : BI_MIN_STOCK;
+        const cls = !isStore ? 'bg-slate-100 text-slate-800'
+          : q <= 0 ? 'bg-red-100 text-red-800' : q < min ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800';
+        return `<td class="py-2.5 px-3 text-right"><span class="inline-block min-w-[2.5rem] text-center px-2 py-0.5 rounded font-mono font-bold ${cls}">${biQty(q)}</span></td>`;
+      };
+      const healthHtml = posRows.length === 0
+        ? `<tr><td colspan="${whCols.length + 3}" class="py-6 text-center text-slate-400">No product is enabled for Point of Sale.</td></tr>`
+        : posRows.map(p => {
+            const min = p.minStock !== undefined ? p.minStock : BI_MIN_STOCK;
+            const worst = m.stores.reduce((w, st) => Math.min(w, p.stocks[st.id] || 0), Infinity);
+            const status = worst <= 0 ? badge('Out of stock', 'red') : worst < min ? badge('Low', 'amber') : badge('Healthy', 'green');
+            return `<tr class="hover:bg-slate-50/80">
+              <td class="py-2.5 px-4"><div class="font-bold text-slate-900">${p.name}</div><div class="text-[10px] font-mono text-slate-400">${p.sku}</div></td>
+              ${whCols.map((w, i) => stockCell(p, w, i > 0)).join('')}
+              <td class="py-2.5 px-3 text-right font-mono text-slate-600">${biQty(min)}</td>
+              <td class="py-2.5 px-4">${status}</td>
+            </tr>`;
+          }).join('');
+
+      // ---- production readiness
+      const moHtml = m.mos.length === 0
+        ? `<tr><td colspan="7" class="py-6 text-center text-slate-400">No open production orders.</td></tr>`
+        : m.mos.map(x => `<tr class="hover:bg-slate-50/80">
+            <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${x.mo.code}</td>
+            <td class="py-2.5 px-3">${x.mo.productName} <span class="text-slate-400">× ${x.mo.quantity}</span></td>
+            <td class="py-2.5 px-3">${badge(x.mo.status.replace('_', ' '), 'slate')}</td>
+            <td class="py-2.5 px-3 text-right font-mono">${biQty(x.need)} g</td>
+            <td class="py-2.5 px-3 text-right font-mono">${biQty(x.avail)} g</td>
+            <td class="py-2.5 px-4">${x.ok ? badge('Ready', 'green') : badge('Short ' + biQty(x.short) + ' g', 'red')}</td>
+            <td class="py-2.5 px-4 text-slate-500">${x.mo.assignedCell || '-'}</td>
+          </tr>`).join('');
+
+      // ---- purchase pipeline
+      const poHtml = m.openPOs.length === 0
+        ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">No purchase orders waiting for receipt.</td></tr>`
+        : m.openPOs.map(po => `<tr class="hover:bg-slate-50/80">
+            <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${po.code}</td>
+            <td class="py-2.5 px-3">${po.vendor}</td>
+            <td class="py-2.5 px-3">${po.productName}</td>
+            <td class="py-2.5 px-3 text-right font-mono">${biVnd(po.totalVnd || 0)}</td>
+            <td class="py-2.5 px-4">${badge(po.status, 'amber')}</td>
+          </tr>`).join('');
+
+      // ---- product economics
+      const econHtml = m.rows.slice().sort((a, b) => b.value - a.value).map(r => `<tr class="hover:bg-slate-50/80">
+          <td class="py-2.5 px-4"><div class="font-bold text-slate-900">${r.p.name}</div><div class="text-[10px] font-mono text-slate-400">${r.p.sku}</div></td>
+          <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.p.unitCostVnd)}</td>
+          <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.p.retailPriceVnd)}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-semibold ${r.margin < 5 ? 'text-red-600' : 'text-emerald-700'}">${r.margin.toFixed(1)}%</td>
+          <td class="py-2.5 px-3 text-right font-mono">${biQty(r.qty)} ${r.p.type === 'raw' ? 'g' : 'pcs'}</td>
+          <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.value)} đ</td>
+          <td class="py-2.5 px-3 text-right font-mono">${r.gold > 0 ? biQty(Math.round(r.gold * 10) / 10) + ' g' : '-'}</td>
+          <td class="py-2.5 px-4">${r.p.type === 'raw' ? badge('Raw', 'slate') : (m.soldInPos(r.p) ? badge('In POS', 'green') : badge('Hidden', 'slate'))}</td>
+        </tr>`).join('');
+
+      // ---- POS & movement activity
+      const soldList = Object.entries(m.soldBySku).sort((a, b) => b[1] - a[1]);
+      const soldHtml = soldList.length === 0
+        ? `<div class="text-[11px] text-slate-400">No POS sales recorded in the movement ledger yet.</div>`
+        : soldList.map(([sku, q]) => {
+            const p = erp.products.find(x => x.sku === sku);
+            return `<div class="flex items-center justify-between text-[11px]"><span class="font-semibold text-slate-700">${p ? p.name : sku}</span><span class="font-mono text-slate-600">${biQty(q)} pcs sold</span></div>`;
+          }).join('');
+      const moveChip = (label, n, tone) => `<div class="p-3 rounded-lg border border-slate-200 bg-slate-50 text-center"><div class="text-lg font-bold font-mono ${tone}">${n}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">${label}</div></div>`;
+
+      const th = (t, cls) => `<th class="py-3 ${cls || 'px-3'}">${t}</th>`;
+      const card = (title, icon, body, extra) => `
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden ${extra || ''}">
+          <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 flex items-center gap-2">
+            <i data-lucide="${icon}" class="w-4 h-4 text-amber-600"></i><span>${title}</span>
+          </div>
+          ${body}
+        </div>`;
+      const tableWrap = (head, body) => `<div class="overflow-x-auto"><table class="w-full text-left text-xs border-collapse"><thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase"><tr>${head}</tr></thead><tbody class="divide-y divide-slate-100">${body}</tbody></table></div>`;
+
       container.innerHTML = `
         <div class="space-y-6 animate-fadeIn">
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
-            <h2 class="text-xl font-bold font-serif text-slate-950">Gold Flow Business Intelligence (BI) Matrix</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Michael Porter's Value Chain Model &amp; Precious Metal Distribution</p>
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 class="text-xl font-bold font-serif text-slate-950">BI Dashboard</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Live view of gold stock, store health, production, purchasing and POS sales</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full w-fit">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>Live from ERP data
+            </span>
           </div>
 
-          <!-- Value Chain Flow -->
-          <div class="bg-slate-950 text-white p-6 rounded-2xl border border-slate-800 shadow-lg">
-            <h3 class="text-sm font-bold text-amber-300 font-serif mb-4 flex items-center gap-2">
-              <i data-lucide="layers" class="w-4 h-4"></i>
-              <span>Integrated Closed-Loop Value Chain (Laudon &amp; Laudon MIS Chapter 3)</span>
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-              <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
-                <span class="text-amber-400 font-mono font-bold block text-[10px]">1. INBOUND LOGISTICS</span>
-                <div class="font-bold mt-1 text-slate-200">Central Bullion Vault</div>
-                <p class="text-[11px] text-slate-400 mt-1">SJC &amp; DOJI bullion receipt into high-security WH-MW vault.</p>
-              </div>
-              <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
-                <span class="text-blue-400 font-mono font-bold block text-[10px]">2. OPERATIONS (CASTING)</span>
-                <div class="font-bold mt-1 text-slate-200">Go Vap Precision Plant</div>
-                <p class="text-[11px] text-slate-400 mt-1">Computerized vacuum investment casting with 1.87% loss factor.</p>
-              </div>
-              <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
-                <span class="text-purple-400 font-mono font-bold block text-[10px]">3. OUTBOUND DISPATCH</span>
-                <div class="font-bold mt-1 text-slate-200">AI-Prescribed Transfers</div>
-                <p class="text-[11px] text-slate-400 mt-1">Autonomous 1-click rebalancing to prevent retail stockout velocity.</p>
-              </div>
-              <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
-                <span class="text-emerald-400 font-mono font-bold block text-[10px]">4. MARKETING &amp; POS</span>
-                <div class="font-bold mt-1 text-slate-200">Boutique Omnichannel</div>
-                <p class="text-[11px] text-slate-400 mt-1">VIP loyalty tiers, instant gold warranty certificates &amp; buybacks.</p>
-              </div>
-            </div>
+          <div class="grid grid-cols-2 lg:grid-cols-6 gap-3">
+            ${kpi('Total Gold', `${biQty(Math.round(m.totalGold * 10) / 10)} g`, `≈ ${(m.totalGold / 3.75).toFixed(1)} chi · ${(m.totalGold / 37.5).toFixed(2)} tael`)}
+            ${kpi('Inventory Value', `${biCompact(m.totalValue)} đ`, `At cost · finished goods retail ${biCompact(m.finishedRetail)} đ`)}
+            ${kpi('POS Sales Today', `${biCompact(erp.salesTodayVnd)} đ`, `Finished stock margin ${biCompact(m.finishedRetail - m.finishedCost)} đ`)}
+            ${kpi('Store Alerts', m.alerts.length, outOfStock > 0 ? `${outOfStock} out of stock` : (m.alerts.length ? 'Below minimum level' : 'All stores healthy'), m.alerts.length ? 'text-red-600' : 'text-emerald-600')}
+            ${kpi('Open Production', m.mos.length, blockedMOs > 0 ? `${blockedMOs} blocked by gold shortage` : 'All have enough gold', blockedMOs ? 'text-red-600' : 'text-slate-950')}
+            ${kpi('Open Purchases', m.openPOs.length, `${biCompact(openPoValue)} đ to receive`)}
           </div>
 
-          <!-- Porter's 5 Forces Grid -->
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
-            <h3 class="font-bold text-sm text-slate-900 font-serif">Michael Porter's Five Forces Strategy Scorecard</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <strong class="text-slate-900">1. Supplier Power (High):</strong> State Bank bullion quotas. Aurora maintains multi-supplier long-term agreements.
-              </div>
-              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <strong class="text-slate-900">2. Buyer Power (Moderate):</strong> Discerning customers demand certified purity assays and digital trade-in transparency.
-              </div>
-              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <strong class="text-slate-900">3. Competitive Rivalry (Intense):</strong> PNJ, DOJI, and family gold shops. Aurora differentiates via agile Odoo ERP and AI.
-              </div>
-              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <strong class="text-slate-900">4. Threat of Substitutes (Moderate-High):</strong> Lab-grown diamonds (LGD) pressure natural stones. Aurora offers dual-track portfolios.
-              </div>
-            </div>
+          ${card('Priority Actions', 'zap', `<div class="p-4 space-y-2">${actionHtml}</div>`)}
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            ${card('Gold Position by Location', 'map-pin', `<div class="p-4 space-y-3">${goldBars}</div>`)}
+            ${card('Inventory Value by Product', 'bar-chart-3', `<div class="p-4 space-y-3">${valueBars}</div>`)}
           </div>
+
+          ${card('Store Stock Health (pieces)', 'store', tableWrap(
+            th('Product', 'px-4') + whCols.map((w, i) => th(w.code + (i === 0 ? ' (central)' : ''), 'px-3 text-right')).join('') + th('Min', 'px-3 text-right') + th('Status', 'px-4'),
+            healthHtml))}
+
+          ${card('Production Readiness', 'factory', tableWrap(
+            th('Order', 'px-4') + th('Product') + th('Status') + th('Gold needed', 'px-3 text-right') + th('In vault', 'px-3 text-right') + th('Result', 'px-4') + th('Cell', 'px-4'),
+            moHtml))}
+
+          ${card('Purchase Pipeline', 'truck', tableWrap(
+            th('PO', 'px-4') + th('Vendor') + th('Item') + th('Total', 'px-3 text-right') + th('Status', 'px-4'),
+            poHtml))}
+
+          ${card('Product Economics', 'coins', tableWrap(
+            th('Product', 'px-4') + th('Cost', 'px-3 text-right') + th('Price', 'px-3 text-right') + th('Margin', 'px-3 text-right') + th('On hand', 'px-3 text-right') + th('Stock value', 'px-3 text-right') + th('Gold', 'px-3 text-right') + th('Channel', 'px-4'),
+            econHtml))}
+
+          ${card('POS & Movement Activity', 'activity', `
+            <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="grid grid-cols-4 gap-2">
+                ${moveChip('Receipts', m.moveCounts.receipt, 'text-emerald-700')}
+                ${moveChip('Transfers', m.moveCounts.transfer, 'text-purple-700')}
+                ${moveChip('Sales', m.moveCounts.sale, 'text-amber-700')}
+                ${moveChip('Adjust.', m.moveCounts.adjustment, 'text-red-700')}
+              </div>
+              <div class="space-y-2">
+                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Units sold at POS</div>
+                ${soldHtml}
+              </div>
+            </div>`)}
         </div>
       `;
     }
@@ -1488,7 +1938,17 @@
           totalGoldChiAll: calculateTotalGold() / 3.75,
           totalInventoryValueVnd: calculateTotalInventoryValue(),
           totalSalesTodayVnd: erp.salesTodayVnd,
-          activeWarnings: erp.aiRecommendations.filter(r => r.status === 'pending').map(r => r.title).join('; ')
+          activeWarnings: erp.aiRecommendations.filter(r => r.status === 'pending').map(r => r.title).join('; '),
+          snapshot: {
+            warehouses: erp.warehouses,
+            products: erp.products,
+            boms: erp.boms,
+            manufacturingOrders: erp.manufacturingOrders,
+            purchaseOrders: erp.purchaseOrders,
+            stockMoves: erp.stockMoves.slice(0, 15),
+            aiRecommendations: erp.aiRecommendations,
+            salesTodayVnd: erp.salesTodayVnd
+          }
         }
       };
 

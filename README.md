@@ -58,7 +58,7 @@ PORT=5000
 **3. Start the server**
 
 ```bash
-python -m backend.app
+python backend/app.py
 ```
 
 **4. Open the application**

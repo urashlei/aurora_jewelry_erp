@@ -322,8 +322,7 @@
         { id: 'prod_g18k', sku: 'RAW-G18K-BAR', name: '18K Gold Ingot (750)', karat: '18K', goldWeightGrams: 0.75, type: 'raw', unitCostVnd: 1680000, retailPriceVnd: 1740000, stocks: { wh_mw: 500.0, wh_pn: 0.0, wh_d1: 0.0 } },
         { id: 'prod_ring_24k', sku: 'JWL-RNG-24K-01', name: 'Fortune Ring 24K (Kim Tien)', karat: '24K', goldWeightGrams: 3.75, type: 'finished', unitCostVnd: 9150000, retailPriceVnd: 9800000, stocks: { wh_mw: 40.0, wh_pn: 4.0, wh_d1: 18.0 } },
         { id: 'prod_ring_18k_dia', sku: 'JWL-RNG-18K-D01', name: 'Solitaire Diamond Ring 18K (0.5ct GIA)', karat: '18K', goldWeightGrams: 2.8, type: 'finished', unitCostVnd: 28500000, retailPriceVnd: 36000000, stocks: { wh_mw: 15.0, wh_pn: 5.0, wh_d1: 12.0 } },
-        { id: 'prod_silver_ingot', sku: 'RAW-SILVER-999', name: 'Pure Fine Silver (999)', karat: '999', goldWeightGrams: 0.0, type: 'raw', unitCostVnd: 28000, retailPriceVnd: 32000, stocks: { wh_mw: 4500.0, wh_pn: 0.0, wh_d1: 0.0 } },
-        { id: 'prod_diamond_05', sku: 'RAW-DIA-050', name: 'Round Brilliant Diamonds 0.5ct', karat: 'N/A', goldWeightGrams: 0.0, type: 'raw', unit: 'units', showInPos: false, unitCostVnd: 22000000, retailPriceVnd: 22000000, stocks: { wh_mw: 0.0, wh_pn: 0.0, wh_d1: 0.0 } }
+        { id: 'prod_silver_ingot', sku: 'RAW-SILVER-999', name: 'Pure Fine Silver (999)', karat: '999', goldWeightGrams: 0.0, type: 'raw', unitCostVnd: 28000, retailPriceVnd: 32000, stocks: { wh_mw: 4500.0, wh_pn: 0.0, wh_d1: 0.0 } }
       ],
       suppliers: [
         { id: 'sup_sjc', name: 'SJC Gold Corporation' },
@@ -340,8 +339,7 @@
         { id: 'mo_102', code: 'MO-2026-090', bomId: 'bom_ring_dia', productName: 'Solitaire Diamond Ring 18K', quantity: 10, status: 'in_progress', createdAt: '2026-10-24 14:15' }
       ],
       purchaseOrders: [
-        { id: 'po_201', code: 'PO-2026-045', vendor: 'SJC Gold Corporation', supplierId: 'sup_sjc', productId: 'prod_g24k', productName: '24K Gold Bullion (9999)', quantity: 200, quantityGrams: 200, unit: 'g', unitPriceVnd: 2360000, totalVnd: 472000000, status: 'received', createdAt: '2026-10-23 09:00' },
-        { id: 'po_202', code: 'PO-2026-046', vendor: 'Viet Tin GIA Diamond Importers', supplierId: 'sup_viettin', productId: 'prod_diamond_05', productName: 'Round Brilliant Diamonds 0.5ct', quantity: 10, quantityGrams: 10, unit: 'units', unitPriceVnd: 22000000, totalVnd: 220000000, status: 'confirmed', createdAt: '2026-10-24 11:30' }
+        { id: 'po_201', code: 'PO-2026-045', vendor: 'SJC Gold Corporation', supplierId: 'sup_sjc', productId: 'prod_g24k', productName: '24K Gold Bullion (9999)', quantity: 200, quantityGrams: 200, unit: 'g', unitPriceVnd: 2360000, totalVnd: 472000000, status: 'received', createdAt: '2026-10-23 09:00' }
       ],
       stockMoves: [
         { id: 'sm_01', reference: 'PO-2026-045', productSku: 'RAW-G24K-BAR', fromLocation: 'Vendor: SJC', toLocation: 'WH-MW', quantity: '200 g', type: 'receipt', timestamp: '2026-10-23 11:00' },
@@ -532,6 +530,16 @@
     // Upgrades data saved by an older version of this page
     function migrateState(s) {
       s.products = s.products || [];
+      const dia = s.products.find(p => p.id === 'prod_diamond_05' || p.sku === 'RAW-DIA-050');
+      if (dia) {
+        const onHand = Object.values(dia.stocks || {}).reduce((a, b) => a + b, 0);
+        const inBom = (s.boms || []).some(b => (b.components || []).some(c => c.productId === dia.id));
+        const received = (s.purchaseOrders || []).some(po => po.status === 'received' && (po.productId === dia.id || po.productName === dia.name));
+        if (onHand === 0 && !inBom && !received) {
+          s.products = s.products.filter(p => p.id !== dia.id);
+          s.purchaseOrders = (s.purchaseOrders || []).filter(po => po.productId !== dia.id && po.productName !== dia.name);
+        }
+      }
       s.products.forEach(p => { if (!p.unit) p.unit = p.type === 'raw' ? 'g' : 'pcs'; });
 
       s.boms = s.boms || [];
@@ -661,7 +669,7 @@
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
             <div>
               <h2 class="text-xl font-bold font-serif text-slate-950">Inventory &amp; Stock Distribution</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Real-time stock balance across Main Warehouse (WH-MW) and retail stores</p>
+              <p class="text-xs text-slate-500 mt-0.5">Real-time stock balance across main warehouse and retail stores</p>
             </div>
             <div class="flex items-center gap-2">
               <button onclick="openNewProductModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs cursor-pointer">
@@ -1074,8 +1082,6 @@
             </span>
           </label>
 
-          <p class="text-[10px] text-slate-400">A product becomes a <strong>finished product</strong> automatically once a Bill of Materials (Manufacturing) produces it. Until then it is treated as a purchasable material.</p>
-
           <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
             <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
             <button onclick="executeNewProduct()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Create Product</button>
@@ -1197,7 +1203,7 @@
       const btn = 'flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg shadow-xs cursor-pointer';
 
       const bomCards = erp.boms.length === 0
-        ? `<div class="md:col-span-2 p-6 bg-white rounded-xl border border-dashed border-slate-300 text-xs text-slate-500 text-center">No bill of materials yet. Click <strong>Create BOM</strong> to define which materials make a product.</div>`
+        ? `<div class="md:col-span-2 p-6 bg-white rounded-xl border border-dashed border-slate-300 text-xs text-slate-500 text-center">No bill of materials yet. Click <strong>Create BOM</strong> to define which material makes a product.</div>`
         : erp.boms.map(bom => {
             const prod = erp.products.find(p => p.id === bom.productId);
             const comps = (bom.components || []).map(c => {
@@ -1212,7 +1218,10 @@
                     <div class="text-xs font-bold font-serif text-slate-900">${bom.name}</div>
                     <div class="text-[11px] text-slate-500 mt-0.5">Makes 1 × ${prod ? prod.name : '(deleted product)'}</div>
                   </div>
-                  <button onclick="deleteBOMAction('${bom.id}')" title="Delete BOM" class="text-slate-300 hover:text-red-600 cursor-pointer"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button onclick="openEditBOMModal('${bom.id}')" title="Edit BOM" class="text-slate-300 hover:text-amber-600 cursor-pointer"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="deleteBOMAction('${bom.id}')" title="Delete BOM" class="text-slate-300 hover:text-red-600 cursor-pointer"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  </div>
                 </div>
                 <div class="mt-3 text-[10px] uppercase tracking-wider font-bold text-slate-400">Components per ${prod && unitOf(prod) === 'units' ? 'unit' : 'piece'}</div>
                 <ul class="mt-1 text-xs text-slate-600 space-y-1">${comps || '<li class="text-slate-400">No components</li>'}</ul>
@@ -1221,7 +1230,7 @@
           }).join('');
 
       const moRows = erp.manufacturingOrders.length === 0
-        ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">No manufacturing orders yet.</td></tr>`
+        ? `<tr><td colspan="6" class="py-6 text-center text-slate-400">No manufacturing orders yet.</td></tr>`
         : erp.manufacturingOrders.map(mo => {
             const bom = erp.boms.find(b => b.id === mo.bomId);
             const fin = bom && erp.products.find(p => p.id === bom.productId);
@@ -1243,6 +1252,9 @@
                     : na ? `<button onclick="recheckMOAction('${mo.id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white cursor-pointer">Re-check</button>`
                     : `<button onclick="completeMOAction('${mo.id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer">Complete MO</button>`}
                 </td>
+                <td class="py-3 px-3 text-center">
+                  ${mo.status === 'completed' ? '' : `<button onclick="openEditMOModal('${mo.id}')" title="Edit order quantity" class="text-slate-300 hover:text-amber-600 cursor-pointer"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>`}
+                </td>
               </tr>`;
           }).join('');
 
@@ -1251,7 +1263,7 @@
           <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
             <div>
               <h2 class="text-xl font-bold font-serif text-slate-950">Manufacturing Orders &amp; Bills of Materials</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Combine several materials into one product, then issue production orders. New products are created in Inventory.</p>
+              <p class="text-xs text-slate-500 mt-0.5">Turn one material into one product, then issue production orders.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <button onclick="openCreateBOMModal()" class="${btn} bg-slate-900 hover:bg-slate-800 text-white">
@@ -1278,6 +1290,7 @@
                     <th class="py-3 px-3 text-right">Order Quantity</th>
                     <th class="py-3 px-3">Status</th>
                     <th class="py-3 px-4 text-center">Action</th>
+                    <th class="py-3 px-3"></th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">${moRows}</tbody>
@@ -1288,21 +1301,22 @@
       `;
     }
 
-    // ---------- Bill of Materials (several components -> 1 product) ----------
-    let bomDraft = [];
+    // ---------- Bill of Materials (1 material -> 1 product) ----------
+    let bomDraft = [];            // holds exactly one component row
+    const BOM_NEW = '__new__';
 
     function openCreateBOMModal() {
       const modal = document.getElementById('actionModal');
       const content = document.getElementById('actionModalContent');
-      const makeable = erp.products.slice();
-      const withoutBom = makeable.filter(p => !erp.boms.some(b => b.productId === p.id));
-      const withBom = makeable.filter(p => erp.boms.some(b => b.productId === p.id));
+      const withoutBom = erp.products.filter(p => !erp.boms.some(b => b.productId === p.id));
+      const withBom = erp.products.filter(p => erp.boms.some(b => b.productId === p.id));
 
-      if (makeable.length === 0) {
-        showNotice('Create a product first (Inventory > New Product), then build its BOM here.', 'error');
+      if (erp.products.length === 0) {
+        showNotice('Create a material first (Inventory > New Product), then build a BOM here.', 'error');
         return;
       }
 
+      const field = 'w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs';
       content.style.maxWidth = '40rem';
       content.innerHTML = `
         <div class="space-y-4 text-xs">
@@ -1315,21 +1329,30 @@
           </div>
           <div>
             <label class="block text-slate-600 font-semibold mb-1">Product to make:</label>
-            <select id="bomProduct" onchange="bomProductChanged()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+            <select id="bomProduct" onchange="bomProductChanged()" class="${field}">
+              <option value="${BOM_NEW}">+ Create a new product...</option>
               ${withoutBom.length ? `<optgroup label="Products without a BOM yet">${withoutBom.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}</optgroup>` : ''}
               ${withBom.length ? `<optgroup label="Products already made by a BOM">${withBom.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}</optgroup>` : ''}
             </select>
           </div>
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="block text-slate-600 font-semibold">Components (materials used for 1 piece):</label>
-              <button onclick="bomAddRow()" class="text-[11px] font-bold text-amber-700 hover:text-amber-900 cursor-pointer">+ Add component</button>
+          <div id="bomNewBox" class="hidden p-3 rounded-lg border border-amber-200 bg-amber-50 space-y-2">
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">New product name:</label>
+              <input type="text" id="bomNewName" placeholder="e.g. Fortune Pendant 24K" class="${field}">
             </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Selling price (VND / unit):</label>
+              <input type="number" id="bomNewPrice" min="0" step="any" class="${field} font-mono">
+            </div>
+            <p class="text-[10px] text-amber-800">The product code, karat and gold weight come from the material below, and the cost is calculated from this BOM. The product is shown in Point of Sale.</p>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Component (material used for 1 piece):</label>
             <div id="bomComps" class="space-y-2"></div>
           </div>
           <div>
             <label class="block text-slate-600 font-semibold mb-1">Labor cost per piece (VND):</label>
-            <input type="number" id="bomLabor" value="0" min="0" step="any" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+            <input type="number" id="bomLabor" value="0" min="0" step="any" class="${field} font-mono font-bold">
           </div>
           <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
             <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
@@ -1338,22 +1361,31 @@
         </div>
       `;
       modal.classList.remove('hidden');
+      byId('bomProduct').value = (withoutBom[0] || withBom[0]).id;
       bomDraft = [];
       bomProductChanged();
     }
 
     function bomLossDefault(p) { return p && p.type === 'raw' && unitOf(p) === 'g' ? 1.87 : 0; }
 
-    // First open: pre-fill one row with the metal that matches the product's karat
-    function bomProductChanged() {
-      const prod = erp.products.find(p => p.id === byId('bomProduct').value);
-      if (!prod) return;
+    // Makes sure there is a material row that is not the product itself
+    function bomEnsureRow(prod) {
+      const outId = prod ? prod.id : null;
+      bomDraft = bomDraft.filter(r => r.productId !== outId);
       if (bomDraft.length === 0) {
-        const match = prod.karat !== 'N/A' ? erp.products.find(r => r.id !== prod.id && r.type === 'raw' && r.karat === prod.karat) : null;
-        const first = match || erp.products.find(r => r.id !== prod.id && r.type === 'raw');
-        if (first) bomDraft.push({ productId: first.id, quantity: prod.goldWeightGrams > 0 && match ? prod.goldWeightGrams : '', lossPct: bomLossDefault(first) });
+        const raws = erp.products.filter(r => r.id !== outId && r.type === 'raw');
+        const match = prod && prod.karat !== 'N/A' ? raws.find(r => r.karat === prod.karat) : null;
+        const first = match || raws[0] || erp.products.find(r => r.id !== outId);
+        if (first) bomDraft.push({ productId: first.id, quantity: prod && prod.goldWeightGrams > 0 && match ? prod.goldWeightGrams : '', lossPct: bomLossDefault(first) });
       }
-      bomDraft = bomDraft.filter(r => r.productId !== prod.id);
+    }
+
+    function bomProductChanged() {
+      const sel = byId('bomProduct').value;
+      const prod = sel === BOM_NEW ? null : erp.products.find(p => p.id === sel);
+      const box = byId('bomNewBox');
+      if (box) box.classList.toggle('hidden', sel !== BOM_NEW);
+      bomEnsureRow(prod);
       renderBomRows();
     }
 
@@ -1362,26 +1394,23 @@
     }
 
     function renderBomRows() {
-      const prodId = byId('bomProduct').value;
-      const mats = erp.products.filter(p => p.id !== prodId);
-      const group = (label, list, sel) => list.length === 0 ? '' :
-        `<optgroup label="${label}">${list.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${p.name} (${unitOf(p)})</option>`).join('')}</optgroup>`;
+      const sel = byId('bomProduct').value;
+      const mats = erp.products.filter(p => p.id !== sel);
+      const group = (label, list, selId) => list.length === 0 ? '' :
+        `<optgroup label="${label}">${list.map(p => `<option value="${p.id}" ${p.id === selId ? 'selected' : ''}>${p.name} (${unitOf(p)})</option>`).join('')}</optgroup>`;
       const field = 'w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold';
 
       byId('bomComps').innerHTML = bomDraft.length === 0
-        ? `<div class="p-4 rounded-lg border border-dashed border-slate-300 text-center text-slate-400">No component yet. Click "+ Add component".</div>`
+        ? `<div class="p-4 rounded-lg border border-dashed border-slate-300 text-center text-slate-400">No material available. Create one in Inventory first.</div>`
         : bomDraft.map((r, i) => {
             const p = erp.products.find(x => x.id === r.productId);
             const u = unitOf(p);
             return `
               <div class="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-2">
-                <div class="flex items-center gap-2">
-                  <select onchange="bomRowSet(${i}, 'productId', this.value)" class="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-xs">
-                    ${group('Raw materials', mats.filter(m => m.type === 'raw'), r.productId)}
-                    ${group('Finished products', mats.filter(m => m.type !== 'raw'), r.productId)}
-                  </select>
-                  <button onclick="bomRemoveRow(${i})" title="Remove" class="text-slate-400 hover:text-red-600 cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                </div>
+                <select onchange="bomRowSet(${i}, 'productId', this.value)" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs">
+                  ${group('Raw materials', mats.filter(m => m.type === 'raw'), r.productId)}
+                  ${group('Finished products', mats.filter(m => m.type !== 'raw'), r.productId)}
+                </select>
                 <div class="grid grid-cols-3 gap-2">
                   <div><label class="block text-[10px] text-slate-500 mb-0.5">Net qty (${u})</label>
                     <input type="number" min="0" step="any" value="${r.quantity}" oninput="bomRowSet(${i}, 'quantity', this.value)" class="${field}"></div>
@@ -1409,48 +1438,154 @@
       if (el) el.textContent = bomRowRequired(r);
     }
 
-    function bomAddRow() {
-      const prodId = byId('bomProduct').value;
-      const used = new Set(bomDraft.map(r => r.productId));
-      const next = erp.products.find(p => p.id !== prodId && !used.has(p.id) && p.type === 'raw') || erp.products.find(p => p.id !== prodId && !used.has(p.id));
-      if (!next) { showNotice('Every available product is already in this BOM.', 'info'); return; }
-      bomDraft.push({ productId: next.id, quantity: '', lossPct: bomLossDefault(next) });
-      renderBomRows();
+    // Reads and validates the component rows + labor cost of the open BOM modal
+    function bomCollect() {
+      const rows = bomDraft.filter(r => r.productId);
+      const labor = parseFloat(byId('bomLabor').value) || 0;
+      if (rows.length === 0) { showNotice('Choose the material used by this BOM.', 'error'); return null; }
+      if (rows.some(r => !(parseFloat(r.quantity) > 0))) { showNotice('The component needs a quantity greater than 0.', 'error'); return null; }
+      if (rows.some(r => (parseFloat(r.lossPct) || 0) < 0)) { showNotice('Loss percentage cannot be negative.', 'error'); return null; }
+      if (new Set(rows.map(r => r.productId)).size !== rows.length) { showNotice('Each material can only appear once in a BOM.', 'error'); return null; }
+      if (labor < 0) { showNotice('Labor cost cannot be negative.', 'error'); return null; }
+      return {
+        labor,
+        components: rows.map(r => ({ productId: r.productId, quantity: parseFloat(r.quantity), lossPct: parseFloat(r.lossPct) || 0, required: bomRowRequired(r) }))
+      };
     }
 
-    function bomRemoveRow(i) {
-      bomDraft.splice(i, 1);
-      renderBomRows();
+    function bomUnitCostOf(data) {
+      return data.components.reduce((sum, c) => {
+        const p = erp.products.find(x => x.id === c.productId);
+        return sum + (p ? c.required * p.unitCostVnd : 0);
+      }, 0) + data.labor;
+    }
+
+    function uniqueSkuFor(name) {
+      const base = 'JWL-' + (name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24).replace(/-+$/, '') || 'ITEM');
+      let sku = base, n = 2;
+      while (erp.products.some(p => p.sku.toUpperCase() === sku)) sku = `${base}-${n++}`;
+      return sku;
+    }
+
+    // New product created from the BOM modal: karat / gold weight come from the material, cost from the BOM
+    function createProductFromBom(info, data) {
+      const comp = erp.products.find(p => p.id === data.components[0].productId);
+      const gold = comp && isGoldKarat(comp.karat);
+      const goldWeight = data.components.reduce((sum, c) => {
+        const p = erp.products.find(x => x.id === c.productId);
+        return sum + c.quantity * (p ? p.goldWeightGrams : 0);
+      }, 0);
+      return createProductRecord({
+        name: info.name, sku: uniqueSkuFor(info.name), type: 'raw',
+        karat: comp && comp.karat ? comp.karat : 'N/A',
+        unit: gold ? 'pcs' : 'units',
+        goldWeightGrams: Math.round(goldWeight * 1000) / 1000,
+        cost: Math.round(bomUnitCostOf(data)), price: info.price, showInPos: true, whId: null, qty: 0
+      });
     }
 
     function executeCreateBOM() {
-      const prod = erp.products.find(p => p.id === byId('bomProduct').value);
-      const labor = parseFloat(byId('bomLabor').value) || 0;
-      const rows = bomDraft.filter(r => r.productId);
+      const sel = byId('bomProduct').value;
+      const data = bomCollect();
+      if (!data) return;
 
-      if (!prod) { showNotice('Please choose the product to make.', 'error'); return; }
-      if (rows.length === 0) { showNotice('Add at least one component to this BOM.', 'error'); return; }
-      if (rows.some(r => !(parseFloat(r.quantity) > 0))) { showNotice('Every component needs a quantity greater than 0.', 'error'); return; }
-      if (rows.some(r => (parseFloat(r.lossPct) || 0) < 0)) { showNotice('Loss percentage cannot be negative.', 'error'); return; }
-      if (new Set(rows.map(r => r.productId)).size !== rows.length) { showNotice('Each material can only appear once in a BOM.', 'error'); return; }
-      if (labor < 0) { showNotice('Labor cost cannot be negative.', 'error'); return; }
-
-      const components = rows.map(r => ({
-        productId: r.productId,
-        quantity: parseFloat(r.quantity),
-        lossPct: parseFloat(r.lossPct) || 0,
-        required: bomRowRequired(r)
-      }));
+      let prod = null, info = null;
+      if (sel === BOM_NEW) {
+        const name = cleanText(byId('bomNewName').value);
+        const price = parseFloat(byId('bomNewPrice').value);
+        if (!name) { showNotice('Please enter the name of the new product.', 'error'); return; }
+        if (erp.products.some(p => p.name.toLowerCase() === name.toLowerCase())) { showNotice('A product with this name already exists. Pick it from the list instead.', 'error'); return; }
+        if (isNaN(price) || price <= 0) { showNotice('Please enter a selling price greater than 0.', 'error'); return; }
+        info = { name, price };
+      } else {
+        prod = erp.products.find(p => p.id === sel);
+        if (!prod) { showNotice('Please choose the product to make.', 'error'); return; }
+      }
 
       const save = () => {
-        erp.boms.push({ id: `bom_${Date.now()}`, productId: prod.id, name: `BOM - ${prod.name}`, components, laborCostVnd: labor });
+        if (info) prod = createProductFromBom(info, data);
+        erp.boms.push({ id: `bom_${Date.now()}`, productId: prod.id, name: `BOM - ${prod.name}`, components: data.components, laborCostVnd: data.labor });
         saveState();
         closeActionModal();
         renderActiveTab();
-        showNotice(`BOM saved: ${components.length} component${components.length > 1 ? 's' : ''} for ${prod.name}.`, 'success');
+        showNotice(info
+          ? `New product "${prod.name}" (${prod.sku}) and its BOM were saved. Cost per ${unitOf(prod)}: ${Math.round(prod.unitCostVnd).toLocaleString('en-US')} đ.`
+          : `BOM saved for ${prod.name}.`, 'success');
       };
-      if (erp.boms.some(b => b.productId === prod.id)) askConfirm(`${prod.name} already has a BOM. Add another one?`, save);
+
+      if (info && info.price < bomUnitCostOf(data)) askConfirm('The selling price is lower than the cost of this BOM. Continue anyway?', save);
+      else if (!info && erp.boms.some(b => b.productId === prod.id)) askConfirm(`${prod.name} already has a BOM. Add another one?`, save);
       else save();
+    }
+
+    // ---------- Edit a BOM (quantity, loss, labor) ----------
+    function openEditBOMModal(bomId) {
+      const bom = erp.boms.find(b => b.id === bomId);
+      if (!bom) return;
+      const prod = erp.products.find(p => p.id === bom.productId);
+      const openMos = erp.manufacturingOrders.filter(m => m.bomId === bomId && m.status !== 'completed').length;
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      content.style.maxWidth = '40rem';
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="pencil" class="w-4 h-4 text-amber-600"></i>
+              <span>Edit Bill of Materials</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-900">${bom.name}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Makes 1 × ${prod ? prod.name : '(deleted product)'}</div>
+            <input type="hidden" id="bomProduct" value="${bom.productId}">
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Component (material used for 1 piece):</label>
+            <div id="bomComps" class="space-y-2"></div>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Labor cost per piece (VND):</label>
+            <input type="number" id="bomLabor" value="${bom.laborCostVnd || 0}" min="0" step="any" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+          </div>
+          <p class="text-[10px] text-slate-500">${openMos > 0 ? `${openMos} open production order(s) use this BOM and will be re-checked after saving.` : 'No open production order uses this BOM.'}</p>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executeEditBOM('${bomId}')" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Save changes</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      bomDraft = (bom.components || []).map(c => ({ productId: c.productId, quantity: c.quantity, lossPct: c.lossPct }));
+      renderBomRows();
+    }
+
+    function executeEditBOM(bomId) {
+      const bom = erp.boms.find(b => b.id === bomId);
+      const data = bomCollect();
+      if (!bom || !data) return;
+      bom.components = data.components;
+      bom.laborCostVnd = data.labor;
+      const changed = refreshOpenMOStatuses(bomId);
+      saveState();
+      closeActionModal();
+      renderActiveTab();
+      showNotice(`${bom.name} updated.` + (changed ? `\n${changed} production order(s) changed status after the re-check.` : ''), 'success');
+    }
+
+    // Re-evaluates open orders: Not Available becomes confirmed when stock is enough, and the other way round
+    function refreshOpenMOStatuses(bomId) {
+      let changed = 0;
+      erp.manufacturingOrders.forEach(mo => {
+        if (mo.status === 'completed' || (bomId && mo.bomId !== bomId)) return;
+        const bom = erp.boms.find(b => b.id === mo.bomId);
+        if (!bom) return;
+        const ok = checkMOAvailability(bom, mo.quantity, mo.id).ok;
+        if (mo.status === 'not_available' && ok) { mo.status = 'confirmed'; changed++; }
+        else if (mo.status === 'confirmed' && !ok) { mo.status = 'not_available'; changed++; }
+      });
+      return changed;
     }
 
     function deleteBOMAction(bomId) {
@@ -1563,6 +1698,78 @@
       showNotice(r.ok ? `${mo.code} is now available and confirmed.` : `Still Not Available: short ${shortageText(r)}.`, r.ok ? 'success' : 'error');
     }
 
+    // ---------- Edit the quantity of an open order ----------
+    let moEditId = null;
+
+    function openEditMOModal(moId) {
+      const mo = erp.manufacturingOrders.find(m => m.id === moId);
+      const bom = mo && erp.boms.find(b => b.id === mo.bomId);
+      if (!mo || !bom) { showNotice('This order has no valid BOM.', 'error'); return; }
+      const fin = erp.products.find(p => p.id === bom.productId);
+      moEditId = moId;
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      content.style.maxWidth = '32rem';
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="pencil" class="w-4 h-4 text-amber-600"></i>
+              <span>Edit ${mo.code}</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="font-bold text-slate-900">${mo.productName}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">${bom.name}</div>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Quantity to produce (${unitOf(fin)}):</label>
+            <input type="number" id="moEditQty" value="${mo.quantity}" min="1" step="1" oninput="moEditPreview()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-mono font-bold">
+          </div>
+          <div id="moEditPreview"></div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executeEditMO()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Save quantity</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+      moEditPreview();
+    }
+
+    function moEditPreview() {
+      const mo = erp.manufacturingOrders.find(m => m.id === moEditId);
+      const bom = mo && erp.boms.find(b => b.id === mo.bomId);
+      const box = byId('moEditPreview');
+      if (!bom || !box) return;
+      const qty = parseInt(byId('moEditQty').value) || 0;
+      if (qty < 1) { box.innerHTML = ''; return; }
+      const r = checkMOAvailability(bom, qty, mo.id);
+      const rows = r.lines.map(l => `<li class="flex justify-between gap-3 ${l.ok ? '' : 'font-bold'}"><span>${l.prod ? l.prod.name : 'Missing item'}</span><span class="font-mono shrink-0">${fmtG(l.need)} / ${fmtG(l.available)} ${unitOf(l.prod)} ${l.ok ? '' : '(short ' + fmtG(l.short) + ')'}</span></li>`).join('');
+      box.innerHTML = r.ok
+        ? `<div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800"><div class="font-semibold mb-1">Available. Needed / free in the vault:</div><ul class="space-y-0.5">${rows}</ul></div>`
+        : `<div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800"><div class="font-semibold mb-1">Not Available. Needed / free in the vault:</div><ul class="space-y-0.5">${rows}</ul></div>`;
+    }
+
+    function executeEditMO() {
+      const mo = erp.manufacturingOrders.find(m => m.id === moEditId);
+      const bom = mo && erp.boms.find(b => b.id === mo.bomId);
+      const qty = parseInt(byId('moEditQty').value) || 0;
+      if (!mo || !bom) { showNotice('This order has no valid BOM.', 'error'); return; }
+      if (qty < 1) { showNotice('Quantity must be at least 1.', 'error'); return; }
+
+      mo.quantity = qty;
+      const r = checkMOAvailability(bom, qty, mo.id);
+      if (mo.status === 'not_available' && r.ok) mo.status = 'confirmed';
+      else if (mo.status === 'confirmed' && !r.ok) mo.status = 'not_available';
+      saveState();
+      closeActionModal();
+      renderActiveTab();
+      showNotice(r.ok ? `${mo.code} is now ${qty} and the materials are Available.` : `${mo.code} is now ${qty}, still Not Available: short ${shortageText(r)}.`, r.ok ? 'success' : 'error');
+    }
+
     function completeMOAction(moId) {
       const mo = erp.manufacturingOrders.find(m => m.id === moId);
       if (!mo || mo.status === 'completed') return;
@@ -1633,7 +1840,7 @@
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
             <div>
               <h2 class="text-xl font-bold font-serif text-slate-950">Procurement &amp; Vault Intake (PO)</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Buy any raw material (gold, silver, diamonds...) from a saved or a new supplier. Received goods go straight to inventory.</p>
+              <p class="text-xs text-slate-500 mt-0.5">Buy any raw material (gold, silver...) from a saved or a new supplier. Received goods go straight to inventory.</p>
             </div>
             <button onclick="openCreatePOModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs cursor-pointer">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i>

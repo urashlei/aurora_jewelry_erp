@@ -54,25 +54,24 @@
       <div class="flex items-center gap-4 overflow-x-auto no-scrollbar">
         <div class="flex items-center gap-1.5 shrink-0">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="text-slate-400 uppercase font-bold tracking-wider">System Ref. Price:</span>
+          <span class="text-slate-400 uppercase font-bold tracking-wider">Ref. Benchmark:</span>
+          <select id="headerBenchmarkSelect" onchange="switchBenchmarkSource(this.value)" class="bg-slate-900 border border-slate-700 text-amber-400 font-bold px-2 py-0.5 rounded text-[11px] focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer">
+            <option value="sjc" selected>SJC 9999 (88.5M)</option>
+            <option value="doji">DOJI Wholesale (88.2M)</option>
+            <option value="pnj">PNJ Retail (88.6M)</option>
+            <option value="kitco">Kitco Spot (63.2M)</option>
+            <option value="sbv">State Bank Ref (87.8M)</option>
+          </select>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <span class="text-amber-400 font-bold">SJC 24K:</span>
-          <span>88,500,000 đ/Tael</span>
-          <span class="text-emerald-400 text-[10px]">▲ +0.4%</span>
+          <span class="text-slate-400 font-semibold">Active Benchmark:</span>
+          <span id="headerBenchmarkRate" class="text-amber-300 font-bold">88,500,000 đ/Tael</span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <span class="text-amber-300 font-bold">Aurora 18K:</span>
-          <span>63,200,000 đ/Tael</span>
-          <span class="text-emerald-400 text-[10px]">▲ +0.2%</span>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <span class="text-slate-400">Spot USD/oz:</span>
-          <span class="text-white font-semibold">$2,735.40</span>
         </div>
       </div>
       <div class="text-[10px] text-slate-400 shrink-0 hidden md:block">
-        Conversion: 1 Tael = 10 Mace = 37.5g · Casting Loss Factor: 1.87%
+        <span>1 Tael = 37.5g · Casting Loss: 1.87%</span>
       </div>
     </div>
 
@@ -115,7 +114,7 @@
       <div class="flex items-center gap-2">
         <button onclick="openGuidedDemoModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 shadow-xs transition-all active:scale-95 cursor-pointer">
           <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-          <span>Guided MIS Demo</span>
+          <span>Interactive ERP Walkthrough</span>
         </button>
         <button onclick="resetDemoData()" title="Reset to default seed state" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
           <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
@@ -177,7 +176,7 @@
             <h3 class="font-serif font-bold text-sm text-amber-300">Aurora AI Copilot</h3>
             <span class="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-400/30">Active</span>
           </div>
-          <p class="text-[11px] text-slate-400">MIS Decision Support &amp; Gold Risk Advisor</p>
+          <p class="text-[11px] text-slate-400">Executive Decision Support &amp; Gold Risk Advisor</p>
         </div>
       </div>
       <div class="flex items-center gap-1.5 text-slate-400">
@@ -197,14 +196,16 @@
 
     <!-- Suggestion Chips -->
     <div class="px-3 py-2 bg-white border-t border-slate-100 overflow-x-auto no-scrollbar shrink-0 flex items-center gap-1.5 text-[11px]">
-      <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider shrink-0 mr-1">Suggestions:</span>
-      <button onclick="sendQuickQuery('Balance gold inventory & hedging risks')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Gold Hedging Risk</button>
-      <button onclick="sendQuickQuery('Which store is at risk of stockout?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Boutique Stockout</button>
-      <button onclick="sendQuickQuery('Compare strengths & weaknesses: PNJ vs Aurora')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">PNJ vs Aurora</button>
-      <button onclick="sendQuickQuery('Which button to buy gold & cast rings?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Button Flow Guide</button>
+      <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider shrink-0 mr-1">SUGGESTIONS:</span>
+      <button onclick="sendQuickQuery('Analyze our net gold exposure across reference benchmarks (SJC vs DOJI vs Kitco) and ±1% sensitivity')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Net Gold Exposure &amp; Benchmarks</button>
+      <button onclick="sendQuickQuery('Compare purchase prices and quotes across our suppliers: DOJI, SJC, Phu Quy, and Heraeus')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Compare Supplier Quotes</button>
+      <button onclick="sendQuickQuery('Which purchase orders or store transfer requests are awaiting CFO and COO approval today?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Pending Approvals (CFO/COO)</button>
+      <button onclick="sendQuickQuery('Which boutique is at risk of stockout by Days of Inventory (DOI) and what transfer rebalancing is needed?')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Stockout Alerts (DOI)</button>
+      <button onclick="sendQuickQuery('Evaluate our demand forecast accuracy (WAPE, MAPE, Tracking Signal) for the God of Wealth peak')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Forecast Accuracy (WAPE/MAPE)</button>
+      <button onclick="sendQuickQuery('Review open physical audit discrepancies and tolerance against the 1.87% casting loss standard')" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-700 border border-slate-200 shrink-0 cursor-pointer">Blind Audit &amp; Casting Loss</button>
     </div>
 
-    <!-- Input Bar -->
+    <!-- Input Bar --><!-- Input Bar -->
     <div class="p-3 bg-white border-t border-slate-200 shrink-0">
       <form onsubmit="handleChatSubmit(event)" class="flex items-center gap-2">
         <input type="text" id="chatInput" placeholder="Ask Aurora" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:bg-white transition-all">
@@ -228,8 +229,8 @@
               <i data-lucide="sparkles" class="w-5 h-5"></i>
             </div>
             <div>
-              <h3 class="font-bold text-slate-900 text-base">MIS Presentation: Closed-Loop Demo Scenario</h3>
-              <p class="text-xs text-slate-500">4-step sequence illustrating Odoo ERP architecture and gold inventory management</p>
+              <h3 class="font-bold text-slate-900 text-base">Executive Walkthrough: End-to-End Gold Operations</h3>
+              <p class="text-xs text-slate-500">4-step sequence illustrating end-to-end jewelry supply chain and gold inventory management</p>
             </div>
           </div>
           <button onclick="closeGuidedDemoModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
@@ -324,11 +325,63 @@
         { id: 'prod_ring_18k_dia', sku: 'JWL-RNG-18K-D01', name: 'Solitaire Diamond Ring 18K (0.5ct GIA)', karat: '18K', goldWeightGrams: 2.8, type: 'finished', unitCostVnd: 28500000, retailPriceVnd: 36000000, stocks: { wh_mw: 15.0, wh_pn: 5.0, wh_d1: 12.0 } },
         { id: 'prod_silver_ingot', sku: 'RAW-SILVER-999', name: 'Pure Fine Silver (999)', karat: '999', goldWeightGrams: 0.0, type: 'raw', unitCostVnd: 28000, retailPriceVnd: 32000, stocks: { wh_mw: 4500.0, wh_pn: 0.0, wh_d1: 0.0 } }
       ],
+      activeBenchmark: 'sjc',
+      benchmarks: {
+        sjc: { id: 'sjc', code: 'SJC', name: 'SJC 9999 National Benchmark', priceTael: 88500000, priceGram: 2360000, spread: '+25.3M vs Kitco', note: 'State-licensed benchmark bar' },
+        doji: { id: 'doji', code: 'DOJI', name: 'DOJI 9999 Wholesale Bullion', priceTael: 88200000, priceGram: 2352000, spread: '+25.0M vs Kitco', note: 'Primary jewelry trade reference' },
+        pnj: { id: 'pnj', code: 'PNJ', name: 'PNJ 9999 Retail Benchmark', priceTael: 88600000, priceGram: 2362667, spread: '+25.4M vs Kitco', note: 'Nationwide retail jewelry benchmark' },
+        kitco: { id: 'kitco', code: 'KITCO', name: 'World Spot (Kitco Converted)', priceTael: 63200000, priceGram: 1685333, spread: 'Base Spot Rate', note: 'London / COMEX conversion (USD 2,740/oz)' },
+        sbv: { id: 'sbv', code: 'SBV', name: 'State Bank Reference Rate', priceTael: 87800000, priceGram: 2341333, spread: '+24.6M vs Kitco', note: 'Customs & central bank valuation rate' }
+      },
       suppliers: [
-        { id: 'sup_sjc', name: 'SJC Gold Corporation' },
-        { id: 'sup_doji', name: 'DOJI Group' },
-        { id: 'sup_heraeus', name: 'Heraeus Precious Metals' },
-        { id: 'sup_viettin', name: 'Viet Tin GIA Diamond Importers' }
+        {
+          id: 'sup_sjc',
+          code: 'SJC',
+          name: 'SJC Gold Corporation',
+          contact: '028-3929-6016',
+          priceList: { 'prod_g24k': 2360000, 'prod_g18k': 1690000, 'prod_silver_ingot': 29000 },
+          note: 'National benchmark bullion producer (SJC 9999). Official standard.'
+        },
+        {
+          id: 'sup_doji',
+          code: 'DOJI',
+          name: 'DOJI Gold & Gems Group',
+          contact: '024-2220-6688',
+          priceList: { 'prod_g24k': 2352000, 'prod_g18k': 1675000, 'prod_silver_ingot': 28200 },
+          note: 'Wholesale bullion casting grains. Bulk volume discount: -8,000 đ/g on 24K.'
+        },
+        {
+          id: 'sup_phuquy',
+          code: 'PHUQUY',
+          name: 'Phu Quy Precious Metals',
+          contact: '024-3573-5959',
+          priceList: { 'prod_g24k': 2356000, 'prod_g18k': 1680000, 'prod_silver_ingot': 28000 },
+          note: 'Competitive fine silver 999 and investment bullion bars.'
+        },
+        {
+          id: 'sup_pnj',
+          code: 'PNJ',
+          name: 'PNJ Material Supply',
+          contact: '028-3995-1703',
+          priceList: { 'prod_g24k': 2365000, 'prod_g18k': 1685000, 'prod_silver_ingot': 28500 },
+          note: 'Certified European master alloys and high-purity casting metals.'
+        },
+        {
+          id: 'sup_heraeus',
+          code: 'HERAEUS',
+          name: 'Heraeus Precious Metals Vietnam',
+          contact: '028-3827-0100',
+          priceList: { 'prod_g24k': 2358000, 'prod_g18k': 1678000, 'prod_silver_ingot': 27800 },
+          note: 'LBMA-certified international bullion grains for precision casting.'
+        },
+        {
+          id: 'sup_viettin',
+          code: 'VIETTIN',
+          name: 'Viet Tin GIA Diamond Importers',
+          contact: '028-3822-1234',
+          priceList: { 'prod_ring_18k_dia': 28000000 },
+          note: 'Loose GIA certified diamonds (0.3ct - 2.0ct) & luxury settings.'
+        }
       ],
       boms: [
         { id: 'bom_ring_24k', productId: 'prod_ring_24k', name: 'BOM - Fortune Ring 24K', components: [{ productId: 'prod_g24k', quantity: 3.75, lossPct: 1.87, required: 3.82 }], laborCostVnd: 250000 },
@@ -369,6 +422,101 @@
       currentTab: 'inventory',
       activeStoreId: 'wh_pn',
       salesTodayVnd: 31200000,
+      biSubTab: 'net_position',
+      approvals: [
+        {
+          id: 'app_01',
+          type: 'transfer',
+          title: 'Urgent transfer of 15 Fortune Rings 24K from WH-MW to WH-PN',
+          requester: 'Phu Nhuan Store Manager',
+          assignedRole: 'COO (Chief Operating Officer)',
+          approverName: 'Nguyen Van An (COO)',
+          estimatedValueVnd: 147000000,
+          goldWeightGrams: 56.25,
+          urgency: 'Critical',
+          status: 'pending',
+          slaHours: 2,
+          createdAt: '2026-10-24 09:15',
+          decisionNote: 'Imminent stockout risk before 16:00 due to surge in God of Wealth pre-orders.',
+          sourceWarehouse: 'wh_mw',
+          destinationWarehouse: 'wh_pn',
+          productId: 'prod_ring_24k',
+          quantity: 15
+        },
+        {
+          id: 'app_02',
+          type: 'manufacturing',
+          title: 'Production order for 30 Fortune Rings 24K for God of Wealth festival',
+          requester: 'Go Vap Plant Superintendent',
+          assignedRole: 'CFO (Chief Financial Officer)',
+          approverName: 'Tran Thi Bich (CFO)',
+          estimatedValueVnd: 294000000,
+          goldWeightGrams: 112.5,
+          urgency: 'High',
+          status: 'pending',
+          slaHours: 4,
+          createdAt: '2026-10-24 11:30',
+          decisionNote: 'Working capital threshold reached; requires CFO approval to release 112.5g of 24K bullion for casting.',
+          bomId: 'bom_ring_24k',
+          quantity: 30
+        }
+      ],
+      forecastData: {
+        activeScenario: 'than_tai',
+        scenarioName: 'God of Wealth Festival (24K bullion demand +250%)',
+        mape: 8.4,
+        wape: 7.1,
+        trackingSignal: 1.2,
+        biasPercent: 2.3,
+        series: [
+          { period: 'Week 40 (Baseline Month)', forecast: 45, actual: 43, variance: -4.4, status: 'Compliant' },
+          { period: 'Week 41 (Wedding Season)', forecast: 60, actual: 64, variance: 6.7, status: 'Compliant' },
+          { period: 'Week 42 (Pre-Tet Surge)', forecast: 95, actual: 91, variance: -4.2, status: 'Compliant' },
+          { period: 'Week 43 (God of Wealth)', forecast: 220, actual: 235, variance: 6.8, status: 'Compliant' }
+        ]
+      },
+      discrepancies: [
+        {
+          id: 'disc_01',
+          type: 'physical_audit',
+          typeName: 'Blind Count Variance',
+          warehouseId: 'wh_d1',
+          warehouseName: 'WH-D1 (District 1 Store)',
+          productId: 'prod_ring_18k_dia',
+          productName: 'Solitaire Diamond Ring 18K (0.5ct GIA)',
+          systemQty: 13,
+          countedQty: 12,
+          variance: -1,
+          goldWeightLossGrams: 2.8,
+          valueDiffVnd: -28500000,
+          investigator: 'Internal Audit Department',
+          approverRole: 'CFO & Head of Internal Audit',
+          status: 'investigating',
+          reason: 'Suspected display tray misplacement in VIP showcase or missed barcode scan at shift change.',
+          actionTaken: 'POS checkout temporarily locked for 1 SKU; security CCTV footage retrieved at 08:30.',
+          createdAt: '2026-10-24 08:45'
+        },
+        {
+          id: 'disc_02',
+          type: 'casting_loss',
+          typeName: 'Casting Loss Tolerance Breach (>1.87%)',
+          warehouseId: 'wh_mw',
+          warehouseName: 'WH-MW (Go Vap Casting Plant)',
+          productId: 'prod_g24k',
+          productName: '24K Gold Bullion (Batch MO-2026-089)',
+          systemQty: 1.87,
+          countedQty: 2.15,
+          variance: 0.28,
+          goldWeightLossGrams: 0.28,
+          valueDiffVnd: -660800,
+          investigator: 'Chief Metallurgy Engineer',
+          approverRole: 'COO (Chief Operating Officer)',
+          status: 'open',
+          reason: 'Induction furnace temperature drifted by 12 deg C during melt, increasing quartz slag adhesion.',
+          actionTaken: 'Thermocouple recalibrated; vacuum floor filtration dust collected for chemical gold recovery.',
+          createdAt: '2026-10-24 10:10'
+        }
+      ],
       cashiers: [
         { id: 'cash_01', name: 'Nguyen Bao Tien' },
         { id: 'cash_02', name: 'Nguyen Ngoc Kim Thinh' },
@@ -524,6 +672,20 @@
       });
       (s.manufacturingOrders || []).forEach(m => { delete m.assignedCell; });
 
+      s.benchmarks = DEFAULT_DATA.benchmarks;
+      s.activeBenchmark = s.activeBenchmark || 'sjc';
+      DEFAULT_DATA.suppliers.forEach(defSup => {
+        const found = (s.suppliers || []).find(x => x.id === defSup.id || x.name === defSup.name);
+        if (found) {
+          found.code = defSup.code;
+          found.contact = defSup.contact;
+          found.priceList = defSup.priceList;
+          found.note = defSup.note;
+        } else {
+          s.suppliers.push(JSON.parse(JSON.stringify(defSup)));
+        }
+      });
+
       s.suppliers = s.suppliers || [];
       const addSupplier = name => {
         if (name && !s.suppliers.some(x => x.name === name)) s.suppliers.push({ id: `sup_${s.suppliers.length + 1}_${Date.now() % 100000}`, name });
@@ -576,6 +738,16 @@
 
       s.posCheckout = s.posCheckout || { customerId: '__walkin__', walkInName: '', discountType: 'percent', discountValue: 0, payment: 'cash' };
       if (s.posReceipt === undefined) s.posReceipt = null;
+      if (!Array.isArray(s.approvals) || s.approvals.length === 0) {
+        s.approvals = JSON.parse(JSON.stringify(DEFAULT_DATA.approvals));
+      }
+      if (!s.forecastData) {
+        s.forecastData = JSON.parse(JSON.stringify(DEFAULT_DATA.forecastData));
+      }
+      if (!Array.isArray(s.discrepancies) || s.discrepancies.length === 0) {
+        s.discrepancies = JSON.parse(JSON.stringify(DEFAULT_DATA.discrepancies));
+      }
+      if (!s.biSubTab) s.biSubTab = 'net_position';
       deriveProductTypes(s);
       return s;
     }
@@ -617,6 +789,13 @@
       document.getElementById('headerCapitalTotal').textContent = `${capital.toLocaleString('en-US')} đ`;
       document.getElementById('headerSalesToday').textContent = `${erp.salesTodayVnd.toLocaleString('en-US')} đ`;
 
+      const bmKey = erp.activeBenchmark || 'sjc';
+      const bm = (erp.benchmarks && erp.benchmarks[bmKey]) || { priceTael: 88500000 };
+      const sel = document.getElementById('headerBenchmarkSelect');
+      if (sel) sel.value = bmKey;
+      const rate = document.getElementById('headerBenchmarkRate');
+      if (rate) rate.textContent = `${(bm.priceTael).toLocaleString('en-US')} đ/Tael`;
+
       const pendingRecs = erp.aiRecommendations.filter(r => r.status === 'pending').length;
       const badge = document.getElementById('tabAgentBadge');
       if (pendingRecs > 0) {
@@ -624,6 +803,17 @@
       } else {
         badge.classList.add('hidden');
       }
+    }
+
+    function switchBenchmarkSource(bmKey) {
+      erp.activeBenchmark = bmKey;
+      saveState();
+      updateHeaderKPIs();
+      if (erp.currentTab === 'bi') {
+        const container = document.getElementById('mainContent');
+        if (container) renderGoldFlowBIView(container);
+      }
+      showNotice(`Active benchmark switched to ${(erp.benchmarks[bmKey]?.name || bmKey).toUpperCase()}. Valuation and sensitivity recalculated.`, 'success');
     }
 
     function switchTab(tabId) {
@@ -1853,9 +2043,68 @@
             </button>
           </div>
 
+          <!-- Supplier Price Quotes Comparison Table -->
           <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
-              Purchase Orders Ledger
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  <i data-lucide="layers" class="w-4 h-4 text-amber-600"></i>
+                  <span>Supplier Quotation &amp; Sourcing Matrix</span>
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Purchases are negotiated with specific suppliers with distinct pricing, volume terms, and alloy purities.</p>
+              </div>
+              <span class="text-[11px] font-mono bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-1 rounded-full font-semibold">
+                6 Active Partner Contracts
+              </span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                  <tr>
+                    <th class="py-2.5 px-4">Supplier (NCC)</th>
+                    <th class="py-2.5 px-3 text-right">24K Bullion / Grains</th>
+                    <th class="py-2.5 px-3 text-right">18K Ingot / Alloy</th>
+                    <th class="py-2.5 px-3 text-right">Fine Silver 999</th>
+                    <th class="py-2.5 px-4">Terms &amp; Sourcing Focus</th>
+                    <th class="py-2.5 px-4 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-mono">
+                  ${erp.suppliers.map(sup => {
+                    const pl = sup.priceList || {};
+                    const p24k = pl['prod_g24k'] ? `${(pl['prod_g24k']).toLocaleString('en-US')} đ/g` : '-';
+                    const p18k = pl['prod_g18k'] ? `${(pl['prod_g18k']).toLocaleString('en-US')} đ/g` : '-';
+                    const pSil = pl['prod_silver_ingot'] ? `${(pl['prod_silver_ingot']).toLocaleString('en-US')} đ/g` : '-';
+                    return `
+                      <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-4 font-sans font-bold text-slate-900">
+                          <div>${sup.name}</div>
+                          <div class="text-[10px] text-slate-400 font-normal">${sup.contact || ''}</div>
+                        </td>
+                        <td class="py-3 px-3 text-right font-bold ${pl['prod_g24k'] === 2352000 ? 'text-emerald-700 font-extrabold' : 'text-slate-800'}">
+                          ${p24k}
+                          ${pl['prod_g24k'] === 2352000 ? '<span class="block text-[9px] text-emerald-600 font-sans font-semibold">Wholesale -8k/g</span>' : ''}
+                        </td>
+                        <td class="py-3 px-3 text-right text-slate-700">${p18k}</td>
+                        <td class="py-3 px-3 text-right text-slate-700">${pSil}</td>
+                        <td class="py-3 px-4 font-sans text-slate-600 text-[11px]">${sup.note || 'Contracted vendor'}</td>
+                        <td class="py-3 px-4 text-center">
+                          <button onclick="openCreatePOModal('${sup.id}')" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 font-sans cursor-pointer transition-colors">
+                            Draft PO
+                          </button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 flex items-center justify-between">
+              <span>Purchase Orders Ledger</span>
+              <span class="text-[11px] text-slate-400 font-normal font-mono">Vault Receipts &amp; Cost Tracking</span>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
@@ -1879,7 +2128,7 @@
       `;
     }
 
-    function openCreatePOModal() {
+    function openCreatePOModal(defaultSupId, defaultProdId) {
       const modal = document.getElementById('actionModal');
       const content = document.getElementById('actionModalContent');
       const raws = erp.products.filter(p => p.type === 'raw');
@@ -1895,9 +2144,9 @@
           </div>
 
           <div>
-            <label class="block text-slate-600 font-semibold mb-1">Supplier:</label>
+            <label class="block text-slate-600 font-semibold mb-1">Supplier (NCC):</label>
             <select id="poVendor" onchange="poSupplierChanged()" class="${field}">
-              ${erp.suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+              ${erp.suppliers.map(s => `<option value="${s.id}" ${s.id === defaultSupId ? 'selected' : ''}>${s.name} (${s.code || 'Vendor'})</option>`).join('')}
               <option value="__new__">+ Add a new supplier...</option>
             </select>
             <input type="text" id="poNewSupplier" placeholder="New supplier name" class="${field} mt-2 hidden">
@@ -1906,7 +2155,7 @@
           <div>
             <label class="block text-slate-600 font-semibold mb-1">Raw material:</label>
             <select id="poProd" onchange="poProductChanged()" class="${field}">
-              ${raws.map(p => `<option value="${p.id}">${p.name} (${unitOf(p)})</option>`).join('')}
+              ${raws.map(p => `<option value="${p.id}" ${p.id === defaultProdId ? 'selected' : ''}>${p.name} (${unitOf(p)})</option>`).join('')}
               <option value="__new__">+ Add a new raw material...</option>
             </select>
             <div id="poNewProdWrap" class="hidden mt-2 p-3 rounded-lg border border-amber-200 bg-amber-50/60 space-y-3">
@@ -1936,10 +2185,15 @@
             </div>
           </div>
 
+          <!-- Supplier Quote Notice Callout -->
+          <div id="poSupplierQuoteCallout" class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between">
+            <!-- Injected dynamically -->
+          </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label id="poQtyLabel" class="block text-slate-600 font-semibold mb-1">Quantity:</label>
-              <input type="number" id="poQty" value="10" min="0" step="any" oninput="poRecalc()" class="${field} font-mono font-bold">
+              <input type="number" id="poQty" value="100" min="0" step="any" oninput="poRecalc()" class="${field} font-mono font-bold">
             </div>
             <div>
               <label id="poPriceLabel" class="block text-slate-600 font-semibold mb-1">Unit price (VND):</label>
@@ -1967,10 +2221,10 @@
       const isNew = byId('poVendor').value === '__new__';
       byId('poNewSupplier').classList.toggle('hidden', !isNew);
       if (isNew) byId('poNewSupplier').focus();
+      updatePOSupplierQuote();
     }
 
     // Unit of the item being bought (existing product or the new one being typed)
-    // A new raw material bought here is counted in grams (g). Only a non-metal (karat N/A) is counted in units.
     function poNewProdUnit() { return byId('poNpKarat').value === 'N/A' ? 'units' : 'g'; }
 
     function poCurrentUnit() {
@@ -1983,10 +2237,48 @@
       if (isNew) {
         poNewProdChanged(true);
       } else {
-        const p = erp.products.find(x => x.id === byId('poProd').value);
-        if (p) byId('poPrice').value = p.unitCostVnd;
-        poRecalc();
+        updatePOSupplierQuote();
       }
+    }
+
+    function updatePOSupplierQuote() {
+      const supId = byId('poVendor')?.value;
+      const prodId = byId('poProd')?.value;
+      const callout = byId('poSupplierQuoteCallout');
+      if (!callout) return;
+
+      if (supId === '__new__' || prodId === '__new__') {
+        callout.classList.add('hidden');
+        poRecalc();
+        return;
+      }
+
+      const sup = erp.suppliers.find(s => s.id === supId);
+      const prod = erp.products.find(p => p.id === prodId);
+      if (sup && prod && sup.priceList && sup.priceList[prod.id]) {
+        const quote = sup.priceList[prod.id];
+        byId('poPrice').value = quote;
+        callout.classList.remove('hidden');
+        callout.innerHTML = `
+          <div>
+            <div class="font-bold flex items-center gap-1.5">
+              <span>Contracted Rate: ${sup.name}</span>
+              <span class="text-[10px] bg-blue-200 text-blue-900 px-2 py-0.5 rounded font-mono font-bold">Contracted</span>
+            </div>
+            <div class="text-[11px] text-blue-800 mt-0.5">Quote: <strong>${quote.toLocaleString('en-US')} đ / ${unitOf(prod)}</strong> · ${sup.note || 'Special contracted rate'}</div>
+          </div>
+        `;
+      } else {
+        if (prod) byId('poPrice').value = prod.unitCostVnd;
+        callout.classList.remove('hidden');
+        callout.innerHTML = `
+          <div>
+            <div class="font-bold text-slate-700">Catalog Standard Price</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Standard cost on file: ${prod ? prod.unitCostVnd.toLocaleString('en-US') : 0} đ / ${unitOf(prod)}. You may adjust if custom spot discount negotiated.</div>
+          </div>
+        `;
+      }
+      poRecalc();
     }
 
     function poNewProdChanged() {
@@ -2598,27 +2890,59 @@
 
       // ---- inventory by warehouse and by product
       const whStats = erp.warehouses.map(w => ({ id: w.id, code: w.code, name: w.name, gold: 0, value: 0 }));
+      const goldByKarat = { '24K': 0, '18K': 0, '14K': 0, 'Other': 0 };
+      let goldRawGrams = 0, goldFinishedGrams = 0;
+
       const rows = erp.products.map(p => {
         const qty = sum(p.stocks);
+        const itemGold = qty * p.goldWeightGrams;
+        const itemVal = qty * p.unitCostVnd;
+
         whStats.forEach(s => {
           const q = p.stocks[s.id] || 0;
           s.gold += q * p.goldWeightGrams;
           s.value += q * p.unitCostVnd;
         });
+
+        if (goldByKarat[p.karat] !== undefined) goldByKarat[p.karat] += itemGold;
+        else goldByKarat['Other'] += itemGold;
+
+        if (p.type === 'raw') goldRawGrams += itemGold;
+        else goldFinishedGrams += itemGold;
+
         return {
           p,
           qty,
-          value: qty * p.unitCostVnd,
+          value: itemVal,
           retail: qty * p.retailPriceVnd,
-          gold: qty * p.goldWeightGrams,
+          gold: itemGold,
           margin: p.retailPriceVnd > 0 ? (p.retailPriceVnd - p.unitCostVnd) / p.retailPriceVnd * 100 : 0
         };
       });
+
       const totalGold = rows.reduce((a, r) => a + r.gold, 0);
       const totalValue = rows.reduce((a, r) => a + r.value, 0);
       const finished = rows.filter(r => r.p.type !== 'raw' || soldInPos(r.p));
       const finishedCost = finished.reduce((a, r) => a + r.value, 0);
       const finishedRetail = finished.reduce((a, r) => a + r.retail, 0);
+
+      // Pending PO Gold (incoming raw materials)
+      let pendingPoGold = 0;
+      (erp.purchaseOrders || []).forEach(po => {
+        if (po.status !== 'received') {
+          const prod = erp.products.find(p => p.id === po.productId || p.name === po.productName);
+          pendingPoGold += (po.quantity || po.quantityGrams || 0) * (prod ? prod.goldWeightGrams : 1.0);
+        }
+      });
+
+      const netGoldExposure = totalGold + pendingPoGold;
+      const netGoldTael = netGoldExposure / 37.5;
+      const activeBenchmarkKey = erp.activeBenchmark || 'sjc';
+      const activeBenchmarkData = (erp.benchmarks && erp.benchmarks[activeBenchmarkKey]) || {
+        id: 'sjc', code: 'SJC', name: 'SJC 9999 National Benchmark', priceTael: 88500000, priceGram: 2360000
+      };
+      const activeRefPriceTael = activeBenchmarkData.priceTael || 88500000;
+      const sensitivity1PctVnd = Math.round(netGoldTael * activeRefPriceTael * 0.01);
 
       // ---- store stock gaps and suggested transfers
       const alerts = [];
@@ -2638,7 +2962,7 @@
       });
       alerts.sort((a, b) => (a.have / (a.min || 1)) - (b.have / (b.min || 1)));
 
-      // ---- production readiness (every BOM component must be in stock)
+      // ---- production readiness
       const rawLeft = {};
       const mos = [];
       (erp.manufacturingOrders || []).forEach(mo => {
@@ -2667,50 +2991,198 @@
         if (m.type === 'sale') soldBySku[m.productSku] = (soldBySku[m.productSku] || 0) + (parseFloat(m.quantity) || 0);
       });
 
-      return { central, stores, soldInPos, whStats, rows, totalGold, totalValue, finishedCost, finishedRetail,
-               alerts, mos, openPOs, moveCounts, soldBySku };
+      return {
+        central, stores, soldInPos, whStats, rows, totalGold, totalValue, finishedCost, finishedRetail,
+        goldByKarat, goldRawGrams, goldFinishedGrams, pendingPoGold, netGoldExposure, netGoldTael,
+        activeBenchmarkKey, activeBenchmarkData, activeRefPriceTael, sjcRefPriceTael: activeRefPriceTael, sensitivity1PctVnd, alerts, mos, openPOs, moveCounts, soldBySku
+      };
     }
 
-    // One-click transfer from a dashboard action (same effect as Inventory > Internal Transfer)
-    function biQuickTransfer(prodId, srcId, destId, qty) {
-      const prod = erp.products.find(p => p.id === prodId);
-      const src = erp.warehouses.find(w => w.id === srcId);
-      const dest = erp.warehouses.find(w => w.id === destId);
-      if (!prod || !src || !dest) return;
-      if ((prod.stocks[srcId] || 0) < qty) {
-        showNotice(`Not enough stock at ${src.code}.`, 'error');
-        return;
-      }
-      askConfirm(`Transfer ${qty} ${unitOf(prod)} of ${prod.name} from ${src.code} to ${dest.code}?`, () => {
-
-      prod.stocks[srcId] -= qty;
-      prod.stocks[destId] = (prod.stocks[destId] || 0) + qty;
-      erp.stockMoves.unshift({
-        id: `sm_${Date.now()}`,
-        reference: `INT-TRF-${Math.floor(1000 + Math.random() * 9000)}`,
-        productSku: prod.sku,
-        fromLocation: src.code,
-        toLocation: dest.code,
-        quantity: `${qty} ${unitOf(prod)}`,
-        type: 'transfer',
-        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-      });
-      if (prodId === 'prod_ring_24k' && destId === 'wh_pn' && qty >= 10) {
-        erp.aiRecommendations.forEach(r => { if (r.id === 'rec_01') r.status = 'completed'; });
-      }
+    function switchBISubTab(subTab) {
+      erp.biSubTab = subTab;
       saveState();
       renderActiveTab();
-      }, 'Transfer');
     }
+
+    function approveWorkflowItem(appId) {
+      const app = (erp.approvals || []).find(a => a.id === appId);
+      if (!app || app.status !== 'pending') return;
+
+      if (app.type === 'transfer') {
+        const prod = erp.products.find(p => p.id === app.productId);
+        const src = erp.warehouses.find(w => w.id === app.sourceWarehouse);
+        const dest = erp.warehouses.find(w => w.id === app.destinationWarehouse);
+
+        if (!prod || !src || !dest) {
+          showNotice('Invalid product or warehouse data.', 'error');
+          return;
+        }
+        if ((prod.stocks[app.sourceWarehouse] || 0) < app.quantity) {
+          showNotice(`Insufficient stock at ${src.code} to execute transfer.`, 'error');
+          return;
+        }
+
+        prod.stocks[app.sourceWarehouse] -= app.quantity;
+        prod.stocks[app.destinationWarehouse] = (prod.stocks[app.destinationWarehouse] || 0) + app.quantity;
+
+        const ref = `APP-TRF-${Math.floor(1000 + Math.random() * 9000)}`;
+        erp.stockMoves.unshift({
+          id: `sm_${Date.now()}`,
+          reference: ref,
+          productSku: prod.sku,
+          fromLocation: src.code,
+          toLocation: dest.code,
+          quantity: `${app.quantity} ${unitOf(prod)}`,
+          type: 'transfer',
+          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        });
+
+        // Resolve AI recommendation if matches
+        if (app.productId === 'prod_ring_24k' && app.destinationWarehouse === 'wh_pn') {
+          (erp.aiRecommendations || []).forEach(r => { if (r.id === 'rec_01') r.status = 'completed'; });
+        }
+      } else if (app.type === 'manufacturing') {
+        const bom = erp.boms.find(b => b.id === app.bomId);
+        const prod = erp.products.find(p => p.id === bom?.productId);
+        const moCode = nextCode('MO', erp.manufacturingOrders);
+        const mo = {
+          id: `mo_${Date.now()}`,
+          code: moCode,
+          bomId: app.bomId,
+          productName: prod?.name || 'Jewelry',
+          quantity: app.quantity,
+          status: 'confirmed',
+          createdAt: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        };
+        erp.manufacturingOrders.unshift(mo);
+      }
+
+      app.status = 'approved';
+      app.decisionNote = `Approved via 1-Click by ${app.assignedRole} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}.`;
+
+      saveState();
+      renderActiveTab();
+      showNotice(`Approval successful: ${app.title}. The system executed the action and updated the ledger.`, 'success');
+    }
+
+    function rejectWorkflowItem(appId) {
+      const app = (erp.approvals || []).find(a => a.id === appId);
+      if (!app || app.status !== 'pending') return;
+
+      askConfirm(`Reject request: "${app.title}" and require the department to provide clarification?`, () => {
+        app.status = 'rejected';
+        app.decisionNote = `Rejected by ${app.assignedRole} at ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}. Clarification requested.`;
+        saveState();
+        renderActiveTab();
+        showNotice(`Request ${app.id} rejected. Status updated in Audit Trail.`, 'info');
+      }, 'Reject');
+    }
+
+    function setForecastScenario(scenarioKey) {
+      const scenarios = {
+        than_tai: {
+          scenarioName: 'God of Wealth Festival (24K bullion demand +250%)',
+          mape: 8.4,
+          wape: 7.1,
+          trackingSignal: 1.2,
+          biasPercent: 2.3,
+          series: [
+            { period: 'Week 40 (Baseline Month)', forecast: 45, actual: 43, variance: -4.4, status: 'Compliant' },
+            { period: 'Week 41 (Wedding Season)', forecast: 60, actual: 64, variance: 6.7, status: 'Compliant' },
+            { period: 'Week 42 (Pre-Tet Surge)', forecast: 95, actual: 91, variance: -4.2, status: 'Compliant' },
+            { period: 'Week 43 (God of Wealth)', forecast: 220, actual: 235, variance: 6.8, status: 'Compliant' }
+          ]
+        },
+        mua_cuoi: {
+          scenarioName: 'Wedding Season (18K & Solitaire demand +180%)',
+          mape: 7.6,
+          wape: 6.8,
+          trackingSignal: -0.4,
+          biasPercent: 1.1,
+          series: [
+            { period: 'Week 40 (Baseline Month)', forecast: 35, actual: 34, variance: -2.8, status: 'Compliant' },
+            { period: 'Week 41 (Early Season)', forecast: 55, actual: 58, variance: 5.4, status: 'Compliant' },
+            { period: 'Week 42 (Peak Wedding)', forecast: 85, actual: 89, variance: 4.7, status: 'Compliant' },
+            { period: 'Week 43 (Late Season)', forecast: 70, actual: 68, variance: -2.9, status: 'Compliant' }
+          ]
+        },
+        tet: {
+          scenarioName: 'Lunar New Year (Chain-wide demand +150%)',
+          mape: 9.1,
+          wape: 7.9,
+          trackingSignal: 1.8,
+          biasPercent: 3.2,
+          series: [
+            { period: 'Week 40 (Early Lunar Month)', forecast: 50, actual: 48, variance: -4.0, status: 'Compliant' },
+            { period: 'Week 41 (Bonus Shopping)', forecast: 90, actual: 96, variance: 6.6, status: 'Compliant' },
+            { period: 'Week 42 (Kitchen Gods Day)', forecast: 140, actual: 145, variance: 3.5, status: 'Compliant' },
+            { period: 'Week 43 (Lunar Eve Surge)', forecast: 160, actual: 152, variance: -5.0, status: 'Compliant' }
+          ]
+        },
+        binh_thuong: {
+          scenarioName: 'Baseline Standard Month (Base Demand)',
+          mape: 5.8,
+          wape: 5.2,
+          trackingSignal: 0.2,
+          biasPercent: 0.5,
+          series: [
+            { period: 'Week 40', forecast: 40, actual: 39, variance: -2.5, status: 'Compliant' },
+            { period: 'Week 41', forecast: 42, actual: 44, variance: 4.7, status: 'Compliant' },
+            { period: 'Week 42', forecast: 41, actual: 40, variance: -2.4, status: 'Compliant' },
+            { period: 'Week 43', forecast: 43, actual: 42, variance: -2.3, status: 'Compliant' }
+          ]
+        }
+      };
+
+      if (scenarios[scenarioKey]) {
+        erp.forecastData = {
+          activeScenario: scenarioKey,
+          ...scenarios[scenarioKey]
+        };
+        saveState();
+        renderActiveTab();
+        showNotice(`Activated scenario: ${scenarios[scenarioKey].scenarioName}. Safety stock buffers and forecast variance recalculated.`, 'success');
+      }
+    }
+
+    function resolveDiscrepancy(discId) {
+      const disc = (erp.discrepancies || []).find(d => d.id === discId);
+      if (!disc || disc.status === 'resolved') return;
+
+      askConfirm(`Confirm audit reconciliation complete and sign protocol for ticket ${disc.id}?`, () => {
+        if (disc.type === 'physical_audit') {
+          const prod = erp.products.find(p => p.id === disc.productId);
+          if (prod && disc.warehouseId) {
+            prod.stocks[disc.warehouseId] = disc.countedQty;
+            erp.stockMoves.unshift({
+              id: `sm_${Date.now()}`,
+              reference: `AUDIT-ADJ-${disc.id}`,
+              productSku: prod.sku,
+              fromLocation: disc.warehouseName,
+              toLocation: 'Internal Audit (Reconciled)',
+              quantity: `${disc.variance > 0 ? '+' : ''}${disc.variance} ${unitOf(prod)}`,
+              type: 'adjustment',
+              timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            });
+          }
+        }
+        disc.status = 'resolved';
+        disc.actionTaken = `CCTV cross-check complete; protocol signed on ${new Date().toLocaleDateString('en-US')} by ${disc.approverRole}. Inventory synchronized cleanly.`;
+        saveState();
+        renderActiveTab();
+        showNotice(`Discrepancy ticket ${disc.id} resolved and closed successfully.`, 'success');
+      }, 'Sign Protocol');
+    }
+
     function syncAIRecommendations() {
       const m = getBIMetrics();
       const fresh = m.alerts.filter(a => a.move > 0).map(a => ({
         id: `rec_${a.p.id}_${a.store.id}`,
         auto: true,
         severity: a.have <= 0 ? 'critical' : 'high',
-        title: `Stock ${a.have <= 0 ? 'Out' : 'Alert'}: ${a.p.name} at ${a.store.name}`,
-        description: `${a.store.code} holds ${biQty(a.have)} ${unitOf(a.p)} (minimum ${biQty(a.min)}). ${m.central.code} holds ${biQty(a.centralBefore)} ${unitOf(a.p)}.`,
-        recommendedAction: `Dispatch ${a.move} × ${a.p.name} from ${m.central.name} (${m.central.code}) to ${a.store.code}, reaching ${biQty(a.target)} ${unitOf(a.p)}.`,
+        title: `Stockout Alert: ${a.p.name} at ${a.store.name}`,
+        description: `${a.store.code} holds only ${biQty(a.have)} ${unitOf(a.p)} (minimum safety buffer ${biQty(a.min)}). Main warehouse ${m.central.code} holds ${biQty(a.centralBefore)} ${unitOf(a.p)}.`,
+        recommendedAction: `Dispatch ${a.move} × ${a.p.name} from ${m.central.name} (${m.central.code}) to ${a.store.code}, restoring buffer to ${biQty(a.target)} ${unitOf(a.p)}.`, 
         sourceWarehouse: m.central.id,
         destinationWarehouse: a.store.id,
         productId: a.p.id,
@@ -2719,18 +3191,21 @@
       }));
       const freshIds = new Set(fresh.map(r => r.id));
       const history = (erp.aiRecommendations || [])
-        .filter(r => r.auto && !freshIds.has(r.id))                            // drops the old fixed demo card
-        .map(r => (r.status === 'pending' ? { ...r, status: 'completed' } : r)) // shortage no longer exists
+        .filter(r => r.auto && !freshIds.has(r.id))
+        .map(r => (r.status === 'pending' ? { ...r, status: 'completed' } : r))
         .slice(0, 3);
       erp.aiRecommendations = [...fresh, ...history];
     }
 
     function renderGoldFlowBIView(container) {
       const m = getBIMetrics();
+      const subTab = erp.biSubTab || 'net_position';
+      const pendingApps = (erp.approvals || []).filter(a => a.status === 'pending');
+      const openDiscs = (erp.discrepancies || []).filter(d => d.status !== 'resolved');
+
       const palette = ['bg-amber-500', 'bg-sky-500', 'bg-emerald-500', 'bg-purple-500', 'bg-rose-500', 'bg-slate-500'];
       const blockedMOs = m.mos.filter(x => !x.ok).length;
       const outOfStock = m.alerts.filter(a => a.have <= 0).length;
-      const openPoValue = m.openPOs.reduce((a, po) => a + (po.totalVnd || 0), 0);
 
       const kpi = (label, value, sub, tone) => `
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
@@ -2749,249 +3224,609 @@
         </div>`;
 
       const badge = (text, tone) => {
-        const t = { red: 'bg-red-100 text-red-800', amber: 'bg-amber-100 text-amber-900', green: 'bg-emerald-100 text-emerald-800', slate: 'bg-slate-100 text-slate-700' }[tone];
+        const t = { red: 'bg-red-100 text-red-800', amber: 'bg-amber-100 text-amber-900', green: 'bg-emerald-100 text-emerald-800', slate: 'bg-slate-100 text-slate-700', purple: 'bg-purple-100 text-purple-800' }[tone];
         return `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t}">${text}</span>`;
       };
-
-      // ---- priority actions
-      const toneBox = { red: 'border-red-200 bg-red-50', amber: 'border-amber-200 bg-amber-50', green: 'border-emerald-200 bg-emerald-50', slate: 'border-slate-200 bg-slate-50' };
-      const btnCls = 'shrink-0 px-3 py-1.5 text-[11px] font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white cursor-pointer';
-      const actions = [];
-      m.mos.forEach(x => {
-        const needTxt = x.lines.map(l => `${biQty(l.need)} ${unitOf(l.prod)} ${l.prod.name}`).join(', ');
-        const shortTxt = x.lines.filter(l => !l.ok).map(l => `${biQty(l.short)} ${unitOf(l.prod)} of ${l.prod.name}`).join(', ');
-        actions.push(x.ok
-          ? { tone: 'green', title: `${x.mo.code} is ready: ${x.mo.quantity} × ${x.mo.productName}`,
-              detail: `Needs ${needTxt}. Everything is in the vault.`,
-              btn: `<button onclick="switchTab('manufacturing')" class="${btnCls}">Open Manufacturing</button>` }
-          : { tone: 'red', title: `${x.mo.code} is blocked: short ${shortTxt}`,
-              detail: `Needs ${needTxt}. Buy the missing items.`,
-              btn: `<button onclick="switchTab('purchase')" class="${btnCls}">Open Procurement</button>` });
-      });
-      m.openPOs.forEach(po => {
-        actions.push({ tone: 'slate', title: `${po.code} awaiting receipt: ${po.productName}`,
-          detail: `${po.vendor} · ${biVnd(po.totalVnd || 0)}`,
-          btn: `<button onclick="switchTab('purchase')" class="${btnCls}">Open Procurement</button>` });
-      });
-      const actionHtml = actions.length === 0
-        ? `<div class="p-4 rounded-lg border border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-800">All clear: no production order is blocked and no purchase order is waiting.</div>`
-        : actions.slice(0, 8).map(a => `
-            <div class="flex items-center justify-between gap-3 p-3 rounded-lg border ${toneBox[a.tone]}">
-              <div class="min-w-0">
-                <div class="font-bold text-slate-900 text-xs">${a.title}</div>
-                <div class="text-[11px] text-slate-600 mt-0.5">${a.detail}</div>
-              </div>
-              ${a.btn}
-            </div>`).join('');
-
-      // ---- gold by location, value by product
-      const goldBars = m.whStats.map((w, i) =>
-        bar(`${w.code} · ${w.name}`, `${biQty(Math.round(w.gold * 10) / 10)} g (${m.totalGold ? (w.gold / m.totalGold * 100).toFixed(1) : 0}%)`,
-            m.totalGold ? w.gold / m.totalGold * 100 : 0, palette[i % palette.length])).join('');
-      const valueBars = m.rows.slice().sort((a, b) => b.value - a.value).map((r, i) =>
-        bar(r.p.name, `${biCompact(r.value)} đ (${m.totalValue ? (r.value / m.totalValue * 100).toFixed(1) : 0}%)`,
-            m.totalValue ? r.value / m.totalValue * 100 : 0, palette[i % palette.length])).join('');
-
-      // ---- store stock health matrix
-      const posRows = erp.products.filter(p => m.soldInPos(p));
-      const whCols = [m.central, ...m.stores];
-      const stockCell = (p, wh, isStore) => {
-        const q = p.stocks[wh.id] || 0;
-        const min = p.minStock !== undefined ? p.minStock : BI_MIN_STOCK;
-        const cls = !isStore ? 'bg-slate-100 text-slate-800'
-          : q <= 0 ? 'bg-red-100 text-red-800' : q < min ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800';
-        return `<td class="py-2.5 px-3 text-right"><span class="inline-block min-w-[2.5rem] text-center px-2 py-0.5 rounded font-mono font-bold ${cls}">${biQty(q)}</span></td>`;
-      };
-      const healthHtml = posRows.length === 0
-        ? `<tr><td colspan="${whCols.length + 3}" class="py-6 text-center text-slate-400">No product is enabled for Point of Sale.</td></tr>`
-        : posRows.map(p => {
-            const min = p.minStock !== undefined ? p.minStock : BI_MIN_STOCK;
-            const worst = m.stores.reduce((w, st) => Math.min(w, p.stocks[st.id] || 0), Infinity);
-            const status = worst <= 0 ? badge('Out of stock', 'red') : worst < min ? badge('Low', 'amber') : badge('Healthy', 'green');
-            return `<tr class="hover:bg-slate-50/80">
-              <td class="py-2.5 px-4"><div class="font-bold text-slate-900">${p.name}</div><div class="text-[10px] font-mono text-slate-400">${p.sku}</div></td>
-              ${whCols.map((w, i) => stockCell(p, w, i > 0)).join('')}
-              <td class="py-2.5 px-3 text-right font-mono text-slate-600">${biQty(min)}</td>
-              <td class="py-2.5 px-4">${status}</td>
-            </tr>`;
-          }).join('');
-
-      // ---- production readiness
-      const moHtml = m.mos.length === 0
-        ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">No open production orders.</td></tr>`
-        : m.mos.map(x => `<tr class="hover:bg-slate-50/80">
-            <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${x.mo.code}</td>
-            <td class="py-2.5 px-3">${x.mo.productName} <span class="text-slate-400">× ${x.mo.quantity}</span></td>
-            <td class="py-2.5 px-3">${x.mo.status === 'not_available' ? badge('Not Available', 'red') : badge(x.mo.status.replace('_', ' '), 'slate')}</td>
-            <td class="py-2.5 px-3 text-[11px]">${x.lines.map(l => `<div class="${l.ok ? 'text-slate-600' : 'text-red-600 font-semibold'}">${l.prod.name}: <span class="font-mono">${biQty(l.need)} / ${biQty(l.avail)} ${unitOf(l.prod)}</span></div>`).join('')}</td>
-            <td class="py-2.5 px-4">${x.ok ? badge('Ready', 'green') : badge('Not enough', 'red')}</td>
-          </tr>`).join('');
-
-      // ---- purchase pipeline
-      const poHtml = m.openPOs.length === 0
-        ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">No purchase orders waiting for receipt.</td></tr>`
-        : m.openPOs.map(po => `<tr class="hover:bg-slate-50/80">
-            <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${po.code}</td>
-            <td class="py-2.5 px-3">${po.vendor}</td>
-            <td class="py-2.5 px-3">${po.productName}</td>
-            <td class="py-2.5 px-3 text-right font-mono">${biVnd(po.totalVnd || 0)}</td>
-            <td class="py-2.5 px-4">${badge(po.status, 'amber')}</td>
-          </tr>`).join('');
-
-      // ---- product economics
-      const econHtml = m.rows.slice().sort((a, b) => b.value - a.value).map(r => `<tr class="hover:bg-slate-50/80">
-          <td class="py-2.5 px-4"><div class="font-bold text-slate-900">${r.p.name}</div><div class="text-[10px] font-mono text-slate-400">${r.p.sku}</div></td>
-          <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.p.unitCostVnd)}</td>
-          <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.p.retailPriceVnd)}</td>
-          <td class="py-2.5 px-3 text-right font-mono font-semibold ${r.margin < 5 ? 'text-red-600' : 'text-emerald-700'}">${r.margin.toFixed(1)}%</td>
-          <td class="py-2.5 px-3 text-right font-mono">${biQty(r.qty)} ${unitOf(r.p)}</td>
-          <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.value)} đ</td>
-          <td class="py-2.5 px-3 text-right font-mono">${r.gold > 0 ? biQty(Math.round(r.gold * 10) / 10) + ' g' : '-'}</td>
-          <td class="py-2.5 px-4">${m.soldInPos(r.p) ? badge('In POS', 'green') : (r.p.type === 'raw' ? badge('Raw', 'slate') : badge('Hidden', 'slate'))}</td>
-        </tr>`).join('');
-
-      // ---- POS & movement activity
-      const soldList = Object.entries(m.soldBySku).sort((a, b) => b[1] - a[1]);
-      const soldHtml = soldList.length === 0
-        ? `<div class="text-[11px] text-slate-400">No POS sales recorded in the movement ledger yet.</div>`
-        : soldList.map(([sku, q]) => {
-            const p = erp.products.find(x => x.sku === sku);
-            return `<div class="flex items-center justify-between text-[11px]"><span class="font-semibold text-slate-700">${p ? p.name : sku}</span><span class="font-mono text-slate-600">${biQty(q)} ${unitOf(p)} sold</span></div>`;
-          }).join('');
-      const moveChip = (label, n, tone) => `<div class="p-3 rounded-lg border border-slate-200 bg-slate-50 text-center"><div class="text-lg font-bold font-mono ${tone}">${n}</div><div class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">${label}</div></div>`;
 
       const th = (t, cls) => `<th class="py-3 ${cls || 'px-3'}">${t}</th>`;
       const card = (title, icon, body, extra) => `
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden ${extra || ''}">
-          <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 flex items-center gap-2">
-            <i data-lucide="${icon}" class="w-4 h-4 text-amber-600"></i><span>${title}</span>
+          <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600 flex items-center justify-between">
+            <div class="flex items-center gap-2"><i data-lucide="${icon}" class="w-4 h-4 text-amber-600"></i><span>${title}</span></div>
           </div>
           ${body}
         </div>`;
       const tableWrap = (head, body) => `<div class="overflow-x-auto"><table class="w-full text-left text-xs border-collapse"><thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase"><tr>${head}</tr></thead><tbody class="divide-y divide-slate-100">${body}</tbody></table></div>`;
 
-      // ---- AI Decision Agent (was a separate tab)
-      const recs = erp.aiRecommendations || [];
-      const pendingRecs = recs.filter(r => r.status !== 'completed').length;
-      const aiRecHtml = recs.length === 0
-        ? `<div class="p-4 text-xs font-semibold text-emerald-800 bg-emerald-50 border-t border-emerald-100">No recommendation right now: every store holds enough stock.</div>`
-        : `<div class="p-4 space-y-3">${recs.map(rec => `
-            <div class="p-4 rounded-xl border ${rec.status === 'completed' ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-400/20'} flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded ${rec.status === 'completed' ? 'bg-slate-200 text-slate-700' : 'bg-red-500 text-white'}">${rec.status === 'completed' ? 'Resolved' : (rec.severity === 'critical' ? 'Critical' : 'High Priority')}</span>
-                  <h3 class="font-bold text-sm text-slate-900">${rec.title}</h3>
-                </div>
-                <p class="text-xs text-slate-600 max-w-2xl">${rec.description}</p>
-                <div class="text-[11px] font-mono font-semibold text-amber-900 mt-1">Prescribed Action: ${rec.recommendedAction}</div>
-              </div>
-              ${rec.status !== 'completed' ? `
-                <button onclick="approveAIRecommendation('${rec.id}')" class="px-4 py-2 rounded-lg bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all active:scale-95 shrink-0 cursor-pointer flex items-center gap-1.5">
-                  <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400"></i>
-                  <span>Approve &amp; Rebalance</span>
-                </button>
-              ` : '<span class="text-xs font-mono text-emerald-700 font-bold flex items-center gap-1 shrink-0"><i data-lucide="check-circle-2" class="w-4 h-4"></i> Transfer Executed</span>'}
-            </div>`).join('')}</div>`;
-      const aiCardBody = `
-        <div class="px-4 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <p class="text-[11px] text-slate-500">Continuous stock monitoring with one-click prescriptive transfers.</p>
-          <span class="text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full border border-emerald-300 flex items-center gap-1.5 w-fit">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>Autonomous Agent Active · ${pendingRecs} pending
-          </span>
-        </div>
-        ${aiRecHtml}`;
-
-      container.innerHTML = `
-        <div class="space-y-6 animate-fadeIn">
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 class="text-xl font-bold font-serif text-slate-950">BI Dashboard</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Live view of gold stock, store health, production, purchasing, POS sales and AI decisions</p>
-            </div>
-            <span class="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full w-fit">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>Live from ERP data
-            </span>
-          </div>
-
-          <div class="grid grid-cols-2 lg:grid-cols-6 gap-3">
-            ${kpi('Total Gold', `${biQty(Math.round(m.totalGold * 10) / 10)} g`, `≈ ${(m.totalGold / 3.75).toFixed(1)} chi · ${(m.totalGold / 37.5).toFixed(2)} tael`)}
-            ${kpi('Inventory Value', `${biCompact(m.totalValue)} đ`, `At cost · finished goods retail ${biCompact(m.finishedRetail)} đ`)}
-            ${kpi('POS Sales Today', `${biCompact(erp.salesTodayVnd)} đ`, `Finished stock margin ${biCompact(m.finishedRetail - m.finishedCost)} đ`)}
-            ${kpi('Store Alerts', m.alerts.length, outOfStock > 0 ? `${outOfStock} out of stock` : (m.alerts.length ? 'Below minimum level' : 'All stores healthy'), m.alerts.length ? 'text-red-600' : 'text-emerald-600')}
-            ${kpi('Open Production', m.mos.length, blockedMOs > 0 ? `${blockedMOs} blocked by missing materials` : 'All have enough gold', blockedMOs ? 'text-red-600' : 'text-slate-950')}
-            ${kpi('Open Purchases', m.openPOs.length, `${biCompact(openPoValue)} đ to receive`)}
-          </div>
-
-          ${card('AI Decision Agent', 'cpu', aiCardBody)}
-
-          ${card('Priority Actions', 'zap', `<div class="p-4 space-y-2">${actionHtml}</div>`)}
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            ${card('Gold Position by Location', 'map-pin', `<div class="p-4 space-y-3">${goldBars}</div>`)}
-            ${card('Inventory Value by Product', 'bar-chart-3', `<div class="p-4 space-y-3">${valueBars}</div>`)}
-          </div>
-
-          ${card('Store Stock Health', 'store', tableWrap(
-            th('Product', 'px-4') + whCols.map((w, i) => th(w.code + (i === 0 ? ' (central)' : ''), 'px-3 text-right')).join('') + th('Min', 'px-3 text-right') + th('Status', 'px-4'),
-            healthHtml))}
-
-          ${card('Production Readiness', 'factory', tableWrap(
-            th('Order', 'px-4') + th('Product') + th('Status') + th('Materials (needed / in vault)') + th('Result', 'px-4'),
-            moHtml))}
-
-          ${card('Purchase Pipeline', 'truck', tableWrap(
-            th('PO', 'px-4') + th('Vendor') + th('Item') + th('Total', 'px-3 text-right') + th('Status', 'px-4'),
-            poHtml))}
-
-          ${card('Product Economics', 'coins', tableWrap(
-            th('Product', 'px-4') + th('Cost', 'px-3 text-right') + th('Price', 'px-3 text-right') + th('Margin', 'px-3 text-right') + th('On hand', 'px-3 text-right') + th('Stock value', 'px-3 text-right') + th('Gold', 'px-3 text-right') + th('Channel', 'px-4'),
-            econHtml))}
-
-          ${card('POS & Movement Activity', 'activity', `
-            <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="grid grid-cols-4 gap-2">
-                ${moveChip('Receipts', m.moveCounts.receipt, 'text-emerald-700')}
-                ${moveChip('Transfers', m.moveCounts.transfer, 'text-purple-700')}
-                ${moveChip('Sales', m.moveCounts.sale, 'text-amber-700')}
-                ${moveChip('Adjust.', m.moveCounts.adjustment, 'text-red-700')}
-              </div>
-              <div class="space-y-2">
-                <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Units sold at POS</div>
-                ${soldHtml}
-              </div>
-            </div>`)}
+      // Sub-Tabs Navigation Buttons
+      const subTabsNav = `
+        <div class="bg-white p-2 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center gap-1.5 text-xs">
+          <button onclick="switchBISubTab('net_position')" class="px-3 py-2 rounded-lg font-bold flex items-center gap-2 transition-all cursor-pointer ${subTab==='net_position'?'bg-amber-500 text-slate-950 shadow-xs':'text-slate-600 hover:bg-slate-100'}">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+            <span>1. Net Gold Position & Risk</span>
+          </button>
+          <button onclick="switchBISubTab('approvals')" class="px-3 py-2 rounded-lg font-bold flex items-center gap-2 transition-all cursor-pointer ${subTab==='approvals'?'bg-amber-500 text-slate-950 shadow-xs':'text-slate-600 hover:bg-slate-100'}">
+            <i data-lucide="check-check" class="w-4 h-4"></i>
+            <span>2. Prescriptive & Approvals</span>
+            ${pendingApps.length > 0 ? `<span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-600 text-white">${pendingApps.length}</span>` : ''}
+          </button>
+          <button onclick="switchBISubTab('forecast')" class="px-3 py-2 rounded-lg font-bold flex items-center gap-2 transition-all cursor-pointer ${subTab==='forecast'?'bg-amber-500 text-slate-950 shadow-xs':'text-slate-600 hover:bg-slate-100'}">
+            <i data-lucide="trending-up" class="w-4 h-4"></i>
+            <span>3. Demand Forecast (WAPE/MAPE)</span>
+          </button>
+          <button onclick="switchBISubTab('discrepancies')" class="px-3 py-2 rounded-lg font-bold flex items-center gap-2 transition-all cursor-pointer ${subTab==='discrepancies'?'bg-amber-500 text-slate-950 shadow-xs':'text-slate-600 hover:bg-slate-100'}">
+            <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+            <span>4. Discrepancy & Audit Control</span>
+            ${openDiscs.length > 0 ? `<span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-600 text-white">${openDiscs.length}</span>` : ''}
+          </button>
+          <button onclick="switchBISubTab('store_matrix')" class="px-3 py-2 rounded-lg font-bold flex items-center gap-2 transition-all cursor-pointer ${subTab==='store_matrix'?'bg-amber-500 text-slate-950 shadow-xs':'text-slate-600 hover:bg-slate-100'}">
+            <i data-lucide="store" class="w-4 h-4"></i>
+            <span>5. Store Health & Economics</span>
+          </button>
         </div>
       `;
-    }
 
-    // ================= AI DECISION ACTIONS (rendered inside the BI Dashboard) =================
-    function approveAIRecommendation(recId) {
-      const rec = erp.aiRecommendations.find(r => r.id === recId);
-      if (!rec || rec.status === 'completed') return;
+      // ================= VIEW 1: NET GOLD POSITION & RISK EXPOSURE =================
+      let subViewContent = '';
+      if (subTab === 'net_position') {
+        const netExposureTael = m.netGoldTael;
+        const netGoldValue = netExposureTael * m.sjcRefPriceTael;
+        const sens1Pct = m.sensitivity1PctVnd;
+        const sens5Pct = sens1Pct * 5;
 
-      const prod = erp.products.find(p => p.id === rec.productId);
-      if (prod && prod.stocks[rec.sourceWarehouse] >= rec.quantity) {
-        prod.stocks[rec.sourceWarehouse] -= rec.quantity;
-        prod.stocks[rec.destinationWarehouse] = (prod.stocks[rec.destinationWarehouse] || 0) + rec.quantity;
+        const sensitivityRows = [
+          { scenario: 'Bullion Surge (+5%)', sjcPrice: m.sjcRefPriceTael * 1.05, pnl: sens5Pct, advice: 'Liquidate selective finished stock; evaluate upward retail tag adjustment.' },
+          { scenario: 'Mild Increase (+1%)', sjcPrice: m.sjcRefPriceTael * 1.01, pnl: sens1Pct, advice: 'Nominal gross margin expands slightly; maintain normal sales tempo.' },
+          { scenario: 'Current Reference (Baseline)', sjcPrice: m.sjcRefPriceTael, pnl: 0, advice: 'Hedging portfolio balance baseline.' },
+          { scenario: 'Mild Decline (-1%)', sjcPrice: m.sjcRefPriceTael * 0.99, pnl: -sens1Pct, advice: 'Closely monitor Spot USD/oz; pause speculative bullion accumulation.' },
+          { scenario: 'Bullion Drop (-5%)', sjcPrice: m.sjcRefPriceTael * 0.95, pnl: -sens5Pct, advice: 'CFO initiates forward hedging contracts to safeguard operating working capital.' },
+        ];
 
-        rec.status = 'completed';
+        subViewContent = `
+          <div class="space-y-6">
+            <!-- Reference Benchmark Switcher Card -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
+                  <i data-lucide="scale" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-slate-900 text-sm">Active Reference Gold Price Benchmark:</h3>
+                    <span class="text-xs font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">${m.activeBenchmarkData?.name || 'SJC 9999'}</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-0.5">SJC is an external market index for portfolio valuation and hedging; purchases are contracted per supplier in Procurement.</p>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                ${Object.values(erp.benchmarks || {}).map(bm => `
+                  <button onclick="switchBenchmarkSource('${bm.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${erp.activeBenchmark === bm.id ? 'bg-amber-500 text-slate-950 border-amber-500 font-bold shadow-xs' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+                    <span>${bm.name.split(' ')[0]} ${bm.name.includes('Spot') ? 'Spot' : ''}: ${(bm.priceTael/1000000).toFixed(1)}M/Tael</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
 
-        erp.stockMoves.unshift({
-          id: `sm_${Date.now()}`,
-          reference: `AI-TRF-${Math.floor(1000 + Math.random() * 9000)}`,
-          productSku: prod.sku,
-          fromLocation: erp.warehouses.find(w => w.id === rec.sourceWarehouse)?.code,
-          toLocation: erp.warehouses.find(w => w.id === rec.destinationWarehouse)?.code,
-          quantity: `${rec.quantity} ${unitOf(prod)}`,
-          type: 'transfer',
-          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+            <!-- Net Exposure Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-6 gap-3">
+              ${kpi('Net Gold Exposure', `${netExposureTael.toFixed(2)} Taels`, `Total ${m.netGoldExposure.toFixed(1)} g gold`, 'text-amber-600')}
+              ${kpi('Main Warehouse', `${(m.whStats[0]?.gold || 0).toFixed(1)} g`, `Raw bullion & cast WIP`)}
+              ${kpi('Store Displays', `${(m.totalGold - (m.whStats[0]?.gold || 0)).toFixed(1)} g`, `Phu Nhuan & District 1`)}
+              ${kpi('Pending Intake (PO)', `${m.pendingPoGold.toFixed(1)} g`, `Open supplier orders en route`)}
+              ${kpi('Valuation (' + (m.activeBenchmarkData?.code || 'Ref') + ')', `${biCompact(netGoldValue)} đ`, `@ ${(m.activeRefPriceTael/1000000).toFixed(1)}M / Tael`)}
+              ${kpi('Sensitivity (±1%)', `±${biCompact(sens1Pct)} đ`, `Nominal P&L sensitivity`, 'text-blue-700')}
+            </div>
+
+            <!-- Stress-test sensitivity table -->
+            ${card('Gold Price Sensitivity & Hedging Risk Matrix', 'activity', `
+              <div class="p-4 bg-amber-50/50 border-b border-slate-200 text-xs text-slate-700 flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <strong>Net Gold Position Formula:</strong>
+                  <span class="font-mono text-slate-900 ml-1">Main Warehouse + Store Displays + Pending PO Intake - Customer Deposits</span>
+                </div>
+                <span class="text-[11px] font-mono bg-amber-200/60 text-amber-900 px-2 py-0.5 rounded font-bold">Sensitivity Factor: ±1% = ±${biCompact(sens1Pct)} đ</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                    <tr>
+                      <th class="py-3 px-4">Price Scenario</th>
+                      <th class="py-3 px-3 text-right">Projected Ref Price</th>
+                      <th class="py-3 px-3 text-right">Unrealized P&L Impact</th>
+                      <th class="py-3 px-4">Risk Mitigation & Hedging Guidance (CFO / Executive Board)</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    ${sensitivityRows.map(r => `
+                      <tr class="hover:bg-slate-50 font-mono text-xs">
+                        <td class="py-3 px-4 font-sans font-semibold ${r.pnl > 0 ? 'text-emerald-700' : r.pnl < 0 ? 'text-red-700' : 'text-slate-900'}">${r.scenario}</td>
+                        <td class="py-3 px-3 text-right font-bold">${biVnd(r.sjcPrice)}</td>
+                        <td class="py-3 px-3 text-right font-bold ${r.pnl > 0 ? 'text-emerald-600' : r.pnl < 0 ? 'text-red-600' : 'text-slate-500'}">
+                          ${r.pnl > 0 ? '+' : ''}${biVnd(r.pnl)}
+                        </td>
+                        <td class="py-3 px-4 font-sans text-slate-600">${r.advice}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `)}
+
+            <!-- Karat structure & Casting loss benchmark -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              ${card('Karat Composition & Capital Structure', 'pie-chart', `
+                <div class="p-4 space-y-3">
+                  ${bar('24K Gold (99.99%) - Bullion & Fortune Rings', `${m.goldByKarat['24K'].toFixed(1)} g (${(m.totalGold?m.goldByKarat['24K']/m.totalGold*100:0).toFixed(1)}%)`, m.totalGold?m.goldByKarat['24K']/m.totalGold*100:0, 'bg-amber-500')}
+                  ${bar('18K Gold (750) - Solitaire Rings & Diamond Jewelry', `${m.goldByKarat['18K'].toFixed(1)} g (${(m.totalGold?m.goldByKarat['18K']/m.totalGold*100:0).toFixed(1)}%)`, m.totalGold?m.goldByKarat['18K']/m.totalGold*100:0, 'bg-amber-400')}
+                  ${bar('Fine Silver (999) & Certified GIA Diamonds', '4,500 g Silver · 25 GIA Diamonds', 18, 'bg-sky-500')}
+                  <div class="mt-4 pt-3 border-t border-slate-100 grid grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                      <span class="text-slate-500 text-[11px] block">Raw Bullion Metal Capital:</span>
+                      <span class="font-bold font-mono text-slate-900">${biCompact(m.goldRawGrams * 2360000)} đ (82%)</span>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg">
+                      <span class="text-slate-500 text-[11px] block">Labor & Gemstone Capital:</span>
+                      <span class="font-bold font-mono text-slate-900">${biCompact(m.totalValue - (m.goldRawGrams * 2360000))} đ (18%)</span>
+                    </div>
+                  </div>
+                </div>
+              `)}
+
+              ${card('Go Vap Casting Plant Loss Monitoring (Casting Loss Variance)', 'flame', `
+                <div class="p-4 space-y-4 text-xs">
+                  <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <div>
+                      <div class="font-bold text-emerald-950">Standard BOM Loss: 1.87%</div>
+                      <div class="text-[11px] text-emerald-700 mt-0.5">30-day recorded actual loss: <strong>1.91%</strong></div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900 font-mono">Tolerance +0.04% (PASSED)</span>
+                  </div>
+                  <div class="space-y-2 text-slate-600 leading-relaxed">
+                    <div class="flex items-start gap-2">
+                      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
+                      <span><strong>Scrap & dust recovery:</strong> Casting floor dust and ultrasonic wash water filtered under vacuum; recovery reaches <strong>94.6%</strong>.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"></i>
+                      <span><strong>Gold purity assurance:</strong> X-ray fluorescence spectrometry (XRF) verified before vault release to ensure zero alloy contamination.</span>
+                    </div>
+                  </div>
+                </div>
+              `)}
+            </div>
+          </div>
+        `;
+      }
+
+      // ================= VIEW 2: PRESCRIPTIVE ENGINE & MULTI-TIER APPROVALS =================
+      else if (subTab === 'approvals') {
+        const apps = erp.approvals || [];
+        subViewContent = `
+          <div class="space-y-6">
+            <!-- Approval Matrix Governance Rules -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-5 rounded-xl shadow-xs">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-serif font-bold text-base text-amber-300 flex items-center gap-2">
+                  <i data-lucide="shield-check" class="w-5 h-5"></i>
+                  <span>Multi-Tier Inventory & Production Approval Matrix (Enterprise Governance)</span>
+                </h3>
+                <span class="text-[10px] font-mono bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded border border-amber-400/30">ISO 9001:2015 Governance</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                  <div class="text-emerald-400 font-bold uppercase text-[10px] tracking-wider font-mono">TIER 1 · STORE MANAGER</div>
+                  <div class="font-bold text-white mt-1">Threshold: &lt; 50M VND (&lt; 10 Mace)</div>
+                  <div class="text-slate-300 text-[11px] mt-0.5">Authorizes inter-store boutique transfers when DOI &lt; 3 days. SLA: 1 hr.</div>
+                </div>
+                <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                  <div class="text-amber-400 font-bold uppercase text-[10px] tracking-wider font-mono">TIER 2 · CHIEF OPERATING OFFICER (COO)</div>
+                  <div class="font-bold text-white mt-1">Threshold: 50M - 300M VND (10 Mace - 5 Taels)</div>
+                  <div class="text-slate-300 text-[11px] mt-0.5">Authorizes releases from Main Warehouse, standard MOs, network rebalancing. SLA: 2 hrs.</div>
+                </div>
+                <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700">
+                  <div class="text-rose-400 font-bold uppercase text-[10px] tracking-wider font-mono">TIER 3 · CHIEF FINANCIAL OFFICER (CFO)</div>
+                  <div class="font-bold text-white mt-1">Threshold: &gt; 300M VND (&gt; 5 Taels)</div>
+                  <div class="text-slate-300 text-[11px] mt-0.5">Authorizes raw bullion POs, mass seasonal casting batches for God of Wealth / Tet. SLA: 4 hrs.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pending Approvals Cards -->
+            ${card('Prescriptive Approval Queue', 'zap', `
+              <div class="p-4 space-y-4">
+                ${apps.filter(a => a.status === 'pending').length === 0 ? `
+                  <div class="p-6 text-center text-xs text-slate-500 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <i data-lucide="check-circle-2" class="w-8 h-8 text-emerald-600 mx-auto mb-2"></i>
+                    <strong>All prescriptive proposals processed!</strong> No items pending in approval queue.
+                  </div>
+                ` : apps.filter(a => a.status === 'pending').map(app => `
+                  <div class="p-4 rounded-xl border border-amber-300 bg-amber-50/70 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="space-y-1.5 flex-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${app.urgency === 'Critical' ? 'bg-red-500 text-white' : 'bg-amber-500 text-slate-950'}">${app.urgency}</span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 bg-slate-200 text-slate-800 rounded font-bold">${app.id.toUpperCase()}</span>
+                        <h4 class="font-bold text-sm text-slate-950">${app.title}</h4>
+                      </div>
+                      <p class="text-xs text-slate-600 leading-relaxed">${app.decisionNote}</p>
+                      <div class="flex flex-wrap items-center gap-4 text-[11px] font-mono text-slate-700 pt-1">
+                        <span>Est. Value: <strong class="text-slate-900">${biVnd(app.estimatedValueVnd)}</strong></span>
+                        <span>Gold Weight: <strong class="text-amber-900">${app.goldWeightGrams} g (~${(app.goldWeightGrams/3.75).toFixed(1)} Mace)</strong></span>
+                        <span>Requester: <strong class="text-slate-900">${app.requester}</strong></span>
+                        <span>Authority: <strong class="text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">${app.assignedRole}</strong></span>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <button onclick="approveWorkflowItem('${app.id}')" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span>1-Click Approve</span>
+                      </button>
+                      <button onclick="rejectWorkflowItem('${app.id}')" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs cursor-pointer">
+                        <span>Reject</span>
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `)}
+
+            <!-- Approval Audit Trail -->
+            ${card('Approval Audit Trail Ledger', 'clipboard-list', `
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                    <tr>
+                      <th class="py-3 px-4">Ticket ID</th>
+                      <th class="py-3 px-3">Type</th>
+                      <th class="py-3 px-4">Proposal Details</th>
+                      <th class="py-3 px-3 text-right">Est. Value</th>
+                      <th class="py-3 px-3">Authority</th>
+                      <th class="py-3 px-4">Status & Decision Audit</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 font-mono text-[11px]">
+                    ${apps.map(a => `
+                      <tr class="hover:bg-slate-50">
+                        <td class="py-2.5 px-4 font-bold text-blue-700">${a.id.toUpperCase()}</td>
+                        <td class="py-2.5 px-3 uppercase font-sans text-slate-600 font-semibold">${a.type}</td>
+                        <td class="py-2.5 px-4 font-sans text-slate-900">${a.title}</td>
+                        <td class="py-2.5 px-3 text-right font-bold">${biVnd(a.estimatedValueVnd)}</td>
+                        <td class="py-2.5 px-3 font-sans">${a.assignedRole}</td>
+                        <td class="py-2.5 px-4 font-sans">
+                          ${a.status === 'approved' ? '<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold">Approved</span>' :
+                            a.status === 'rejected' ? '<span class="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-800 font-bold">Rejected</span>' :
+                            '<span class="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 font-bold">Pending</span>'}
+                          <span class="text-[10px] text-slate-400 block mt-0.5">${a.decisionNote || ''}</span>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `)}
+          </div>
+        `;
+      }
+
+      // ================= VIEW 3: DEMAND FORECAST & MODEL ACCURACY =================
+      else if (subTab === 'forecast') {
+        const fc = erp.forecastData || {};
+        const activeScenario = fc.activeScenario || 'than_tai';
+
+        subViewContent = `
+          <div class="space-y-6">
+            <!-- Forecast Accuracy KPI Banner -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] uppercase font-bold text-slate-400 font-mono">MAPE (Mean Abs. % Error)</span>
+                  <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 font-mono">&lt; 10% EXCELLENT</span>
+                </div>
+                <div class="text-2xl font-bold font-mono text-emerald-600 mt-2">${fc.mape}%</div>
+                <p class="text-[11px] text-slate-500 mt-1">Mean absolute percentage error relative to actual POS checkout.</p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] uppercase font-bold text-slate-400 font-mono">WAPE (Weighted Abs. Error)</span>
+                  <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 font-mono">VALUE WEIGHTED</span>
+                </div>
+                <div class="text-2xl font-bold font-mono text-emerald-600 mt-2">${fc.wape}%</div>
+                <p class="text-[11px] text-slate-500 mt-1">Weighted absolute percentage error by revenue volume.</p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] uppercase font-bold text-slate-400 font-mono">Tracking Signal (TS)</span>
+                  <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-800 font-mono">[-4, +4] SAFE RANGE</span>
+                </div>
+                <div class="text-2xl font-bold font-mono text-blue-700 mt-2">${fc.trackingSignal > 0 ? '+' : ''}${fc.trackingSignal}</div>
+                <p class="text-[11px] text-slate-500 mt-1">Directional tracking: model exhibits no continuous systemic drift.</p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] uppercase font-bold text-slate-400 font-mono">Forecast Bias (%)</span>
+                  <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 font-mono">POSITIVE BUFFER</span>
+                </div>
+                <div class="text-2xl font-bold font-mono text-amber-600 mt-2">+${fc.biasPercent}%</div>
+                <p class="text-[11px] text-slate-500 mt-1">Deliberate positive buffer designed to preempt holiday stockouts.</p>
+              </div>
+            </div>
+
+            <!-- What-if scenario selector -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div>
+                  <h3 class="font-serif font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-amber-600"></i>
+                    <span>Demand & Safety Stock Simulator (What-If Analysis)</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5">Select seasonal scenarios to dynamically adjust Min-Max buffers and casting batch sizes</p>
+                </div>
+                <span class="text-xs font-mono font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded border border-amber-200">Active Scenario: ${fc.scenarioName}</span>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mt-4">
+                <button onclick="setForecastScenario('than_tai')" class="p-3 text-left rounded-xl border transition-all cursor-pointer ${activeScenario==='than_tai'?'bg-amber-50 border-amber-500 ring-2 ring-amber-400/30 text-amber-950':'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'}">
+                  <div class="text-[10px] font-mono uppercase font-bold">SCENARIO 1</div>
+                  <div class="font-bold text-xs mt-1">🪙 God of Wealth</div>
+                  <div class="text-[10px] text-slate-500 mt-0.5">24K demand +250%, safety buffer x3</div>
+                </button>
+                <button onclick="setForecastScenario('mua_cuoi')" class="p-3 text-left rounded-xl border transition-all cursor-pointer ${activeScenario==='mua_cuoi'?'bg-amber-50 border-amber-500 ring-2 ring-amber-400/30 text-amber-950':'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'}">
+                  <div class="text-[10px] font-mono uppercase font-bold">SCENARIO 2</div>
+                  <div class="font-bold text-xs mt-1">💍 Wedding Season</div>
+                  <div class="text-[10px] text-slate-500 mt-0.5">Solitaire 18K demand +180%</div>
+                </button>
+                <button onclick="setForecastScenario('tet')" class="p-3 text-left rounded-xl border transition-all cursor-pointer ${activeScenario==='tet'?'bg-amber-50 border-amber-500 ring-2 ring-amber-400/30 text-amber-950':'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'}">
+                  <div class="text-[10px] font-mono uppercase font-bold">SCENARIO 3</div>
+                  <div class="font-bold text-xs mt-1">🧧 Lunar New Year</div>
+                  <div class="text-[10px] text-slate-500 mt-0.5">Chain-wide demand +150%</div>
+                </button>
+                <button onclick="setForecastScenario('binh_thuong')" class="p-3 text-left rounded-xl border transition-all cursor-pointer ${activeScenario==='binh_thuong'?'bg-amber-50 border-amber-500 ring-2 ring-amber-400/30 text-amber-950':'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'}">
+                  <div class="text-[10px] font-mono uppercase font-bold">SCENARIO 4</div>
+                  <div class="font-bold text-xs mt-1">⚖️ Baseline Month</div>
+                  <div class="text-[10px] text-slate-500 mt-0.5">Base demand, Min 10 pcs buffer</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Forecast vs Actual Series Table -->
+            ${card('Forecast vs Actual Demand Ledger', 'calendar-check', `
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
+                    <tr>
+                      <th class="py-3 px-4">Period / Cycle</th>
+                      <th class="py-3 px-3 text-right">Forecast (Pcs)</th>
+                      <th class="py-3 px-3 text-right">Actual POS (Pcs)</th>
+                      <th class="py-3 px-3 text-right">Variance (%)</th>
+                      <th class="py-3 px-4">Validation Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 font-mono text-xs">
+                    ${(fc.series || []).map(s => `
+                      <tr class="hover:bg-slate-50">
+                        <td class="py-2.5 px-4 font-sans font-semibold text-slate-900">${s.period}</td>
+                        <td class="py-2.5 px-3 text-right font-bold text-blue-700">${s.forecast}</td>
+                        <td class="py-2.5 px-3 text-right font-bold text-slate-900">${s.actual}</td>
+                        <td class="py-2.5 px-3 text-right font-bold ${s.variance > 0 ? 'text-amber-600' : 'text-emerald-600'}">
+                          ${s.variance > 0 ? '+' : ''}${s.variance}%
+                        </td>
+                        <td class="py-2.5 px-4 font-sans"><span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold font-mono">COMPLIANT</span></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `)}
+          </div>
+        `;
+      }
+
+      // ================= VIEW 4: DATA GOVERNANCE & BLIND AUDIT DISCREPANCIES =================
+      else if (subTab === 'discrepancies') {
+        const discs = erp.discrepancies || [];
+
+        subViewContent = `
+          <div class="space-y-6">
+            <!-- 3-Tier Data Governance Framework Header -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h3 class="font-serif font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600"></i>
+                    <span>Data Quality & Blind Audit Protocol (Exception Handling Framework)</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5">3-tier asset governance: 4-decimal analytical balance, blind count audit, and dual authorization sign-off</p>
+                </div>
+                <button onclick="openPhysicalAuditModal()" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer flex items-center gap-1.5">
+                  <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                  <span>Start Blind Stock Audit</span>
+                </button>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 text-xs">
+                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span>1. Analytical Scale & Tolerance</span>
+                  </div>
+                  <p class="text-[11px] text-slate-600 mt-1">Custody transfer tolerance: <strong>&plusmn;0.005g</strong>. Breaches immediately lock the move and trigger an audit flag.</p>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span>2. Blind Count Audit</span>
+                  </div>
+                  <p class="text-[11px] text-slate-600 mt-1">Auditors count stock blind without visibility into system balances, ensuring 100% objective verification.</p>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span>3. Dual Sign-off (Audit & CFO)</span>
+                  </div>
+                  <p class="text-[11px] text-slate-600 mt-1">Any stock adjustment move exceeding 10M VND mandates digital dual sign-off from Internal Audit and CFO.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Discrepancy Tickets -->
+            ${card('Active Discrepancy & Variance Tickets', 'alert-circle', `
+              <div class="p-4 space-y-4">
+                ${discs.length === 0 ? `
+                  <div class="p-6 text-center text-xs text-slate-500 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <i data-lucide="check-circle-2" class="w-8 h-8 text-emerald-600 mx-auto mb-2"></i>
+                    <strong>No audit discrepancies detected!</strong> Physical stock matches book balances 100%.
+                  </div>
+                ` : discs.map(disc => `
+                  <div class="p-4 rounded-xl border ${disc.status === 'resolved' ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-red-50/70 border-red-300'} flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="space-y-1.5 flex-1 text-xs">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${disc.status === 'resolved' ? 'bg-slate-200 text-slate-700' : 'bg-red-600 text-white'}">${disc.status === 'resolved' ? 'Resolved' : 'Investigating'}</span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 bg-slate-200 text-slate-800 rounded font-bold">${disc.id.toUpperCase()}</span>
+                        <h4 class="font-bold text-sm text-slate-900">${disc.typeName}: ${disc.productName}</h4>
+                      </div>
+                      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[11px]">
+                        <div>Book: <strong>${disc.systemQty}</strong></div>
+                        <div>Counted: <strong>${disc.countedQty}</strong></div>
+                        <div>Variance: <strong class="text-red-600">${disc.variance > 0 ? '+' : ''}${disc.variance}</strong></div>
+                        <div>Variance Value: <strong class="text-red-600">${biVnd(disc.valueDiffVnd)}</strong></div>
+                      </div>
+                      <p class="text-slate-600 mt-1"><strong>Investigation Finding:</strong> ${disc.reason}</p>
+                      <div class="text-[11px] text-slate-500 pt-0.5 flex flex-wrap gap-3">
+                        <span>Location: <strong>${disc.warehouseName}</strong></span>
+                        <span>Investigator: <strong>${disc.investigator}</strong></span>
+                        <span>Sign-off Authority: <strong>${disc.approverRole}</strong></span>
+                      </div>
+                    </div>
+                    <div class="shrink-0 flex items-center gap-2">
+                      ${disc.status !== 'resolved' ? `
+                        <button onclick="resolveDiscrepancy('${disc.id}')" class="px-3.5 py-2 rounded-lg bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5">
+                          <i data-lucide="check" class="w-3.5 h-3.5 text-amber-400"></i>
+                          <span>Approve Protocol & Close Ticket</span>
+                        </button>
+                      ` : `
+                        <span class="text-xs font-mono text-emerald-700 font-bold flex items-center gap-1">
+                          <i data-lucide="check-circle-2" class="w-4 h-4"></i> Reconciled
+                        </span>
+                      `}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `)}
+          </div>
+        `;
+      }
+
+      // ================= VIEW 5: STORE MATRIX & PRODUCT ECONOMICS =================
+      else if (subTab === 'store_matrix') {
+        // Priority actions
+        const toneBox = { red: 'border-red-200 bg-red-50', amber: 'border-amber-200 bg-amber-50', green: 'border-emerald-200 bg-emerald-50', slate: 'border-slate-200 bg-slate-50' };
+        const btnCls = 'shrink-0 px-3 py-1.5 text-[11px] font-bold rounded-lg bg-slate-900 hover:bg-slate-800 text-white cursor-pointer';
+        const actions = [];
+        m.mos.forEach(x => {
+          const needTxt = x.lines.map(l => `${biQty(l.need)} ${unitOf(l.prod)} ${l.prod.name}`).join(', ');
+          const shortTxt = x.lines.filter(l => !l.ok).map(l => `${biQty(l.short)} ${unitOf(l.prod)} of ${l.prod.name}`).join(', ');
+          actions.push(x.ok
+            ? { tone: 'green', title: `${x.mo.code} is ready: ${x.mo.quantity} × ${x.mo.productName}`,
+                detail: `Sufficient bullion in vault. Needed: ${needTxt}.`,
+                btn: `<button onclick="switchTab('manufacturing')" class="${btnCls}">Open Manufacturing</button>` }
+            : { tone: 'red', title: `${x.mo.code} is blocked: short ${shortTxt}`,
+                detail: `Procure missing casting materials: ${needTxt}.`,
+                btn: `<button onclick="switchTab('purchase')" class="${btnCls}">Open Procurement</button>` });
+        });
+        m.openPOs.forEach(po => {
+          actions.push({ tone: 'slate', title: `${po.code} awaiting receipt: ${po.productName}`,
+            detail: `${po.vendor} · ${biVnd(po.totalVnd || 0)}`,
+            btn: `<button onclick="switchTab('purchase')" class="${btnCls}">Receive Goods</button>` });
         });
 
-        saveState();
-        renderActiveTab();
-      } else {
-        alert('Insufficient source stock to execute automated transfer!');
+        const actionHtml = actions.length === 0
+          ? `<div class="p-4 rounded-lg border border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-800">All operations running smoothly; no production orders or purchase orders blocked.</div>`
+          : actions.slice(0, 6).map(a => `
+              <div class="flex items-center justify-between gap-3 p-3 rounded-lg border ${toneBox[a.tone]}">
+                <div class="min-w-0">
+                  <div class="font-bold text-slate-900 text-xs">${a.title}</div>
+                  <div class="text-[11px] text-slate-600 mt-0.5">${a.detail}</div>
+                </div>
+                ${a.btn}
+              </div>`).join('');
+
+        // Store health matrix
+        const posRows = erp.products.filter(p => m.soldInPos(p));
+        const whCols = [m.central, ...m.stores];
+        const stockCell = (p, wh, isStore) => {
+          const q = p.stocks[wh.id] || 0;
+          const min = p.minStock !== undefined ? p.minStock : BI_MIN_STOCK;
+          const cls = !isStore ? 'bg-slate-100 text-slate-800'
+            : q <= 0 ? 'bg-red-100 text-red-800' : q < min ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800';
+          return `<td class="py-2.5 px-3 text-right"><span class="inline-block min-w-[2.5rem] text-center px-2 py-0.5 rounded font-mono font-bold ${cls}">${biQty(q)}</span></td>`;
+        };
+        const healthHtml = posRows.length === 0
+          ? `<tr><td colspan="${whCols.length + 3}" class="py-6 text-center text-slate-400">No products currently active in Retail POS.</td></tr>`
+          : posRows.map(p => {
+              const min = p.minStock !== undefined ? p.minStock : BI_MIN_STOCK;
+              const worst = m.stores.reduce((w, st) => Math.min(w, p.stocks[st.id] || 0), Infinity);
+              const status = worst <= 0 ? badge('Out of Stock', 'red') : worst < min ? badge('Low Buffer', 'amber') : badge('Healthy', 'green');
+              return `<tr class="hover:bg-slate-50/80">
+                <td class="py-2.5 px-4"><div class="font-bold text-slate-900">${p.name}</div><div class="text-[10px] font-mono text-slate-400">${p.sku}</div></td>
+                ${whCols.map((w, i) => stockCell(p, w, i > 0)).join('')}
+                <td class="py-2.5 px-3 text-right font-mono text-slate-600">${biQty(min)}</td>
+                <td class="py-2.5 px-4">${status}</td>
+              </tr>`;
+            }).join('');
+
+        // Product economics
+        const econHtml = m.rows.slice().sort((a, b) => b.value - a.value).map(r => `<tr class="hover:bg-slate-50/80">
+            <td class="py-2.5 px-4"><div class="font-bold text-slate-900">${r.p.name}</div><div class="text-[10px] font-mono text-slate-400">${r.p.sku}</div></td>
+            <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.p.unitCostVnd)}</td>
+            <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.p.retailPriceVnd)}</td>
+            <td class="py-2.5 px-3 text-right font-mono font-semibold ${r.margin < 5 ? 'text-red-600' : 'text-emerald-700'}">${r.margin.toFixed(1)}%</td>
+            <td class="py-2.5 px-3 text-right font-mono">${biQty(r.qty)} ${unitOf(r.p)}</td>
+            <td class="py-2.5 px-3 text-right font-mono">${biCompact(r.value)} đ</td>
+            <td class="py-2.5 px-3 text-right font-mono">${r.gold > 0 ? biQty(Math.round(r.gold * 10) / 10) + ' g' : '-'}</td>
+            <td class="py-2.5 px-4">${m.soldInPos(r.p) ? badge('POS', 'green') : (r.p.type === 'raw' ? badge('Raw', 'slate') : badge('Hidden', 'slate'))}</td>
+          </tr>`).join('');
+
+        subViewContent = `
+          <div class="space-y-6">
+            ${card('Priority Operational Actions', 'zap', `<div class="p-4 space-y-2">${actionHtml}</div>`)}
+
+            ${card('Store Stock Health Matrix', 'store', tableWrap(
+              th('Jewelry Product', 'px-4') + whCols.map((w, i) => th(w.code + (i === 0 ? ' (Central)' : ''), 'px-3 text-right')).join('') + th('Min Buffer', 'px-3 text-right') + th('Status', 'px-4'),
+              healthHtml))}
+
+            ${card('Product Economics & Margin Analysis', 'coins', tableWrap(
+              th('Product', 'px-4') + th('Unit Cost', 'px-3 text-right') + th('Retail Price', 'px-3 text-right') + th('Gross Margin', 'px-3 text-right') + th('On Hand', 'px-3 text-right') + th('Stock Value', 'px-3 text-right') + th('Gold Content', 'px-3 text-right') + th('Channel', 'px-4'),
+              econHtml))}
+          </div>
+        `;
       }
+
+      // ================= MASTER RENDER =================
+      container.innerHTML = `
+        <div class="space-y-6 animate-fadeIn">
+          <!-- Top Title Bar -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold font-serif text-slate-950">Enterprise BI Dashboard & Decision Copilot</h2>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Executive Decision Support System: Net gold position, WAPE/MAPE forecasting, multi-tier approval governance, and audit reconciliation</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              </span>
+            </div>
+          </div>
+
+          <!-- 5 Sub-Modules Nav Bar -->
+          ${subTabsNav}
+
+          <!-- Dynamic Sub-view content -->
+          ${subViewContent}
+        </div>
+      `;
     }
 
 
@@ -3005,7 +3840,7 @@
         win.classList.remove('hidden');
         btn.classList.add('hidden');
         if (chatHistory.length === 0) {
-          addChatMessage('assistant', `Hello! I am your **Aurora AI Decision Copilot**.\n\nI can assist you with:\n- **Balancing physical gold positions** and bullion volatility hedging.\n- **Detecting boutique stockout vulnerabilities** across retail nodes.\n- **Forecasting seasonal surges** for Tet and the God of Wealth festival.\n- **MIS coursework analysis:** Michael Porter's 5 Forces, Value Chain, and PNJ vs. Aurora comparisons.\n\n*Click on any suggested topic or type a question below!*`);
+          addChatMessage('assistant', `Hello! I am your **Aurora AI Decision Copilot**.\n\nI can assist you with:\n- **Balancing physical gold positions** and bullion volatility hedging.\n- **Detecting boutique stockout vulnerabilities** across retail nodes.\n- **Forecasting seasonal surges** for Tet and the God of Wealth festival.\n- **Multi-source gold benchmarks** (SJC, DOJI, PNJ, Kitco) and ±1% portfolio sensitivity.\n- **Multi-supplier procurement pricing** and optimal casting material sourcing.\n\n*Click on any suggested topic or type a question below!*`);
         }
       } else {
         win.classList.add('hidden');
@@ -3020,7 +3855,7 @@
         msgDiv.className = `flex flex-col w-full ${role === 'user' ? 'items-end' : 'items-start'}`;
 
         const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        const badge = source ? ` · ${source === 'gemini' ? 'Gemini 3.6 Flash' : 'MIS Local Engine'}` : '';
+        const badge = source ? ` · ${source === 'gemini' ? 'Gemini 3.6 Flash' : 'Aurora Local Engine'}` : '';
 
         const html = text
             .trim()
@@ -3074,7 +3909,10 @@
             purchaseOrders: erp.purchaseOrders,
             stockMoves: erp.stockMoves.slice(0, 15),
             aiRecommendations: erp.aiRecommendations,
-            salesTodayVnd: erp.salesTodayVnd
+            salesTodayVnd: erp.salesTodayVnd,
+            approvals: erp.approvals,
+            forecastData: erp.forecastData,
+            discrepancies: erp.discrepancies
           }
         }
       };
@@ -3111,7 +3949,7 @@
 
     // ================= GUIDED DEMO STEPPER =================
     const DEMO_STEPS = [
-      { step: 1, tab: 'purchase', title: 'Step 1: Bullion Procurement (PO ➜ WH-MW)', desc: 'Procurement drafts a PO to acquire 150g of 24K pure gold bullion from SJC. Upon confirmation and receiving goods, physical bullion is ingested into the Main Warehouse (WH-MW).', label: 'Go to Procurement Module' },
+      { step: 1, tab: 'purchase', title: 'Step 1: Bullion Procurement (PO ➜ WH-MW)', desc: 'Procurement drafts a PO to acquire 150g of 24K pure gold bullion from contracted supplier (e.g. DOJI Wholesale or SJC Bullion). Upon confirmation and receiving goods, physical bullion is ingested into the Main Warehouse (WH-MW).', label: 'Go to Procurement Module' },
       { step: 2, tab: 'manufacturing', title: 'Step 2: Casting Production (BOM ➜ MO at WH-MW)', desc: 'The Go Vap plant receives an MO to cast 25 Fortune Rings 24K. The ERP resolves the BOM, computes 1.87% casting loss, deducts 95.5g of pure gold, and deposits 25 finished rings into the vault.', label: 'Go to Manufacturing Module' },
       { step: 3, tab: 'inventory', title: 'Step 3: Inter-Store Stock Dispatch (WH-MW ➜ WH-PN)', desc: 'The AI Copilot detects that Phu Nhuan holds only 4 Fortune Rings (below safety threshold of 15). An internal transfer of 15 rings from WH-MW to WH-PN is dispatched, resolving stockout risk.', label: 'Go to Inventory Module' },
       { step: 4, tab: 'pos', title: 'Step 4: Retail POS Checkout & Real-Time Stock Deduction', desc: 'A Diamond VIP member purchases 2 Fortune Rings at Phu Nhuan Store. The cashier registers the sale, applies the 5% tier discount, and issues an e-Receipt with gold warranty. WH-PN store stock decrements instantly!', label: 'Go to Retail POS Module' }
@@ -3147,7 +3985,7 @@
           </div>
           <div>
             <h4 class="font-bold text-sm text-slate-900">${data.title}</h4>
-            <span class="text-[11px] text-slate-500 font-mono">Module: ${data.tab.toUpperCase()} · Odoo ERP Architecture</span>
+            <span class="text-[11px] text-slate-500 font-mono">Module: ${data.tab.toUpperCase()} · Integrated ERP Architecture</span>
           </div>
         </div>
         <p class="text-slate-700 leading-relaxed text-xs">${data.desc}</p>

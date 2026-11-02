@@ -369,7 +369,14 @@
       currentTab: 'inventory',
       activeStoreId: 'wh_pn',
       salesTodayVnd: 31200000,
-      activeCashierSession: { id: 'sess_01', cashierName: 'Nguyen Thi Mai', openTime: '08:00 AM', status: 'open' }
+      cashiers: [
+        { id: 'cash_01', name: 'Nguyen Bao Tien' },
+        { id: 'cash_02', name: 'Nguyen Ngoc Kim Thinh' },
+        { id: 'cash_03', name: 'Nguyen Thi Kim Huyen' },
+        { id: 'cash_04', name: 'Nguyen Hoang Anh Thi' },
+        { id: 'cash_05', name: 'Le Van Anh' }
+      ],
+      activeCashierSession: { id: 'sess_01', cashierName: 'Nguyen Bao Tien', openTime: '08:00 AM', status: 'open' }
     };
 
     // State initialization
@@ -489,44 +496,6 @@
       return p;
     }
 
-    // Keeps unit / gold-weight fields consistent with karat + type. prefix = 'np' (Inventory) or 'poNp' (Procurement)
-    function applyProductFieldRules(prefix, type, reset) {
-      const karat = byId(prefix + 'Karat').value;
-      const gold = isGoldKarat(karat);
-      const sel = byId(prefix + 'Unit');
-      const w = byId(prefix + 'UnitWeight');
-      if (reset) {
-        const opts = type === 'raw' ? ['g', 'units'] : ['pcs', 'units'];
-        sel.innerHTML = opts.map(u => `<option value="${u}">${u}</option>`).join('');
-        sel.value = type === 'raw' ? ((gold || karat === '999') ? 'g' : 'units') : (gold ? 'pcs' : 'units');
-      }
-      const unit = sel.value;
-      let hint;
-      if (!gold) {
-        w.value = 0; w.disabled = true;
-        hint = 'Not gold: gold weight is 0 g and stock is counted in ' + unit + '.';
-      } else if (type === 'raw' && unit === 'g') {
-        w.value = purityOf(karat); w.disabled = true;
-        hint = `Gold content: ${purityOf(karat)} g per gram of this material.`;
-      } else {
-        if (w.disabled) w.value = '';
-        w.disabled = false;
-        hint = `Grams of gold in 1 ${unit === 'pcs' ? 'piece' : 'unit'} (1 Chi = 3.75 g).`;
-      }
-      w.classList.toggle('opacity-50', w.disabled);
-      byId(prefix + 'WeightHint').textContent = hint;
-      return unit;
-    }
-
-    function readProductFields(prefix, type) {
-      const karat = byId(prefix + 'Karat').value;
-      const unit = byId(prefix + 'Unit').value;
-      const gold = isGoldKarat(karat);
-      let weight = 0;
-      if (gold) weight = (type === 'raw' && unit === 'g') ? purityOf(karat) : (parseFloat(byId(prefix + 'UnitWeight').value) || 0);
-      return { karat, unit, goldWeightGrams: weight, error: (gold && weight <= 0) ? 'A gold product needs a gold weight greater than 0 g.' : '' };
-    }
-
     // Upgrades data saved by an older version of this page
     function migrateState(s) {
       s.products = s.products || [];
@@ -579,6 +548,30 @@
         po.unit = po.unit || 'g';
         po.quantityGrams = po.quantity;   // legacy field still read by the Python assistant
         addSupplier(po.vendor);
+      });
+
+      s.migrationNotes = s.migrationNotes || [];
+      s.manufacturingOrders = s.manufacturingOrders || [];
+      const rawByNature = p => !!p && (p.unit === 'g' || (s.purchaseOrders || []).some(po => po.productId === p.id));
+      s.boms.slice().forEach(b => {
+        const out = s.products.find(p => p.id === b.productId);
+        if (!rawByNature(out)) return;
+        if (s.manufacturingOrders.some(m => m.bomId === b.id && m.status === 'completed')) return;
+        const open = s.manufacturingOrders.filter(m => m.bomId === b.id).length;
+        s.boms = s.boms.filter(x => x.id !== b.id);
+        s.manufacturingOrders = s.manufacturingOrders.filter(m => m.bomId !== b.id);
+        s.migrationNotes.push(`${out.name} is a raw material, so the BOM that made it${open ? ` and ${open} production order(s)` : ''} were removed. It is a raw material again.`);
+      });
+
+      const CASHIER_NAMES = ['Nguyen Bao Tien', 'Nguyen Ngoc Kim Thinh', 'Nguyen Thi Kim Huyen', 'Nguyen Hoang Anh Thi', 'Le Van Anh'];
+      if (!Array.isArray(s.cashiers) || s.cashiers.length === 0) s.cashiers = CASHIER_NAMES.map((name, i) => ({ id: `cash_0${i + 1}`, name }));
+      s.activeCashierSession = s.activeCashierSession || { id: 'sess_01', openTime: '08:00 AM', status: 'open' };
+      if (!s.cashiers.some(c => c.name === s.activeCashierSession.cashierName)) s.activeCashierSession.cashierName = s.cashiers[0].name;
+      (s.customers || []).forEach(c => {
+        c.discountPercent = c.discountPercent || 0;
+        c.purchases = c.purchases || 0;
+        c.totalSpentVnd = c.totalSpentVnd || 0;
+        c.tier = c.tier || 'Regular';
       });
 
       s.posCheckout = s.posCheckout || { customerId: '__walkin__', walkInName: '', discountType: 'percent', discountValue: 0, payment: 'cash' };
@@ -1305,11 +1298,20 @@
     let bomDraft = [];            // holds exactly one component row
     const BOM_NEW = '__new__';
 
+    // Raw materials (counted in grams, or bought from suppliers) can never be the product of a BOM
+    function bomBlockReason(p) {
+      if (unitOf(p) === 'g') return `${p.name} is counted in grams, so it is a raw material and cannot be the product of a BOM. Choose a piece product or create a new one.`;
+      const po = erp.purchaseOrders.find(x => x.productId === p.id);
+      if (po) return `${p.name} is bought from suppliers (${po.code}), so it is a raw material and cannot be made by a BOM.`;
+      return '';
+    }
+
     function openCreateBOMModal() {
       const modal = document.getElementById('actionModal');
       const content = document.getElementById('actionModalContent');
-      const withoutBom = erp.products.filter(p => !erp.boms.some(b => b.productId === p.id));
-      const withBom = erp.products.filter(p => erp.boms.some(b => b.productId === p.id));
+      const makeable = erp.products.filter(p => !bomBlockReason(p));
+      const withoutBom = makeable.filter(p => !erp.boms.some(b => b.productId === p.id));
+      const withBom = makeable.filter(p => erp.boms.some(b => b.productId === p.id));
 
       if (erp.products.length === 0) {
         showNotice('Create a material first (Inventory > New Product), then build a BOM here.', 'error');
@@ -1330,6 +1332,7 @@
           <div>
             <label class="block text-slate-600 font-semibold mb-1">Product to make:</label>
             <select id="bomProduct" onchange="bomProductChanged()" class="${field}">
+              <option value="">- Select a product -</option>
               <option value="${BOM_NEW}">+ Create a new product...</option>
               ${withoutBom.length ? `<optgroup label="Products without a BOM yet">${withoutBom.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}</optgroup>` : ''}
               ${withBom.length ? `<optgroup label="Products already made by a BOM">${withBom.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}</optgroup>` : ''}
@@ -1361,7 +1364,7 @@
         </div>
       `;
       modal.classList.remove('hidden');
-      byId('bomProduct').value = (withoutBom[0] || withBom[0]).id;
+      byId('bomProduct').value = '';
       bomDraft = [];
       bomProductChanged();
     }
@@ -1499,7 +1502,9 @@
         info = { name, price };
       } else {
         prod = erp.products.find(p => p.id === sel);
-        if (!prod) { showNotice('Please choose the product to make.', 'error'); return; }
+        if (!prod) { showNotice('Please choose the product to make, or create a new one.', 'error'); return; }
+        const why = bomBlockReason(prod);
+        if (why) { showNotice(why, 'error'); return; }
       }
 
       const save = () => {
@@ -1839,8 +1844,8 @@
         <div class="space-y-6 animate-fadeIn">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
             <div>
-              <h2 class="text-xl font-bold font-serif text-slate-950">Procurement &amp; Vault Intake (PO)</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Buy any raw material (gold, silver...) from a saved or a new supplier. Received goods go straight to inventory.</p>
+              <h2 class="text-xl font-bold font-serif text-slate-950">Procurement</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Buy raw materials (gold, silver...) from suppliers. Received goods go straight to inventory.</p>
             </div>
             <button onclick="openCreatePOModal()" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs cursor-pointer">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -1913,25 +1918,21 @@
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-slate-600 font-semibold mb-1">Karat purity:</label>
-                  <select id="poNpKarat" onchange="poNewProdChanged(true)" class="${field}">
-                    <option value="24K">24K (9999)</option>
+                  <select id="poNpKarat" onchange="poNewProdChanged()" class="${field}">
+                    <option value="24K" selected>24K (9999)</option>
                     <option value="18K">18K (750)</option>
                     <option value="14K">14K (585)</option>
                     <option value="10K">10K (417)</option>
                     <option value="999">999 (Silver)</option>
-                    <option value="N/A" selected>N/A (non-metal)</option>
+                    <option value="N/A">N/A (non-metal)</option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-slate-600 font-semibold mb-1">Unit of measure:</label>
-                  <select id="poNpUnit" onchange="poNewProdChanged(false)" class="${field}"></select>
+                  <label class="block text-slate-600 font-semibold mb-1">Gold weight per unit (g):</label>
+                  <input type="number" id="poNpUnitWeight" disabled class="${field} font-mono opacity-50">
                 </div>
               </div>
-              <div>
-                <label class="block text-slate-600 font-semibold mb-1">Gold weight per unit (g):</label>
-                <input type="number" id="poNpUnitWeight" min="0" step="any" class="${field} font-mono">
-                <p id="poNpWeightHint" class="text-[10px] text-slate-500 mt-1"></p>
-              </div>
+              <p id="poNpWeightHint" class="text-[10px] text-slate-500"></p>
             </div>
           </div>
 
@@ -1969,8 +1970,11 @@
     }
 
     // Unit of the item being bought (existing product or the new one being typed)
+    // A new raw material bought here is counted in grams (g). Only a non-metal (karat N/A) is counted in units.
+    function poNewProdUnit() { return byId('poNpKarat').value === 'N/A' ? 'units' : 'g'; }
+
     function poCurrentUnit() {
-      return byId('poProd').value === '__new__' ? byId('poNpUnit').value : unitOf(erp.products.find(p => p.id === byId('poProd').value));
+      return byId('poProd').value === '__new__' ? poNewProdUnit() : unitOf(erp.products.find(p => p.id === byId('poProd').value));
     }
 
     function poProductChanged() {
@@ -1985,8 +1989,13 @@
       }
     }
 
-    function poNewProdChanged(reset) {
-      applyProductFieldRules('poNp', 'raw', reset);
+    function poNewProdChanged() {
+      const karat = byId('poNpKarat').value;
+      const gold = isGoldKarat(karat);
+      byId('poNpUnitWeight').value = gold ? purityOf(karat) : 0;
+      byId('poNpWeightHint').textContent = gold
+        ? `Counted in grams (g). Gold content: ${purityOf(karat)} g per gram of this material.`
+        : (karat === '999' ? 'Silver: counted in grams (g), gold weight is 0 g.' : 'Not a metal: counted in units, gold weight is 0 g.');
       poRecalc();
     }
 
@@ -2021,9 +2030,8 @@
         if (!name) { showNotice('Please enter the new raw material name.', 'error'); return; }
         if (!sku) { showNotice('Please enter a SKU for the new raw material.', 'error'); return; }
         if (erp.products.some(p => p.sku.toUpperCase() === sku)) { showNotice(`SKU "${sku}" already exists. Please use a different code.`, 'error'); return; }
-        const f = readProductFields('poNp', 'raw');
-        if (f.error) { showNotice(f.error, 'error'); return; }
-        newProd = { name, sku, ...f };
+        const karat = byId('poNpKarat').value;
+        newProd = { name, sku, karat, unit: poNewProdUnit(), goldWeightGrams: isGoldKarat(karat) ? purityOf(karat) : 0 };
       } else {
         prod = erp.products.find(p => p.id === prodSel);
         if (!prod) { showNotice('Please choose a raw material.', 'error'); return; }
@@ -2109,8 +2117,8 @@
     function posCustomer() {
       const f = erp.posCheckout;
       const c = f.customerId !== WALKIN ? erp.customers.find(x => x.id === f.customerId) : null;
-      if (c) return { id: c.id, name: c.name, phone: c.phone, tier: c.tier, tierDiscount: c.discountPercent };
-      return { id: null, name: cleanText(f.walkInName) || 'Walk-in customer', phone: '', tier: '', tierDiscount: 0 };
+      if (c) return { id: c.id, name: c.name, phone: c.phone, tier: c.tier, tierDiscount: c.discountPercent, purchases: c.purchases || 0, totalSpentVnd: c.totalSpentVnd || 0 };
+      return { id: null, name: cleanText(f.walkInName) || 'Walk-in customer', phone: '', tier: '', tierDiscount: 0, purchases: 0, totalSpentVnd: 0 };
     }
 
     // Discount is its own setting: it does not depend on who the customer is
@@ -2145,11 +2153,7 @@
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100">
               <div class="font-bold text-slate-950 font-mono text-sm mb-2">${p.retailPriceVnd.toLocaleString('en-US')} đ</div>
-              <div class="flex items-center gap-2">
-                <input type="number" id="posQty_${p.id}" value="1" min="1" max="${stock}" step="1" ${stock <= 0 ? 'disabled' : ''} class="w-16 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs font-mono font-bold text-center disabled:opacity-40">
-                <span class="text-[10px] text-slate-400">${u}</span>
-                <button onclick="addToPosCart('${p.id}')" ${stock <= 0 ? 'disabled' : ''} class="ml-auto px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-950 font-bold text-xs cursor-pointer">Add to Cart</button>
-              </div>
+              <button onclick="addToPosCart('${p.id}')" ${stock <= 0 ? 'disabled' : ''} class="w-full px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-950 font-bold text-xs cursor-pointer">Add to Cart</button>
             </div>
           </div>`;
       }).join('');
@@ -2157,9 +2161,10 @@
       const chip = v => `<button onclick="posSetDiscountPreset(${v})" class="px-2.5 py-1 rounded-md text-[10px] font-bold border ${f.discountType === 'percent' && Number(f.discountValue) === v ? 'bg-amber-500 border-amber-500 text-slate-950' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'} cursor-pointer">${v === 0 ? 'None' : v + '%'}</button>`;
 
       const cartHtml = erp.posCart.length === 0
-        ? '<div class="text-center py-6 text-slate-400 text-xs">Cart is empty. Pick a quantity and press Add to Cart.</div>'
+        ? '<div class="text-center py-6 text-slate-400 text-xs">Cart is empty. Press Add to Cart on a product, then set the quantity here.</div>'
         : erp.posCart.map((item, idx) => {
             const p = erp.products.find(x => x.id === item.id);
+            const maxQty = p ? (p.stocks[erp.activeStoreId] || 0) : 0;
             return `
               <div class="p-2 rounded-lg bg-slate-50 text-xs">
                 <div class="flex items-start justify-between gap-2">
@@ -2172,8 +2177,8 @@
                 <div class="mt-1.5 flex items-center justify-between">
                   <div class="flex items-center gap-1">
                     <button onclick="changeCartQty(${idx}, -1)" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold hover:bg-slate-100 cursor-pointer">−</button>
-                    <input type="number" min="1" step="1" value="${item.qty}" onchange="setCartQty(${idx}, this.value)" class="w-12 text-center bg-white border border-slate-200 rounded p-1 font-mono font-bold">
-                    <button onclick="changeCartQty(${idx}, 1)" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold hover:bg-slate-100 cursor-pointer">+</button>
+                    <input type="number" min="1" max="${maxQty}" step="1" value="${item.qty}" onfocus="this.select()" onchange="setCartQty(${idx}, this.value)" class="w-14 text-center bg-white border border-slate-300 rounded p-1 font-mono font-bold">                    <button onclick="changeCartQty(${idx}, 1)" class="w-6 h-6 rounded bg-white border border-slate-200 font-bold hover:bg-slate-100 cursor-pointer">+</button>
+                    <span class="ml-1 text-[10px] text-slate-400">${unitOf(p)} · max ${maxQty}</span>
                   </div>
                   <span class="font-mono font-bold text-slate-900">${posMoney(item.price * item.qty)}</span>
                 </div>
@@ -2191,15 +2196,31 @@
               <span class="text-xs text-slate-400 font-mono">${erp.posCart.length} items</span>
             </div>
 
+            <div class="mt-3 space-y-1">
+              <label class="block text-[11px] text-slate-500 font-medium">Cashier:</label>
+              <div class="flex items-center gap-2">
+                <select onchange="posSetCashier(this.value)" class="${field}">
+                  ${erp.cashiers.map(c => `<option value="${c.id}" ${c.name === erp.activeCashierSession.cashierName ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
+                </select>
+                <button onclick="openAddCashierModal()" title="Add a cashier" class="shrink-0 w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 hover:bg-amber-100 text-slate-600 flex items-center justify-center cursor-pointer"><i data-lucide="user-plus" class="w-4 h-4"></i></button>
+              </div>
+            </div>
+
             <div class="mt-3 space-y-2">
               <label class="block text-[11px] text-slate-500 font-medium">Customer:</label>
-              <select onchange="posSetCustomer(this.value)" class="${field}">
-                <option value="${WALKIN}" ${f.customerId === WALKIN ? 'selected' : ''}>Walk-in customer (type a name)</option>
-                ${erp.customers.map(c => `<option value="${c.id}" ${f.customerId === c.id ? 'selected' : ''}>${c.name} · ${c.tier} member</option>`).join('')}
-              </select>
+              <div class="flex items-center gap-2">
+                <select onchange="posSetCustomer(this.value)" class="${field}">
+                  <option value="${WALKIN}" ${f.customerId === WALKIN ? 'selected' : ''}>Walk-in customer</option>
+                  ${erp.customers.map(c => `<option value="${c.id}" ${f.customerId === c.id ? 'selected' : ''}>${esc(c.name)}${c.phone ? ' · ' + esc(c.phone) : ''}</option>`).join('')}
+                </select>
+                <button onclick="openAddCustomerModal()" title="Add a customer (saved permanently)" class="shrink-0 w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 hover:bg-amber-100 text-slate-600 flex items-center justify-center cursor-pointer"><i data-lucide="user-plus" class="w-4 h-4"></i></button>
+              </div>
               ${f.customerId === WALKIN
                 ? `<input type="text" placeholder="Customer name (optional)" value="${esc(f.walkInName || '')}" oninput="erp.posCheckout.walkInName = this.value" class="${field}">`
-                : `<div class="flex items-center justify-between text-[11px] text-slate-500"><span>${cust.phone} · ${cust.tier} tier</span><button onclick="posApplyTier()" class="font-bold text-amber-700 hover:text-amber-900 cursor-pointer">Apply ${cust.tierDiscount}% member discount</button></div>`}
+                : `<div class="text-[11px] text-slate-500 space-y-1">
+                     <div class="flex items-center justify-between"><span>${esc(cust.phone || 'No phone')} · ${esc(cust.tier)} tier</span>${cust.tierDiscount > 0 ? `<button onclick="posApplyTier()" class="font-bold text-amber-700 hover:text-amber-900 cursor-pointer">Apply ${cust.tierDiscount}% member discount</button>` : ''}</div>
+                     <div class="text-slate-400">${cust.purchases} purchase(s) · ${posMoney(cust.totalSpentVnd)} spent</div>
+                   </div>`}
             </div>
 
             <div class="mt-3">
@@ -2237,7 +2258,7 @@
               <span>Total Payable:</span>
               <span class="font-mono text-base text-amber-600" id="posTotal">0 đ</span>
             </div>
-            <button onclick="executePOSCheckout()" ${erp.posCart.length === 0 ? 'disabled' : ''} class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-bold text-xs shadow-xs cursor-pointer">Complete Checkout &amp; Deduct Stock</button>
+            <button onclick="executePOSCheckout()" ${erp.posCart.length === 0 ? 'disabled' : ''} class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-40 text-slate-950 font-bold text-xs shadow-xs cursor-pointer">Checkout</button>
           </div>
         </div>`;
 
@@ -2281,7 +2302,7 @@
           <div class="lg:col-span-2 space-y-4">
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
               <div>
-                <span class="text-[10px] text-slate-400 uppercase font-mono block">Active Boutique Terminal</span>
+                <span class="text-[10px] text-slate-400 uppercase font-mono block">CHOOSE A STORE</span>
                 <div class="font-bold text-sm text-slate-900">${storeWh?.name}</div>
               </div>
               <select onchange="erp.activeStoreId=this.value; saveState(); renderActiveTab();" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold">
@@ -2300,8 +2321,7 @@
     function addToPosCart(prodId) {
       const prod = erp.products.find(p => p.id === prodId);
       if (!prod) return;
-      const input = byId('posQty_' + prodId);
-      const qty = Math.floor(parseFloat(input ? input.value : 1)) || 1;
+      const qty = 1;   // the quantity is typed in the Store Checkout Register
       const stock = prod.stocks[erp.activeStoreId] || 0;
       const existing = erp.posCart.find(i => i.id === prodId);
       const inCart = existing ? existing.qty : 0;
@@ -2347,6 +2367,118 @@
     function posSetDiscountValue(v) { erp.posCheckout.discountValue = v; calculatePOSCartTotals(); }
     function posSetDiscountPreset(p) { erp.posCheckout.discountType = 'percent'; erp.posCheckout.discountValue = p; renderActiveTab(); }
     function posApplyTier() { posSetDiscountPreset(posCustomer().tierDiscount); }
+    function posSetCashier(id) {
+      const c = erp.cashiers.find(x => x.id === id);
+      if (c) { erp.activeCashierSession.cashierName = c.name; saveState(); }
+    }
+
+    // ---------- add a customer / cashier (saved permanently) ----------
+    const CUSTOMER_TIERS = { Regular: 0, Gold: 3, Diamond: 5 };
+
+    function openAddCustomerModal() {
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      const field = 'w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs';
+      content.style.maxWidth = '32rem';
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="user-plus" class="w-4 h-4 text-amber-600"></i>
+              <span>Add Customer</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Full name:</label>
+            <input type="text" id="custName" placeholder="e.g. Ms. Le Thi Mai" class="${field}">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Phone:</label>
+              <input type="text" id="custPhone" placeholder="0901-234-567" class="${field} font-mono">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-semibold mb-1">Email (optional):</label>
+              <input type="text" id="custEmail" placeholder="name@email.com" class="${field}">
+            </div>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Membership tier:</label>
+            <select id="custTier" class="${field}">
+              ${Object.entries(CUSTOMER_TIERS).map(([t, d]) => `<option value="${t}">${t}${d ? ` (${d}% member discount)` : ' (no member discount)'}</option>`).join('')}
+            </select>
+          </div>
+          <p class="text-[10px] text-slate-500">The customer is saved in the system and can be picked again for every future sale.</p>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executeAddCustomer()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Save Customer</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function executeAddCustomer() {
+      const name = cleanText(byId('custName').value);
+      const phone = cleanText(byId('custPhone').value);
+      const email = cleanText(byId('custEmail').value);
+      const tier = byId('custTier').value;
+      if (!name) { showNotice('Please enter the customer name.', 'error'); return; }
+      if (phone && !/^[0-9+\-\s().]{8,20}$/.test(phone)) { showNotice('Please enter a valid phone number.', 'error'); return; }
+      const digits = v => String(v || '').replace(/\D/g, '');
+      if (phone && erp.customers.some(c => digits(c.phone) === digits(phone))) { showNotice('A customer with this phone number already exists.', 'error'); return; }
+      if (!phone && erp.customers.some(c => c.name.toLowerCase() === name.toLowerCase())) { showNotice('A customer with this name already exists. Add a phone number to tell them apart.', 'error'); return; }
+
+      const c = { id: `cust_${Date.now()}`, name, phone, email, tier, discountPercent: CUSTOMER_TIERS[tier] || 0,
+                  purchases: 0, totalSpentVnd: 0, createdAt: new Date().toLocaleDateString('en-GB') };
+      erp.customers.push(c);
+      erp.posCheckout.customerId = c.id;
+      saveState();
+      closeActionModal();
+      renderActiveTab();
+      showNotice(`${name} was saved to the customer list and selected for this sale.`, 'success');
+    }
+
+    function openAddCashierModal() {
+      const modal = document.getElementById('actionModal');
+      const content = document.getElementById('actionModalContent');
+      content.style.maxWidth = '28rem';
+      content.innerHTML = `
+        <div class="space-y-4 text-xs">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i data-lucide="user-plus" class="w-4 h-4 text-amber-600"></i>
+              <span>Add Cashier</span>
+            </h3>
+            <button onclick="closeActionModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <div>
+            <label class="block text-slate-600 font-semibold mb-1">Cashier full name:</label>
+            <input type="text" id="cashName" placeholder="e.g. Tran Van B" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs">
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button onclick="closeActionModal()" class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Cancel</button>
+            <button onclick="executeAddCashier()" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold cursor-pointer">Save Cashier</button>
+          </div>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function executeAddCashier() {
+      const name = cleanText(byId('cashName').value);
+      if (!name) { showNotice('Please enter the cashier name.', 'error'); return; }
+      if (erp.cashiers.some(c => c.name.toLowerCase() === name.toLowerCase())) { showNotice('This cashier already exists.', 'error'); return; }
+      erp.cashiers.push({ id: `cash_${Date.now()}`, name });
+      erp.activeCashierSession.cashierName = name;
+      saveState();
+      closeActionModal();
+      renderActiveTab();
+      showNotice(`${name} was added and selected as the cashier.`, 'success');
+    }
 
     function calculatePOSCartTotals() {
       const { subtotal, discount, total } = posTotals();
@@ -2395,11 +2527,13 @@
       });
 
       erp.salesTodayVnd += total;
+      const saved = cust.id && erp.customers.find(c => c.id === cust.id);
+      if (saved) { saved.purchases = (saved.purchases || 0) + 1; saved.totalSpentVnd = (saved.totalSpentVnd || 0) + total; }
       erp.posReceipt = {
         no,
         time: stamp.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
         store: storeWh?.name || '',
-        cashier: erp.activeCashierSession?.cashierName || 'Cashier',
+        cashier: erp.activeCashierSession.cashierName,
         customer: cust.name + (cust.tier ? ` (${cust.tier})` : ''),
         paymentLabel: PAYMENT_LABELS[f.payment] || 'Cash',
         items, subtotal, discount, total,
@@ -3080,9 +3214,12 @@
 
     // Initialize on DOM load
     window.addEventListener('DOMContentLoaded', () => {
+      const notes = erp.migrationNotes || [];
+      erp.migrationNotes = [];
       saveState();
       switchTab('inventory');
       lucide.createIcons();
+      if (notes.length) showNotice(notes.join('\n'), 'info');
     });
   </script>
 </body>

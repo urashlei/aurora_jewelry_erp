@@ -8,14 +8,174 @@ import os
 import re
 import json
 import unicodedata
+from google import genai
 import urllib.request
 import urllib.error
+
+import time
+import random
+
+import socket
+from pathlib import Path
 
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
+    pass   # handled below: _find_setting() reads the .env file itself
+
+# ---------------------------------------------------------------------------
+# Gemini connection: key / model lookup, error reporting, self-healing model choice
+# ---------------------------------------------------------------------------
+_KEY_NAMES = ("GEMINI_API_KEY", "GOOGLE_API_KEY")
+_PLACEHOLDERS = {"", "MY_GEMINI_API_KEY", "YOUR_API_KEY", "YOUR_GEMINI_API_KEY", "PASTE_YOUR_KEY_HERE"}
+DEFAULT_MODELS = [
+    "gemini-3.5-flash",
+    "gemini-flash-latest",
+    "gemini-3.8-flash",
+]
+_WORKING_MODEL = ""          # last model that answered, tried first next time
+_LAST_STATUS = {}            # what the last call did (for /api/ai/status)
+
+
+def _parse_env_file(path):
+    """Tiny .env reader (KEY=VALUE, quotes, comments, 'export'). Used when python-dotenv is missing."""
+    values = {}
+    try:
+        text = Path(path).read_text(encoding="utf-8-sig")
+    except OSError:
+        return values
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        if line.lower().startswith("export "):
+            line = line[7:].strip()
+        k, v = line.split("=", 1)
+        v = v.strip()
+        if v[:1] in ("\"", "'") and v.find(v[0], 1) > 0:
+            v = v[1:v.find(v[0], 1)]                 # quoted: keep what is inside the quotes
+        elif " #" in v:
+            v = v.split(" #", 1)[0].strip()          # unquoted: drop a trailing comment
+        values[k.strip()] = v.strip()
+    return values
+
+
+def _env_folders():
+    here = Path(__file__).resolve().parent
+    seen, out = set(), []
+    for f in (here, here.parent, Path.cwd()):
+        if f not in seen:
+            seen.add(f)
+            out.append(f)
+    return out
+
+
+def _find_setting(names, skip=()):
+    """Returns (value, where) from the environment first, then from .env files. Re-read on every call."""
+    for name in names:
+        v = os.environ.get(name, "").strip()
+        if v and v not in skip:
+            return v, f"environment variable {name}"
+    for folder in _env_folders():
+        f = folder / ".env"
+        if f.is_file():
+            vals = _parse_env_file(f)
+            for name in names:
+                v = vals.get(name, "").strip()
+                if v and v not in skip:
+                    return v, f"{f} ({name})"
+    return "", ""
+
+
+def _find_api_key():
+    return _find_setting(_KEY_NAMES, skip=_PLACEHOLDERS)
+
+
+class GeminiError(Exception):
+    """Gemini could not be used. `hint` explains how to fix it (in Vietnamese)."""
+    def __init__(self, message, hint=""):
+        super().__init__(message)
+        self.hint = hint
+
+
+def _generate_sdk(api_key, model, prompt):
+    """
+    Gọi Gemini qua SDK google-genai.
+    Key AQ. phải được gửi đến endpoint AI Studio (generativelanguage.googleapis.com),
+    KHÔNG phải Vertex AI (aiplatform.googleapis.com).
+    """
+    from google import genai
+    from google.genai import types
+
+    # Cách 1: Truyền api_key trực tiếp (khuyến nghị cho key AQ. từ AI Studio)
+    client = genai.Client(api_key=api_key)
+
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.2,
+            top_p=0.8,
+            max_output_tokens=4096,
+        ),
+    )
+
+    if not response.text:
+        raise Exception("Empty Gemini response")
+
+    return response.text
+
+class _HTTPFail(Exception):
+    def __init__(self, code, message):
+        super().__init__(message)
+        self.code, self.message = code, message
+
+
+class _EmptyReply(Exception):
     pass
+
+
+def _error_message(body):
+    try:
+        err = json.loads(body).get("error", {})
+        return f"{err.get('status', '')} {err.get('message', '')}".strip() or body[:200]
+    except Exception:
+        return (body or "")[:200]
+
+def _hint_for(code, message):
+    m = (message or "").lower()
+    if "api key not valid" in m or "api_key_invalid" in m or "api key expired" in m:
+        return "API key sai, hết hạn hoặc đã bị thu hồi. Tạo key mới tại aistudio.google.com/apikey rồi dán vào .env: GEMINI_API_KEY=..."
+    if "location is not supported" in m or "user location" in m:
+        return "Khu vực/mạng hiện tại chưa được hỗ trợ cho Gemini API (hoặc gói miễn phí). Bật thanh toán cho project hoặc dùng mạng ở khu vực được hỗ trợ."
+    if code in (401, 403):
+        return "Key bị từ chối. Kiểm tra key còn hiệu lực và project đã bật Generative Language API (tạo key mới trong AI Studio là cách nhanh nhất)."
+    if code == 404:
+        return "Tên model không tồn tại với key này. Hệ thống đã tự thử model khác; nếu vẫn lỗi hãy đặt GEMINI_MODEL trong .env (xem /api/ai/status để biết model khả dụng)."
+    if code == 429:
+        return "Hết hạn mức (quota) hoặc gọi quá nhanh. Đợi 1 phút rồi thử lại, hoặc bật thanh toán cho project."
+    if code and code >= 500:
+        return "Máy chủ Google đang lỗi tạm thời. Thử lại sau."
+    return "Xem chi tiết lỗi ở cửa sổ chạy server."
+
+def gemini_status():
+    """Quick self-test for /api/ai/status: is a key found, and does a tiny request work?"""
+    key, where = _find_api_key()
+    info = {"key_found": bool(key), "key_source": where or "not found",
+            "key_preview": ("..." + key[-4:]) if key else "",
+            "searched_env_folders": [str(f) for f in _env_folders()],
+            "model_setting": _find_setting(("GEMINI_MODEL",))[0] or "(default list: " + ", ".join(DEFAULT_MODELS) + ")"}
+    if not key:
+        info.update(ok=False, error="No API key found.", hint="Tạo file .env cạnh thư mục backend (hoặc cùng thư mục với ai_agent.py) với dòng GEMINI_API_KEY=... rồi chạy lại server.")
+        return info
+    try:
+        text, model = _call_gemini(key, {"contents": [{"role": "user", "parts": [{"text": "Reply with the single word OK."}]}],
+                                          "generationConfig": {"maxOutputTokens": 64, "temperature": 0}})
+        info.update(ok=True, model=model, reply=text[:60])
+    except GeminiError as e:
+        info.update(ok=False, error=str(e)[:500], hint=e.hint)
+    return info
 
 # ---------------------------------------------------------------------------
 # Business Constants & Conversion Standards
@@ -31,45 +191,48 @@ DEFAULT_BENCHMARK_PRICE = 88500000  # Default SJC 9999 (VND/Tael)
 # System Instruction (Executive BI Decision Support)
 # ---------------------------------------------------------------------------
 SYSTEM_INSTRUCTION = """
-Bạn là Aurora Operations & Executive Decision Copilot - Trợ lý Trí tuệ Doanh nghiệp cấp cao dành cho Ban Điều hành (CEO, COO, CFO, Quản lý chuỗi) của hệ thống AURORA JEWELRY.
+RESPONSE PRINCIPLES (MANDATORY):
+1. FOCUSED — CONCISE — DECISION-READY:
+   - Answer the question directly. Do NOT ramble, do NOT list everything you know.
+   - Ideal length: 3-8 lines for simple lookups; 15 lines max for complex analysis.
+   - Every reply must cover: (a) current state, (b) the actual numbers, (c) the recommended next action.
+   - Do NOT repeat the user's question back, do NOT re-greet, do NOT open with filler.
 
-KIẾN THỨC TOÀN DIỆN VỀ NGHIỆP VỤ & PHÂN HỆ AURORA JEWELRY ERP:
-1. Mạng lưới Kho báu & Showroom:
-   - WH-MW (Kho Trung tâm & Nhà máy Đúc Gò Vấp): Lưu trữ vàng thô nguyên khối (24K AU9999, 18K AU750, Bạc 999), thực hiện đúc trang sức theo BOM.
-   - WH-PN (Cửa hàng Flagship Phú Nhuận) & WH-Q1 (Showroom Quận 1): Trưng bày và bán lẻ trang sức thành phẩm (Nhẫn Kim Tiền 24K, Nhẫn Kim Cương Solitaire 18K,...).
-2. Quản trị Giá Vàng & Nguồn Tham Chiếu:
-   - SJC chỉ là MỘT nguồn giá tham chiếu trên thị trường (88.5M đ/lượng), KHÔNG PHẢI là nhà cung cấp mặc định duy nhất của doanh nghiệp.
-   - Hệ thống hỗ trợ nhiều nguồn giá tham chiếu độc lập: SJC 9999 (88.5M), DOJI 9999 (88.2M), PNJ 9999 (88.6M), Giá Spot Thế giới Kitco quy đổi (63.2M), Tỷ giá Tham chiếu NHNN (87.8M).
-   - Giá tham chiếu phục vụ định giá danh mục tài sản, kiểm soát rủi ro biến động và tính độ nhạy (Sensitivity ±1% và ±5%).
-3. Phân hệ Mua sắm (Procurement) & Cơ chế Giá riêng theo Nhà cung cấp (NCC):
-   - Doanh nghiệp mua nguyên liệu từ nhiều đối tác với bảng giá và điều khoản đàm phán riêng, KHÔNG áp dụng một mức giá cố định:
-     * DOJI Gold & Gems Group: Chuyên hạt đúc vàng 24K (2,352,000 đ/g, chiết khấu sỉ -8,000 đ/g so với giá chuẩn).
-     * Phu Quy Precious Metals: Cung ứng vàng 24K (2,356,000 đ/g), vàng 18K (1,680,000 đ/g) và Bạc 999 cạnh tranh (28,000 đ/g).
-     * SJC Gold Corporation: Cung cấp vàng miếng 24K chuẩn quốc gia (2,360,000 đ/g).
-     * PNJ Material Supply: Cung cấp hợp kim hội đúc (Master Alloy) chuẩn Ý 18K (1,685,000 đ/g), 24K (2,365,000 đ/g).
-     * Heraeus Precious Metals Vietnam: Cung ứng vàng hạt đúc chuẩn LBMA quốc tế (2,358,000 đ/g), Bạc 999 (27,800 đ/g).
-     * Viet Tin GIA Diamond Importers: Nhập khẩu kim cương kiểm định GIA và ổ chấu cao cấp.
-4. Phân hệ Sản xuất & Đúc (Manufacturing):
-   - Định mức Bill of Materials (BOM) và hệ số hao hụt đúc định mức chuẩn là 1.87%.
-   - Trạng thái Lệnh sản xuất (MO): confirmed, in_progress, completed, not_available (thiếu nguyên liệu).
-5. Phân hệ Bán lẻ & POS:
-   - Bán hàng tại showroom, áp dụng hạng thành viên (Regular, Gold -3%, Diamond -5%), hóa đơn điện tử bảo hành tuổi vàng.
-6. BI Dashboard & Hỗ trợ Ra Quyết định (5 Phân hệ cốt lõi):
-   - Vị thế Vàng Ròng (Net Gold Exposure): Tồn kho két + Trưng bày cửa hàng + Đơn PO đang về - Đơn đặt trước.
-   - Ma trận Độ nhạy (Sensitivity Matrix): Đo lường biến động P&L danh mục khi giá vàng thị trường thay đổi ±1% hoặc ±5% theo từng nguồn giá tham chiếu.
-   - Ma trận Phân quyền & Duyệt 1-Click (Prescriptive Governance): Cửa hàng trưởng (≤ 50 triệu đ), Giám đốc Vận hành COO (50 - 300 triệu đ), Giám đốc Tài chính CFO (> 300 triệu đ).
-   - Dự báo Nhu cầu & Đo lường Sai số: WAPE, MAPE, Tracking Signal, Bias qua các kịch bản mùa vụ (Vía Thần Tài, Mùa cưới, Cận Tết, Tăng trưởng cơ sở).
-   - Kiểm soát Sai lệch & Kiểm kê Mù (Data Governance & Blind Audit): Quy trình đối soát 3 cấp (≤ ±0.005g dung sai cân phân tích; 0.005g - 0.5g cân lại 2 lần; > 0.5g lập biên bản đối soát kép Cửa hàng trưởng + Kiểm soát nội bộ và rà soát camera).
-   - Ma trận Tồn kho Cửa hàng: Cảnh báo đứt hàng theo Days of Inventory (DOI) và đề xuất lệnh điều chuyển cân bằng.
+2. CONSISTENT FORMATTING (MANDATORY):
+   - Simple markdown only: **bold** for key figures, `-` for bullets, numbered list for steps.
+   - Do NOT use `#` or `##` headings inside chat replies — reserve them only for very long multi-section answers.
+   - Do NOT use markdown tables unless >=3 columns of data genuinely need comparison.
+   - Currency: comma thousands (e.g. 88,500,000 VND), no "88.5M" unless asked for an overview.
+   - Gold weight: 2 decimals for tael/luong (e.g. 61.87 tael), 1 decimal for grams (e.g. 2,320.0 g).
+   - Max 3 sections per reply. No more.
 
-NGUYÊN TẮC TRẢ LỜI CỦA AI:
-- BÁM SÁT SỐ LIỆU THỰC TẾ: Trả lời hoàn toàn dựa trên dữ liệu ERP truyền vào trong BUSINESS DATA. Không tự bịa đặt, suy diễn số liệu ngoài hệ thống.
-- LINH HOẠT, TỰ NHIÊN, ĐÚNG TRỌNG TÂM: Tuyệt đối KHÔNG trả lời theo khuôn mẫu cứng nhắc, không lặp lại nguyên văn các tiêu đề cố định nếu không cần thiết. Trả lời trực diện vào câu hỏi của nhà quản trị (phân tích, so sánh, khuyến nghị hành động, chỉ rõ số liệu).
-- TẬP TRUNG HOÀN TOÀN VÀO ĐIỀU HÀNH THỰC TẾ: Tuyệt đối không đề cập đến bài tập lý thuyết, học phần, hay đồ án trường lớp. Đây là hệ thống điều hành doanh nghiệp thương mại thực tế.
-- XỬ LÝ CÂU HỎI NGOÀI PHẠM VI (OUT OF SCOPE): Nếu người dùng hỏi những câu hỏi hoàn toàn không liên quan đến hệ thống Aurora Jewelry ERP (như hỏi thời tiết, nấu ăn, lập trình bài tập ngoài, tin tức xã hội, chuyện phiếm cá nhân...), hãy từ chối lịch sự và giải thích rằng Aurora AI Copilot hiện chỉ hỗ trợ các nghiệp vụ, dữ liệu và quyết định quản trị trong hệ thống Aurora Jewelry ERP.
-- ĐA NGÔN NGỮ:
-  * Nếu người dùng hỏi bằng tiếng Việt: Trả lời bằng tiếng Việt chuyên nghiệp, ngôn ngữ quản trị điều hành doanh nghiệp.
-  * Nếu người dùng hỏi bằng tiếng Anh: Trả lời hoàn toàn bằng tiếng Anh chuyên nghiệp (Executive English).
+3. GROUNDED IN LIVE DATA:
+   - Only use the BUSINESS DATA provided. Never invent figures.
+   - If the requested data is empty, say "No data available for X in the system" — do NOT speculate.
+
+4. OUT-OF-SCOPE QUERIES:
+   - If the question is entirely unrelated to Aurora Jewelry ERP (weather, cooking, social news, schoolwork, etc.): refuse in 1-2 sentences, then suggest one relevant ERP topic they could ask instead. Do NOT give a long explanation of "I am an AI that only supports...".
+
+5. LANGUAGE:
+   - User asks in Vietnamese → answer in Vietnamese (professional tone, "tôi" — "anh/chị").
+   - User asks in English → answer in English (executive tone, no academic phrasing).
+
+6. GOOD EXAMPLE (focused, decision-ready):
+   Q: "What is our current net gold position?"
+   A: "**Net gold position: 61.87 tael (2,320.0 g)** — 2,200 g sits in WH-MW vault, the rest across two boutiques.
+   - ±1% price sensitivity: **±547,800 VND**.
+   - Main risk: SJC benchmark near its peak (88.5M/tael) → consider partial bullion liquidation.
+   Want me to run the ±5% stress test?"
+
+7. BAD EXAMPLE (verbose — DO NOT do this):
+   "Hello! Thank you for asking about net gold position. This is a very important topic in risk management..."
+   → Wrong because: it re-greets, opens with filler, and does not answer directly.
+
+8. SELF-CHECK BEFORE SENDING:
+   - Is the reply > 15 lines? If yes, CUT — keep only the 3 most important facts.
+   - Any unnecessary greeting or intro line? If yes, DELETE it.
+   - Does it contain concrete numbers from BUSINESS DATA? If not, ADD them.
+   - Does it end with a clear next action or follow-up question? If not, ADD one.
 """
 
 # ---------------------------------------------------------------------------
@@ -503,23 +666,9 @@ def _build_gemini_payload(message, history, facts):
         "generationConfig": {
             "temperature": 0.2,
             "topP": 0.8,
-            "maxOutputTokens": 2048,
+            "maxOutputTokens": 4096,
         },
     }
-
-
-def _call_gemini(api_key, payload):
-    model = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
-    )
-    with urllib.request.urlopen(req, timeout=90) as response:
-        result = json.loads(response.read().decode("utf-8"))
-    parts = (result.get("candidates") or [{}])[0].get("content", {}).get("parts", [])
-    return "".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 
 
 # ---------------------------------------------------------------------------
@@ -876,37 +1025,72 @@ def _local_reply(message, facts):
     )
 
 
-# ---------------------------------------------------------------------------
-# Public Entrypoint
-# ---------------------------------------------------------------------------
 def ask_gemini_or_local(message: str, history: list = None, erp_context: dict = None) -> dict:
     ctx = erp_context or {}
     message = (message or "").strip()
     facts = build_facts(ctx) or _legacy_facts(ctx)
 
-    # If message is clearly out-of-scope, reject immediately with polite guidance
-    if _detect_intent(message) == "out_of_scope":
-        return {"source": "aurora_copilot", "reply": _local_reply(message, facts)}
+    intent = _detect_intent(message)
+    print("MESSAGE =", message)
+    print("INTENT =", intent)
+    print("HISTORY SIZE =", len(history or []))
 
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    if api_key and api_key != "MY_GEMINI_API_KEY":
+    api_key, key_source = _find_api_key()
+    reason = ""
+
+    if api_key:
         try:
             payload = _build_gemini_payload(message, history, facts)
-            reply = _call_gemini(api_key, payload)
-            if reply:
-                print("[AI Agent] Source: GEMINI")
-                return {"source": "gemini", "reply": reply}
-            print("[AI Agent] Gemini returned an empty reply. Using local engine.")
-        except urllib.error.HTTPError as e:
-            detail = ""
-            try:
-                detail = e.read().decode("utf-8")[:300]
-            except Exception:
-                pass
-            print(f"[AI Agent] Gemini HTTP {e.code}: {detail}. Using local engine.")
-        except Exception as e:
-            print(f"[AI Agent] Gemini call failed: {e}. Using local engine.")
-    else:
-        print("[AI Agent] No API key. Using local engine.")
+            prompt = f"{SYSTEM_INSTRUCTION}\n\nBUSINESS DATA:\n{json.dumps(facts, ensure_ascii=False)}\n\nQUESTION:\n{message}"
 
-    return {"source": "local_fallback", "reply": _local_reply(message, facts)}
+            env_model = _find_setting(("GEMINI_MODEL",))[0]
+            models_to_try = []
+            if env_model:
+                models_to_try.append(env_model)
+            for m in DEFAULT_MODELS:
+                if m not in models_to_try:
+                    models_to_try.append(m)
+
+            last_error = None
+            for model in models_to_try:
+                for attempt in range(2):
+                    try:
+                        print(f"[AI Agent] Trying model = {model} (attempt {attempt + 1}) ...")
+                        reply = _generate_sdk(api_key, model, prompt)
+                        _LAST_STATUS.update(ok=True, model=model, error="")
+                        print(f"[AI Agent] ✅ Gemini OK (model={model})")
+                        return {"source": "gemini", "model": model, "reply": reply}
+                    except Exception as e:
+                        err_str = str(e)
+                        is_503 = "503" in err_str or "UNAVAILABLE" in err_str
+                        print(f"[AI Agent] ❌ {model} attempt {attempt + 1} failed -> {e}")
+                        last_error = e
+                        if is_503 and attempt == 0:
+                            wait = 2 + random.uniform(0, 1)
+                            print(f"[AI Agent] 503 detected, retrying in {wait:.1f}s ...")
+                            time.sleep(wait)
+                        else:
+                            break
+
+            reason = f"All models failed after retries. Last error: {last_error}"
+            _LAST_STATUS.update(ok=False, error=reason)
+            print(f"[AI Agent] {reason}")
+
+        except Exception as e:
+            reason = f"unexpected error: {type(e).__name__}: {e}"
+            _LAST_STATUS.update(ok=False, error=reason)
+            print(f"[AI Agent] {reason}")
+    else:
+        reason = (
+            "No API key found (looked for GEMINI_API_KEY / GOOGLE_API_KEY in environment "
+            f"and .env files in: {[str(f) for f in _env_folders()]})."
+        )
+        print(f"[AI Agent] {reason}")
+
+    # 🔴 QUAN TRỌNG: LUÔN trả về fallback local khi Gemini không dùng được
+    print(f"[AI Agent] RETURNING LOCAL FALLBACK. Reason: {reason}")
+    return {
+        "source": "local_fallback",
+        "reply": _local_reply(message, facts),
+        "gemini_error": reason
+    }

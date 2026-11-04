@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AURORA Jewelry ERP</title>
-  <meta name="description" content="Enterprise ERP & AI Gold Decision Copilot for AURORA Jewelry">
+  <meta name="description" content="Enterprise ERP & AI Gold Decision for AURORA Jewelry">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -153,14 +153,14 @@
     <!-- View modules will be dynamically injected here -->
   </main>
 
-  <!-- ================= FLOATING AI COPILOT CHATBOT ================= -->
+  <!-- ================= FLOATING AI CHATBOT ================= -->
   <!-- Floating Button -->
   <button id="aiChatOpenBtn" onclick="toggleAIChat(true)" class="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-slate-950 font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all border border-amber-300 cursor-pointer">
     <div class="relative">
       <i data-lucide="bot" class="w-5 h-5 text-slate-950"></i>
       <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white animate-pulse"></span>
     </div>
-    <span class="font-serif text-sm tracking-wide">AI Copilot</span>
+    <span class="font-serif text-sm tracking-wide">Aurora Chatbot</span>
   </button>
 
   <!-- Floating Chat Window -->
@@ -173,7 +173,7 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h3 class="font-serif font-bold text-sm text-amber-300">Aurora AI Copilot</h3>
+            <h3 class="font-serif font-bold text-sm text-amber-300">Aurora Chatbot</h3>
             <span class="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-400/30">Active</span>
           </div>
           <p class="text-[11px] text-slate-400">Executive Decision Support &amp; Gold Risk Advisor</p>
@@ -3809,7 +3809,7 @@
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div class="flex items-center gap-2">
-                <h2 class="text-xl font-bold font-serif text-slate-950">Enterprise BI Dashboard & Decision Copilot</h2>
+                <h2 class="text-xl font-bold font-serif text-slate-950">Enterprise BI Dashboard</h2>
               </div>
               <p class="text-xs text-slate-500 mt-0.5">Executive Decision Support System: Net gold position, WAPE/MAPE forecasting, multi-tier approval governance, and audit reconciliation</p>
             </div>
@@ -3840,7 +3840,8 @@
         win.classList.remove('hidden');
         btn.classList.add('hidden');
         if (chatHistory.length === 0) {
-          addChatMessage('assistant', `Hello! I am your **Aurora AI Decision Copilot**.\n\nI can assist you with:\n- **Balancing physical gold positions** and bullion volatility hedging.\n- **Detecting boutique stockout vulnerabilities** across retail nodes.\n- **Forecasting seasonal surges** for Tet and the God of Wealth festival.\n- **Multi-source gold benchmarks** (SJC, DOJI, PNJ, Kitco) and ±1% portfolio sensitivity.\n- **Multi-supplier procurement pricing** and optimal casting material sourcing.\n\n*Click on any suggested topic or type a question below!*`);
+          // Đã sửa thành tiếng Anh, ngắn gọn, đúng trọng tâm
+          addChatMessage('assistant', `Hi — I'm the **Aurora Chatbot** for this ERP.\n\nI can pull up live operational data, analyze metrics, and suggest next actions.\n\nWhat would you like to look at first?`);
         }
       } else {
         win.classList.add('hidden');
@@ -3856,15 +3857,27 @@
 
         const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         const badge = source ? ` · ${source === 'gemini' ? 'Gemini 3.6 Flash' : 'Aurora Local Engine'}` : '';
-
         const html = text
             .trim()
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/### (.*?)(\n|$)/g, '<h4 class="font-bold text-slate-950 mb-1">$1</h4>');
+            // Heading
+            .replace(/^### (.+)$/gm, '<h4 class="font-bold text-slate-950 mt-2 mb-1">$1</h4>')
+            .replace(/^## (.+)$/gm, '<h3 class="font-bold text-slate-950 mt-2 mb-1">$1</h3>')
+            // Bold
+            .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold text-slate-950">$1</strong>')
+            // Italic
+            .replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em class="italic text-slate-600">$1</em>')
+            // Gạch đầu dòng (-)
+            .replace(/^- (.+)$/gm, '<span class="block ml-3 before:content-[\'•\'] before:mr-2 before:text-amber-600">$1</span>')
+            // Số thứ tự (1. 2. 3.)
+            .replace(/^(\d+)\. (.+)$/gm, '<span class="block ml-3"><span class="inline-block w-4 font-mono font-bold text-amber-700">$1.</span>$2</span>')
+            // Xuống dòng
+            .replace(/\n/g, '<br>')
+            // Dọn thẻ br thừa sau khối
+            .replace(/<\/(span|h[34])><br>/g, '</$1>');
 
         const bubbleClass = role === 'user'
             ? 'bg-amber-500 text-slate-950 font-medium rounded-tr-xs shadow-xs'
-            : 'bg-white text-slate-800 border border-slate-200 rounded-tl-xs shadow-xs';
+            : 'bg-white text-slate-800 border border-slate-200 rounded-tl-xs shadow-xs leading-relaxed';
 
         msgDiv.innerHTML =
             `<div style="width: fit-content; max-width: 85%;" class="p-3.5 rounded-2xl leading-relaxed whitespace-pre-wrap break-words ${bubbleClass}">${html}</div>` +
@@ -3951,7 +3964,7 @@
     const DEMO_STEPS = [
       { step: 1, tab: 'purchase', title: 'Step 1: Bullion Procurement (PO ➜ WH-MW)', desc: 'Procurement drafts a PO to acquire 150g of 24K pure gold bullion from contracted supplier (e.g. DOJI Wholesale or SJC Bullion). Upon confirmation and receiving goods, physical bullion is ingested into the Main Warehouse (WH-MW).', label: 'Go to Procurement Module' },
       { step: 2, tab: 'manufacturing', title: 'Step 2: Casting Production (BOM ➜ MO at WH-MW)', desc: 'The Go Vap plant receives an MO to cast 25 Fortune Rings 24K. The ERP resolves the BOM, computes 1.87% casting loss, deducts 95.5g of pure gold, and deposits 25 finished rings into the vault.', label: 'Go to Manufacturing Module' },
-      { step: 3, tab: 'inventory', title: 'Step 3: Inter-Store Stock Dispatch (WH-MW ➜ WH-PN)', desc: 'The AI Copilot detects that Phu Nhuan holds only 4 Fortune Rings (below safety threshold of 15). An internal transfer of 15 rings from WH-MW to WH-PN is dispatched, resolving stockout risk.', label: 'Go to Inventory Module' },
+      { step: 3, tab: 'inventory', title: 'Step 3: Inter-Store Stock Dispatch (WH-MW ➜ WH-PN)', desc: 'The Aurora AI detects that Phu Nhuan holds only 4 Fortune Rings (below safety threshold of 15). An internal transfer of 15 rings from WH-MW to WH-PN is dispatched, resolving stockout risk.', label: 'Go to Inventory Module' },
       { step: 4, tab: 'pos', title: 'Step 4: Retail POS Checkout & Real-Time Stock Deduction', desc: 'A Diamond VIP member purchases 2 Fortune Rings at Phu Nhuan Store. The cashier registers the sale, applies the 5% tier discount, and issues an e-Receipt with gold warranty. WH-PN store stock decrements instantly!', label: 'Go to Retail POS Module' }
     ];
 
